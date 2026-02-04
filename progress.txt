@@ -268,3 +268,33 @@ RESULT: PASS
 
 [2026-02-04 06:11:21] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; $db='medusa_sql_rollback_test2'; npm run db:clean-migrate -- --db $db; Get-Content -Raw scripts/rollback/20250203000001_financials.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; Get-Content -Raw scripts/rollback/20250203000002_compliance.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; Get-Content -Raw scripts/rollback/20250203000003_business.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; Get-Content -Raw scripts/rollback/20250203000004_consultation.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT to_regclass('public.earning_entry') as earning_entry, to_regclass('public.payout') as payout, to_regclass('public.document') as document, to_regclass('public.audit_log') as audit_log, to_regclass('public.order_status_event') as order_status_event, to_regclass('public.clinician_schedule') as clinician_schedule, to_regclass('public.clinician_availability_exception') as clinician_availability_exception;"; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT name, count(*) FROM mikro_orm_migrations WHERE name in ('Migration20250203000001','Migration20250203000002','Migration20250203000003','Migration20250203000004') GROUP BY name ORDER BY name;"
 RESULT: PASS
+
+[2026-02-04 06:12:05] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; git check-ignore -v progress.txt; git check-ignore -v PRD_CHECKLIST.md; git check-ignore -v docs/MIGRATIONS.md
+RESULT: PASS (not ignored)
+
+[2026-02-04 06:12:36] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; git add package.json docs/MIGRATIONS.md scripts/db scripts/rollback
+RESULT: PASS
+
+[2026-02-04 06:12:49] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; git status -sb
+RESULT: PASS
+
+[2026-02-04 06:12:58] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; git commit -m "chore(migrations): clean DB migrate workflow (npm run db:clean-migrate)"
+RESULT: PASS
+
+[2026-02-04 06:13:07] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; git show --name-only --oneline -1
+RESULT: PASS
+
+[2026-02-04 06:13:37] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; git add PRD_CHECKLIST.md progress.txt; git status -sb
+RESULT: PASS
+
+[2026-02-04 06:13:49] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; git commit -m "docs(prd): check off migrations reproducibility (npm run db:clean-migrate)"
+RESULT: PASS
+
+[2026-02-04 06:14:02] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; git status -sb
+RESULT: PASS
+
+[2026-02-04 06:14:40] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; node -p "require('./package.json').scripts['db:clean-migrate']"
+RESULT: PASS
+
+[2026-02-04 06:15:15] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+RESULT: PASS
