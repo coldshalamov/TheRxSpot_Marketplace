@@ -24723,3 +24723,42 @@ OUTPUT:
  create mode 100644 src/api/admin/custom/orders/packing-slips/export/route.ts
 
 
+[2026-02-04T16:48:28] CMD: git add progress.txt PRD_CHECKLIST.md docs/API.md src/admin/routes/earnings/page.tsx src/admin/routes/orders-global/page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'PRD_CHECKLIST.md', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add progress.txt PRD_CHECKLIST.md docs/API.md src/admin/routes/ea ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'docs/API.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/admin/routes/orders-global/page.tsx', LF will be replaced by CRLF the next time 
+Git touches it
+warning: in the working copy of 'src/admin/routes/earnings/page.tsx', LF will be replaced by CRLF the next time Git 
+touches it
+
+
+[2026-02-04T16:48:37] CMD: git commit -m "feat(admin): earnings page + orders UI (passes npm run build)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main cd50741] feat(admin): earnings page + orders UI (passes npm run build)
+ 5 files changed, 2040 insertions(+), 139 deletions(-)
+ create mode 100644 src/admin/routes/earnings/page.tsx
+
+
+[2026-02-04T16:48:45] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M progress.txt
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
