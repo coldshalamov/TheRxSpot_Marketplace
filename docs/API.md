@@ -226,15 +226,18 @@ curl -sS -L \
 
 ### `GET /admin/earnings/summary`
 
-Returns integer-cent totals for a business over an optional date range.
+Returns integer-cent totals over an optional date range.
 
 **Headers**
 - `Authorization: Bearer <admin_user_jwt>`
 
 **Query params**
-- `business_id` (required): the business to summarize
+- `business_id` (optional): summarize a single business
+- `business_ids` (optional, comma-separated): summarize multiple businesses
 - `date_from` (optional, ISO date): filter `created_at >= date_from`
 - `date_to` (optional, ISO date): filter `created_at <= date_to`
+
+If neither `business_id` nor `business_ids` are provided, the endpoint returns a platform-wide summary (unless tenant context restricts `business_id`).
 
 **Response 200**
 ```json
@@ -246,19 +249,13 @@ Returns integer-cent totals for a business over an optional date range.
   "total_earnings": 45000,
   "commission_balance": 33000,
   "available_payout": 33000,
+  "platform_commission_balance": 5000,
+  "commission_pending": 2000,
   "breakdown": {
     "commission": 15000,
     "consultation_fee": 20000,
     "service_fee": 10000
   }
-}
-```
-
-**Response 400**
-```json
-{
-  "code": "INVALID_INPUT",
-  "message": "business_id is required"
 }
 ```
 
@@ -341,3 +338,105 @@ curl -sS -X POST \
   -H "Idempotency-Key: payout_bus_123_20260204_0001" \
   -d '{ "business_id": "bus_123", "amount": 25000, "method": "stripe_connect" }'
 ```
+
+---
+
+## Admin: Earnings List + Export (PLAN)
+
+### `GET /admin/earnings`
+
+Lists earning entries with pagination and PLAN-friendly filter values.
+
+**Query params (selected)**
+- `q` (optional): matches `earning_id` or `order_id` (contains)
+- `business_ids` (optional, comma-separated)
+- `status` (optional, comma-separated): `completed|pending|paid_out|refunded`
+- `type` (optional, comma-separated): `commission|consult_fee|service_fee`
+- `date_from`, `date_to` (optional ISO)
+- `limit`, `offset`
+
+**Response 200**
+```json
+{ "earnings": [], "count": 0, "limit": 25, "offset": 0 }
+```
+
+### `GET /admin/earnings/export`
+
+Exports earnings as CSV for the current filter set (same filters as `GET /admin/earnings`).
+
+**Example**
+```bash
+curl -sS -L \
+  "http://localhost:9000/admin/earnings/export?status=completed&type=commission" \
+  -H "Authorization: Bearer <admin_user_jwt>" \
+  -o earnings_export.csv
+```
+
+---
+
+## Admin: Payouts List + Export (PLAN)
+
+### `GET /admin/payouts`
+
+Lists payout requests.
+
+**Response 200**
+```json
+{ "payouts": [], "count": 0, "pagination": { "limit": 25, "offset": 0, "has_more": false } }
+```
+
+### `GET /admin/payouts/export`
+
+Returns printable HTML for payout history (use browser “Save as PDF”).
+
+---
+
+## Admin: Orders (Global) (PLAN)
+
+### `GET /admin/custom/orders`
+
+Cross-tenant order list for the Orders Page Expansion.
+
+**Query params (selected)**
+- `q` (optional): order id/display id, product title, customer name/email, business name
+- `status` (optional, comma-separated): `pending|in_production|shipped|delivered|cancelled`
+- `business_id` (optional)
+- `product_id` (optional)
+- `date_from`, `date_to` (optional ISO)
+- `min_total`, `max_total` (optional; integer cents)
+- `limit`, `offset`
+
+### `GET /admin/custom/orders/{id}`
+
+Returns order detail with extra computed fields:
+- `platform_commission_cents`
+- `net_earnings_cents`
+- `consult_fee_total`
+- `status_history` (business module events)
+
+### `GET /admin/custom/orders/items`
+
+Flattened line items view for the “Order Items” tab.
+
+### `POST /admin/custom/orders/{id}/fulfillment`
+
+Updates fulfillment status using the PLAN state machine:
+`pending → in_production → shipped → delivered` (also supports `cancelled`).
+
+When `status=shipped`, requires `tracking_number`.
+
+### `POST /admin/custom/orders/bulk/fulfillment`
+
+Bulk status update (minimal viable): supports `status=in_production` for multiple `order_ids`.
+
+### `GET /admin/custom/orders/export`
+
+Exports orders as CSV for the current filter set. Supports optional `ids=...` (comma-separated) to export selected orders.
+
+### `GET /admin/custom/orders/packing-slips/export`
+
+Printable HTML packing slips for selected orders: `?ids=order_1,order_2`.
+
+### `POST /admin/custom/orders/{id}/refund`
+
+Refund stub. Returns `501 NOT_IMPLEMENTED` until payment-provider refunds are integrated.

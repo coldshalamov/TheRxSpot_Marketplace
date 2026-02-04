@@ -197,82 +197,82 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
   - [ ] User who made change, timestamp, old status â†’ new status
   - [ ] Related events (document uploaded, clinician assigned)
 - [ ] Earnings Management Page (12h)
-  - [ ] Create src/admin/routes/earnings/page.tsx
-  - [ ] Summary Cards (top row, 5 metrics):
-  - [ ] Pending Payout (amount available to withdraw)
-  - [ ] Total Earnings (lifetime, all businesses)
-  - [ ] Commission Balance (platform's earned commission)
-  - [ ] Available Payout (cleared funds ready for transfer)
-  - [ ] Commission Pending (commission on pending orders)
-  - [ ] Earnings Table:
-  - [ ] Columns: Order ID, Business, Date, Type (Commission/Consult Fee/Service Fee), Amount, Payment Method, Status
-  - [ ] Color-coded amounts: positive (green text), negative (red text for refunds)
-  - [ ] Clickable order ID â†’ opens order detail
-  - [ ] Business column shows logo + name
-  - [ ] Status badges: Completed/Pending/Paid Out/Refunded
-  - [ ] Search & Filters:
-  - [ ] Search by order ID
-  - [ ] Filter by business (multi-select dropdown)
-  - [ ] Filter by type (commission/consult fee/service fee)
-  - [ ] Filter by status (completed/pending/paid out)
-  - [ ] Date range picker (last 7 days, 30 days, 90 days, custom)
+  - [x] Create src/admin/routes/earnings/page.tsx
+  - [x] Summary Cards (top row, 5 metrics):
+  - [x] Pending Payout (amount available to withdraw)
+  - [x] Total Earnings (lifetime, all businesses)
+  - [x] Commission Balance (platform's earned commission)
+  - [x] Available Payout (cleared funds ready for transfer)
+  - [x] Commission Pending (commission on pending orders)
+  - [x] Earnings Table:
+  - [x] Columns: Order ID, Business, Date, Type (Commission/Consult Fee/Service Fee), Amount, Payment Method, Status
+  - [x] Color-coded amounts: positive (green text), negative (red text for refunds)
+  - [x] Clickable order ID â†’ opens order detail
+  - [x] Business column shows logo + name
+  - [x] Status badges: Completed/Pending/Paid Out/Refunded
+  - [x] Search & Filters:
+  - [x] Search by order ID
+  - [x] Filter by business (multi-select dropdown)
+  - [x] Filter by type (commission/consult fee/service fee)
+  - [x] Filter by status (completed/pending/paid out)
+  - [x] Date range picker (last 7 days, 30 days, 90 days, custom)
   - [ ] Payout Request Flow:
-  - [ ] [Request Payout] button (top right)
-  - [ ] Modal: Select payout method (Stripe/ACH/Wire), enter amount (max = available)
-  - [ ] Display estimated arrival (Stripe=2 days, ACH=3-5 days, Wire=1 day)
-  - [ ] Require confirmation ("Are you sure you want to request $X payout?")
+  - [x] [Request Payout] button (top right)
+  - [x] Modal: Select payout method (Stripe/ACH/Wire), enter amount (max = available)
+  - [x] Display estimated arrival (Stripe=2 days, ACH=3-5 days, Wire=1 day)
+  - [x] Require confirmation ("Are you sure you want to request $X payout?")
   - [ ] Create payout record, send email confirmation
-  - [ ] Payout History Section (below earnings table):
-  - [ ] List all payout requests
-  - [ ] Columns: ID, Date Requested, Amount, Method, Status (Pending/In Transit/Completed/Failed), Arrival Date
+  - [x] Payout History Section (below earnings table):
+  - [x] List all payout requests
+  - [x] Columns: ID, Date Requested, Amount, Method, Status (Pending/In Transit/Completed/Failed), Arrival Date
   - [ ] Download receipt/proof of transfer
-  - [ ] Export Functions:
-  - [ ] Export earnings to CSV (filtered by current filters)
-  - [ ] Export payout history to PDF
+  - [x] Export Functions:
+  - [x] Export earnings to CSV (filtered by current filters)
+  - [x] Export payout history to PDF
   - [ ] Generate monthly earnings report (P&L statement)
 - [ ] Orders Page Expansion (10h)
-  - [ ] Expand src/admin/routes/orders-global/page.tsx
-  - [ ] Advanced Search:
-  - [ ] Search by order ID (exact match)
-  - [ ] Search by product name (partial match)
-  - [ ] Search by client name (first + last name)
-  - [ ] Search by business name
-  - [ ] Filters:
-  - [ ] Status filter (multi-select: Pending/In Production/Shipped/Delivered/Cancelled)
-  - [ ] Business filter (dropdown of all businesses)
-  - [ ] Product filter (dropdown of all products)
-  - [ ] Date range (order placed between X and Y)
-  - [ ] Price range (min/max)
-  - [ ] Tabbed Interface:
-  - [ ] Orders Tab (summary view):
-  - [ ] Table: Order ID, Customer, Business, Date, Total, Status, Actions
-  - [ ] Clicking row opens order detail modal
-  - [ ] Order Items Tab (line items view):
-  - [ ] Table: Order ID, Product, Variant, Quantity, Unit Price, Total, Status
-  - [ ] Useful for inventory/fulfillment tracking
-  - [ ] Order Detail Modal:
-  - [ ] Header: Order ID, Status, Placed Date
-  - [ ] Customer info: Name, Email, Phone, Shipping Address
-  - [ ] Business info: Name, Logo, Location
-  - [ ] Line items breakdown:
-  - [ ] Product name, variant, quantity, unit price, total
-  - [ ] Consultation fee (if applicable)
-  - [ ] Pricing breakdown:
-  - [ ] Subtotal, Consultation Fee(s), Tax, Shipping, Total
-  - [ ] Platform commission (calculated, shown to admin only)
+  - [x] Expand src/admin/routes/orders-global/page.tsx
+  - [x] Advanced Search:
+  - [x] Search by order ID (exact match)
+  - [x] Search by product name (partial match)
+  - [x] Search by client name (first + last name)
+  - [x] Search by business name
+  - [x] Filters:
+  - [x] Status filter (multi-select: Pending/In Production/Shipped/Delivered/Cancelled)
+  - [x] Business filter (dropdown of all businesses)
+  - [x] Product filter (dropdown of all products)
+  - [x] Date range (order placed between X and Y)
+  - [x] Price range (min/max)
+  - [x] Tabbed Interface:
+  - [x] Orders Tab (summary view):
+  - [x] Table: Order ID, Customer, Business, Date, Total, Status, Actions
+  - [x] Clicking row opens order detail modal
+  - [x] Order Items Tab (line items view):
+  - [x] Table: Order ID, Product, Variant, Quantity, Unit Price, Total, Status
+  - [x] Useful for inventory/fulfillment tracking
+  - [x] Order Detail Modal:
+  - [x] Header: Order ID, Status, Placed Date
+  - [x] Customer info: Name, Email, Phone, Shipping Address
+  - [x] Business info: Name, Logo, Location
+  - [x] Line items breakdown:
+  - [x] Product name, variant, quantity, unit price, total
+  - [x] Consultation fee (if applicable)
+  - [x] Pricing breakdown:
+  - [x] Subtotal, Consultation Fee(s), Tax, Shipping, Total
+  - [x] Platform commission (calculated, shown to admin only)
   - [ ] Fulfillment info:
   - [ ] Shipping method, carrier, tracking number
   - [ ] Estimated delivery date
-  - [ ] [Mark as Shipped] button â†’ prompts for tracking number
-  - [ ] Status timeline: Pending â†’ In Production â†’ Shipped â†’ Delivered
-  - [ ] Related consultation (linked, if consultation-gated product)
-  - [ ] Payment info: Method, Transaction ID, Status
-  - [ ] [Refund Order] button (if eligible)
-  - [ ] Bulk Actions:
-  - [ ] Select multiple orders
-  - [ ] Bulk export to CSV
-  - [ ] Bulk update status (e.g., mark multiple as "In Production")
-  - [ ] Bulk print packing slips
+  - [x] [Mark as Shipped] button â†’ prompts for tracking number
+  - [x] Status timeline: Pending â†’ In Production â†’ Shipped â†’ Delivered
+  - [x] Related consultation (linked, if consultation-gated product)
+  - [x] Payment info: Method, Transaction ID, Status
+  - [x] [Refund Order] button (if eligible)
+  - [x] Bulk Actions:
+  - [x] Select multiple orders
+  - [x] Bulk export to CSV
+  - [x] Bulk update status (e.g., mark multiple as "In Production")
+  - [x] Bulk print packing slips
 
 ## Week 5-6: Storefront Completion
 - [ ] Consultation-Gating Logic (8h)
