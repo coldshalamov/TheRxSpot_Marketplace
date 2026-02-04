@@ -8,6 +8,7 @@ export const Clinician = model.define("clinician", {
   last_name: model.text(),
   email: model.text(),
   phone: model.text().nullable(),
+  date_of_birth: model.text().nullable(),
   npi_number: model.text().nullable(),
   license_number: model.text(),
   license_state: model.text(),
@@ -15,6 +16,7 @@ export const Clinician = model.define("clinician", {
   credentials: model.array(),
   specializations: model.array(),
   status: model.enum(["active", "inactive", "suspended"]),
+  deactivation_reason: model.text().nullable(),
   is_platform_clinician: model.boolean().default(false),
   timezone: model.text(),
 })
