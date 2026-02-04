@@ -967,3 +967,21 @@ DETAIL: (pre-commit docs) 1 suite, 5 tests passed
 
 [2026-02-04 08:36:55] COMMAND: git commit -m "docs: consultation API examples + checklist/progress (passes: NODE_OPTIONS=--experimental-vm-modules npx jest src/tests/integration/consultation-apis.test.ts --runInBand --forceExit)"
 RESULT: PASS
+[2026-02-04 08:49:37] COMMAND: ='--experimental-vm-modules'; npx jest src/tests/integration/document-admin-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR: Expected 201/400/413 but received 404 (POST /admin/consultations/:id/documents route missing)
+[2026-02-04 09:04:25] NOTE: Added integration tests: src/tests/integration/document-admin-apis.test.ts
+
+[2026-02-04 09:04:25] COMMAND: ='--experimental-vm-modules'; npx jest src/tests/integration/document-admin-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: PASS
+DETAIL: 1 suite, 4 tests passed
+
+[2026-02-04 09:04:25] CURL SNIPPETS:
+# POST /admin/consultations/{id}/documents (multipart upload)
+curl -sS -X POST "http://localhost:9000/admin/consultations/consult_123/documents" -H "Authorization: Bearer <admin_user_jwt>" -F "document=@./example.pdf;type=application/pdf" -F "type=medical_record" -F "title=Initial Intake" -F "access_level=clinician"
+
+# GET /admin/documents?consultation_id={id}
+curl -sS -X GET "http://localhost:9000/admin/documents?consultation_id=consult_123" -H "Authorization: Bearer <admin_user_jwt>"
+
+# GET /admin/documents/{id}/download (stream to file)
+curl -sS -L "http://localhost:9000/admin/documents/doc_123/download" -H "Authorization: Bearer <admin_user_jwt>" -o downloaded.pdf

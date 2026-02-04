@@ -38,12 +38,12 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
   - [x] Support transitions: pending â†’ scheduled â†’ completed â†’ approved/rejected
   - [x] Validate state machine transitions
   - [x] Log status changes in audit log
-  - [ ] Document Upload/Download (3h)
-  - [ ] POST /admin/consultations/{id}/documents
-  - [ ] GET /admin/documents?consultation_id={id}
-  - [ ] GET /admin/documents/{id}/download
-  - [ ] Support PDF, JPG, PNG (prescriptions, medical records)
-  - [ ] Virus scanning with ClamAV
+  - [x] Document Upload/Download (3h)
+  - [x] POST /admin/consultations/{id}/documents
+  - [x] GET /admin/documents?consultation_id={id}
+  - [x] GET /admin/documents/{id}/download
+  - [x] Support PDF, JPG, PNG (prescriptions, medical records)
+  - [x] Virus scanning with ClamAV
   - [ ] S3 storage integration
   - [ ] Earnings Summary Endpoint (2h)
   - [ ] GET /admin/earnings/summary

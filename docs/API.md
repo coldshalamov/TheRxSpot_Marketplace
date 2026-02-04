@@ -143,3 +143,79 @@ curl -sS -X POST \
   -H "Authorization: Bearer <admin_user_jwt>" \
   -d '{ "status": "completed" }'
 ```
+
+---
+
+## Admin: Consultation Documents (PLAN)
+
+### `POST /admin/consultations/{id}/documents`
+
+Upload a document for a consultation using `multipart/form-data`.
+
+Validation (PLAN):
+- Allowed types: **PDF**, **JPG**, **PNG**
+- Max size: **10MB** (controlled by `DOCUMENT_MAX_SIZE`, default 10MB)
+- Virus scan: ClamAV if available, otherwise content validation fallback
+
+**Headers**
+- `Authorization: Bearer <admin_user_jwt>`
+
+**Form fields**
+- `document` (file, required)
+- `type` (required): `prescription | lab_result | medical_record | consent_form | id_verification | insurance_card | other`
+- `title` (required)
+- `description` (optional)
+- `access_level` (required): `patient_only | clinician | business_staff | platform_admin`
+- `expires_at` (optional, ISO date)
+
+**Example**
+```bash
+curl -sS -X POST \
+  "http://localhost:9000/admin/consultations/consult_123/documents" \
+  -H "Authorization: Bearer <admin_user_jwt>" \
+  -F "document=@./example.pdf;type=application/pdf" \
+  -F "type=medical_record" \
+  -F "title=Initial Intake" \
+  -F "access_level=clinician"
+```
+
+---
+
+### `GET /admin/documents?consultation_id={id}`
+
+Lists documents for a consultation. (This repo logs a security warning if PHI identifiers are passed as query params, but still supports `consultation_id` for this endpoint.)
+
+**Headers**
+- `Authorization: Bearer <admin_user_jwt>`
+
+**Example**
+```bash
+curl -sS -X GET \
+  "http://localhost:9000/admin/documents?consultation_id=consult_123" \
+  -H "Authorization: Bearer <admin_user_jwt>"
+```
+
+---
+
+### `GET /admin/documents/{id}/download`
+
+Downloads a document.
+
+- **Local dev**: streams the file content directly (so downloads work without static `/uploads` hosting).
+- **S3** (future): can return a signed URL by adding `?signed_url=1` (expires in 5 minutes by default).
+
+**Headers**
+- `Authorization: Bearer <admin_user_jwt>`
+
+**Query params**
+- `disposition=inline|attachment` (stream mode; defaults to `inline` for PDFs)
+- `signed_url=1` (return JSON with `download_url` instead of streaming)
+- `expires_in=300` (signed URL mode; seconds)
+
+**Example (stream to file)**
+```bash
+curl -sS -L \
+  "http://localhost:9000/admin/documents/doc_123/download" \
+  -H "Authorization: Bearer <admin_user_jwt>" \
+  -o downloaded.pdf
+```
