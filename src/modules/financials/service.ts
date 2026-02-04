@@ -7,6 +7,13 @@ const PLATFORM_FEE_PERCENT = 0.10 // 10%
 const STRIPE_PERCENTAGE_FEE = 0.029 // 2.9%
 const STRIPE_FIXED_FEE_CENTS = 30 // $0.30 in cents
 
+function unwrapListResult<T>(result: any): T[] {
+  if (Array.isArray(result?.[0])) {
+    return result[0] as T[]
+  }
+  return (result || []) as T[]
+}
+
 // Types
 export interface EarningsSummary {
   available: number
@@ -292,23 +299,26 @@ class FinancialsService extends FinancialsBaseService {
    */
   async getEarningsSummary(businessId: string): Promise<EarningsSummary> {
     // Get available earnings (status = 'available')
-    const availableEarnings = await this.listEarningEntries({
+    const availableEarningsRes = await this.listEarningEntries({
       business_id: businessId,
       status: "available",
     })
+    const availableEarnings = unwrapListResult<any>(availableEarningsRes)
     const available = availableEarnings.reduce((sum, e) => sum + Number(e.net_amount), 0)
 
     // Get pending earnings (status = 'pending')
-    const pendingEarnings = await this.listEarningEntries({
+    const pendingEarningsRes = await this.listEarningEntries({
       business_id: businessId,
       status: "pending",
     })
+    const pendingEarnings = unwrapListResult<any>(pendingEarningsRes)
     const pending = pendingEarnings.reduce((sum, e) => sum + Number(e.net_amount), 0)
 
     // Get all historical earnings (excluding cancelled/reversed)
-    const allEarnings = await this.listEarningEntries({
+    const allEarningsRes = await this.listEarningEntries({
       business_id: businessId,
     })
+    const allEarnings = unwrapListResult<any>(allEarningsRes)
     const lifetime = allEarnings
       .filter((e) => e.status !== "reversed")
       .reduce((sum, e) => sum + Number(e.net_amount), 0)
@@ -316,10 +326,11 @@ class FinancialsService extends FinancialsBaseService {
     // Get YTD payouts
     const currentYear = new Date().getFullYear()
     const yearStart = new Date(currentYear, 0, 1)
-    const ytdPayouts = await this.listPayouts({
+    const ytdPayoutsRes = await this.listPayouts({
       business_id: businessId,
       status: "completed",
     })
+    const ytdPayouts = unwrapListResult<any>(ytdPayoutsRes)
     const ytdPayoutsTotal = ytdPayouts
       .filter((p) => p.completed_at && new Date(p.completed_at) >= yearStart)
       .reduce((sum, p) => sum + Number(p.net_amount), 0)
@@ -482,7 +493,8 @@ class FinancialsService extends FinancialsBaseService {
 
     // Link earnings to payout
     for (const earning of earnings) {
-      await this.updateEarningEntries(earning.id, {
+      await this.updateEarningEntries({
+        id: earning.id,
         payout_id: payout.id,
         status: "paid_out", // PLAN: locked to payout request
       })
@@ -511,9 +523,10 @@ class FinancialsService extends FinancialsBaseService {
     // For now, we'll simulate successful processing
 
     // Get linked earnings
-    const earnings = await this.listEarningEntries({
+    const earningsRes = await this.listEarningEntries({
       payout_id: payoutId,
     })
+    const earnings = unwrapListResult<any>(earningsRes)
 
     // Complete the payout
     const completedPayout = await this.updatePayouts(payoutId, {
@@ -523,7 +536,8 @@ class FinancialsService extends FinancialsBaseService {
 
     // Update all linked earnings to paid
     for (const earning of earnings) {
-      await this.updateEarningEntries(earning.id, {
+      await this.updateEarningEntries({
+        id: earning.id,
         status: "paid",
         paid_at: new Date(),
       })
@@ -543,12 +557,14 @@ class FinancialsService extends FinancialsBaseService {
     }
 
     // Get linked earnings and revert them to available
-    const earnings = await this.listEarningEntries({
+    const earningsRes = await this.listEarningEntries({
       payout_id: payoutId,
     })
+    const earnings = unwrapListResult<any>(earningsRes)
 
     for (const earning of earnings) {
-      await this.updateEarningEntries(earning.id, {
+      await this.updateEarningEntries({
+        id: earning.id,
         status: "available",
         payout_id: null,
       })
@@ -565,15 +581,17 @@ class FinancialsService extends FinancialsBaseService {
    * Mark earnings as available (when order is delivered)
    */
   async makeEarningsAvailable(orderId: string): Promise<void> {
-    const earnings = await this.listEarningEntries({
+    const earningsRes = await this.listEarningEntries({
       order_id: orderId,
       status: "pending",
     })
+    const earnings = unwrapListResult<any>(earningsRes)
 
     const now = new Date()
 
     for (const earning of earnings) {
-      await this.updateEarningEntries(earning.id, {
+      await this.updateEarningEntries({
+        id: earning.id,
         status: "available",
         available_at: now,
       })
@@ -584,14 +602,16 @@ class FinancialsService extends FinancialsBaseService {
    * Cancel earnings for an order (when order is cancelled/refunded)
    */
   async cancelEarnings(orderId: string): Promise<void> {
-    const earnings = await this.listEarningEntries({
+    const earningsRes = await this.listEarningEntries({
       order_id: orderId,
     })
+    const earnings = unwrapListResult<any>(earningsRes)
 
     for (const earning of earnings) {
       // Only cancel if not already paid
       if (earning.status !== "paid") {
-        await this.updateEarningEntries(earning.id, {
+        await this.updateEarningEntries({
+          id: earning.id,
           status: "reversed",
         })
       }
@@ -607,8 +627,8 @@ class FinancialsService extends FinancialsBaseService {
     total_paid_out: number
     pending_payouts: number
   }> {
-    const allEarnings = await this.listEarningEntries()
-    const allPayouts = await this.listPayouts()
+    const allEarnings = unwrapListResult<any>(await this.listEarningEntries())
+    const allPayouts = unwrapListResult<any>(await this.listPayouts())
 
     const totalGross = allEarnings
       .filter((e) => e.status !== "reversed")
@@ -649,7 +669,7 @@ class FinancialsService extends FinancialsBaseService {
       if (dateTo) filters.created_at.$lte = dateTo
     }
 
-    const earnings = await this.listEarningEntries(filters)
+    const earnings = unwrapListResult<any>(await this.listEarningEntries(filters))
     const validEarnings = earnings.filter((e) => e.status !== "reversed")
 
     // Group by period

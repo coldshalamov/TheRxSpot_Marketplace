@@ -22020,3 +22020,37 @@ Time:        30.224 s, estimated 31 s
 Ran all test suites matching /src\\tests\\integration\\orders-global-admin.test.ts/i.
 
 
+[2026-02-04T16:03:05] CMD: git add progress.txt src/api/admin/earnings/route.ts src/api/admin/earnings/summary/route.ts src/api/admin/earnings/export/route.ts src/api/admin/payouts/export/route.ts src/tests/integration/earnings-management-admin.test.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add progress.txt src/api/admin/earnings/route.ts src/api/admin/ea ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/api/admin/earnings/route.ts', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'src/api/admin/earnings/summary/route.ts', LF will be replaced by CRLF the next time 
+Git touches it
+warning: in the working copy of 'src/api/admin/earnings/export/route.ts', LF will be replaced by CRLF the next time 
+Git touches it
+warning: in the working copy of 'src/api/admin/payouts/export/route.ts', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'src/tests/integration/earnings-management-admin.test.ts', LF will be replaced by CRLF 
+the next time Git touches it
+
+
+[2026-02-04T16:03:27] CMD: git commit -m "fix(admin): earnings filters + exports (passes node --experimental-vm-modules .\node_modules\jest\bin\jest.js --config=jest.integration.config.js src/tests/integration/earnings-management-admin.test.ts --runInBand --silent=false)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 3c22b17] fix(admin): earnings filters + exports (passes node --experimental-vm-modules .\node_modules\jest\bin\jest.js --config=jest.integration.config.js src/tests/integration/earnings-management-admin.test.ts --runInBand --silent=false)
+ 6 files changed, 5750 insertions(+), 27 deletions(-)
+ create mode 100644 src/api/admin/earnings/export/route.ts
+ create mode 100644 src/api/admin/payouts/export/route.ts
+ create mode 100644 src/tests/integration/earnings-management-admin.test.ts
+
+
