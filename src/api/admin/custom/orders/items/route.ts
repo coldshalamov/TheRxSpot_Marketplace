@@ -1,15 +1,14 @@
 /**
- * Admin Custom Orders (PLAN)
+ * Admin Custom Order Items (PLAN)
  *
- * GET /admin/custom/orders
+ * GET /admin/custom/orders/items
  *
- * Used by Orders Page Expansion. Provides cross-tenant order listing with
- * tenant scoping if a business_id exists in the auth context.
+ * Supports the Orders Page Expansion "Order Items" tab.
  */
 
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
-import { BUSINESS_MODULE } from "../../../../modules/business"
+import { BUSINESS_MODULE } from "../../../../../modules/business"
 import {
   asInt,
   derivePlanStatusFromOrder,
@@ -18,7 +17,7 @@ import {
   parseCommaList,
   parseIsoDate,
   type PlanOrderStatus,
-} from "./_helpers"
+} from "../_helpers"
 
 function unique<T>(values: (T | null | undefined)[]): T[] {
   return Array.from(new Set(values.filter((v): v is T => v != null)))
@@ -45,8 +44,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const offset = Math.max(asInt(query.offset, 0), 0)
 
     const q = typeof query.q === "string" ? query.q.trim() : ""
-
     const statuses = parseCommaList(query.status) as PlanOrderStatus[]
+
     const businessIdRaw = typeof query.business_id === "string" ? query.business_id.trim() : ""
     const tenantBusinessId = getOptionalTenantBusinessId(req)
     if (tenantBusinessId && businessIdRaw && businessIdRaw !== tenantBusinessId) {
@@ -68,9 +67,17 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const minTotal = query.min_total != null ? asInt(query.min_total, NaN as any) : null
     const maxTotal = query.max_total != null ? asInt(query.max_total, NaN as any) : null
 
-    const scanTarget = q || statuses.length || effectiveBusinessId || productId || dateFrom || dateTo || minTotal != null || maxTotal != null
-      ? 10000
-      : Math.min(Math.max(offset + limit, 200), 10000)
+    const scanTarget =
+      q ||
+      statuses.length ||
+      effectiveBusinessId ||
+      productId ||
+      dateFrom ||
+      dateTo ||
+      minTotal != null ||
+      maxTotal != null
+        ? 10000
+        : Math.min(Math.max(offset + limit, 200), 10000)
 
     const filters: any = {}
     if (dateFrom || dateTo) {
@@ -84,13 +91,11 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       skip: 0,
       order: { created_at: "DESC" },
       select: ["id", "display_id", "created_at", "currency_code", "total", "metadata", "customer_id", "email", "status"],
-      relations: ["items", "shipping_address", "shipping_methods"],
+      relations: ["items"],
     })
 
-    const bizIds = unique((orders || []).map((o: any) => o?.metadata?.business_id as string | undefined))
-    const businesses = bizIds.length
-      ? await businessService.listBusinesses({ id: bizIds }, { take: bizIds.length }).catch(() => [])
-      : []
+    const bizIds = unique<string>((orders || []).map((o: any) => o?.metadata?.business_id as string | undefined))
+    const businesses = bizIds.length ? await businessService.listBusinesses({ id: bizIds }, { take: bizIds.length }).catch(() => []) : []
     const bizById = new Map((businesses || []).map((b: any) => [b.id, b]))
 
     const customerIds = unique<string>((orders || []).map((o: any) => o?.customer_id as string | undefined))
@@ -99,22 +104,34 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
     let rows = (orders || []).map((o: any) => {
       const businessId = (o?.metadata?.business_id as string | undefined) || null
+      const business = businessId ? bizById.get(businessId) ?? null : null
       const customer = o.customer_id ? customerById.get(o.customer_id) ?? null : null
-      return {
-        id: o.id,
-        display_id: o.display_id ?? null,
-        created_at: o.created_at ?? null,
-        total: o.total ?? 0,
-        currency_code: o.currency_code ?? "usd",
-        plan_status: derivePlanStatusFromOrder(o),
-        customer,
-        shipping_address: o.shipping_address ?? null,
+      const planStatus = derivePlanStatusFromOrder(o)
+      const createdAt = o.created_at ?? null
+      const currency = o.currency_code ?? "usd"
+      const orderTotal = o.total ?? 0
+
+      const items = (o.items || []).map((it: any) => ({
+        id: it.id,
+        order_id: o.id,
+        order_display_id: o.display_id ?? null,
         business_id: businessId,
-        business: businessId ? bizById.get(businessId) ?? null : null,
-        items: o.items ?? [],
-        metadata: o.metadata ?? {},
-      }
-    })
+        business,
+        created_at: createdAt,
+        plan_status: planStatus,
+        product_id: it.product_id ?? null,
+        product_title: it.title ?? "",
+        variant_title: it.variant_title ?? null,
+        quantity: it.quantity ?? 0,
+        unit_price: it.unit_price ?? 0,
+        total: it.total ?? 0,
+        order_total: orderTotal,
+        currency_code: currency,
+        customer,
+      }))
+
+      return items
+    }).flat()
 
     if (effectiveBusinessId) {
       rows = rows.filter((r: any) => r.business_id === effectiveBusinessId)
@@ -126,29 +143,26 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     }
 
     if (productId) {
-      rows = rows.filter((r: any) => (r.items || []).some((it: any) => it.product_id === productId))
+      rows = rows.filter((r: any) => r.product_id === productId)
     }
 
     if (minTotal != null && Number.isFinite(minTotal as any)) {
-      rows = rows.filter((r: any) => (r.total ?? 0) >= (minTotal as any))
+      rows = rows.filter((r: any) => (r.order_total ?? 0) >= (minTotal as any))
     }
     if (maxTotal != null && Number.isFinite(maxTotal as any)) {
-      rows = rows.filter((r: any) => (r.total ?? 0) <= (maxTotal as any))
+      rows = rows.filter((r: any) => (r.order_total ?? 0) <= (maxTotal as any))
     }
 
     if (q) {
       const qq = normalizeText(q)
       rows = rows.filter((r: any) => {
-        if (normalizeText(r.id).includes(qq)) return true
-        if (`${r.display_id ?? ""}`.includes(qq)) return true
-        const businessName = normalizeText(r.business?.name || "")
-        if (businessName.includes(qq)) return true
-        const custName = normalizeText(`${r.customer?.first_name || ""} ${r.customer?.last_name || ""}`)
-        if (custName.includes(qq)) return true
-        const email = normalizeText(r.customer?.email || r.metadata?.email || "")
-        if (email.includes(qq)) return true
-        const itemTitles = normalizeText((r.items || []).map((it: any) => it.title).join(" "))
-        if (itemTitles.includes(qq)) return true
+        if (normalizeText(r.order_id).includes(qq)) return true
+        if (`${r.order_display_id ?? ""}`.includes(qq)) return true
+        if (normalizeText(r.business?.name || "").includes(qq)) return true
+        if (normalizeText(r.customer?.email || r.customer?.id || "").includes(qq)) return true
+        if (normalizeText(`${r.customer?.first_name || ""} ${r.customer?.last_name || ""}`).includes(qq)) return true
+        if (normalizeText(r.product_title || "").includes(qq)) return true
+        if (normalizeText(r.variant_title || "").includes(qq)) return true
         return false
       })
     }
@@ -156,11 +170,31 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const count = rows.length
     const page = rows.slice(offset, offset + limit)
 
-    return res.json({ orders: page, count, limit, offset })
+    return res.json({
+      items: page.map((r: any) => ({
+        id: r.id,
+        order_id: r.order_id,
+        order_display_id: r.order_display_id,
+        business_id: r.business_id,
+        business: r.business,
+        created_at: r.created_at,
+        plan_status: r.plan_status,
+        product_id: r.product_id,
+        product_title: r.product_title,
+        variant_title: r.variant_title,
+        quantity: r.quantity,
+        unit_price: r.unit_price,
+        total: r.total,
+        currency_code: r.currency_code,
+      })),
+      count,
+      limit,
+      offset,
+    })
   } catch (error) {
     return res.status(500).json({
       code: "INTERNAL_ERROR",
-      message: "Failed to list orders",
+      message: "Failed to list order items",
       error: error instanceof Error ? error.message : "Unknown error",
     })
   }

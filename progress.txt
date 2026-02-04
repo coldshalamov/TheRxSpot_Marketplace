@@ -22054,3 +22054,2632 @@ OUTPUT:
  create mode 100644 src/tests/integration/earnings-management-admin.test.ts
 
 
+[2026-02-04T16:03:35] CMD: git add progress.txt src/modules/financials/service.ts src/api/admin/custom/orders src/tests/integration/orders-global-admin.test.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add progress.txt src/modules/financials/service.ts src/api/admin/ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/modules/financials/service.ts', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'src/api/admin/custom/orders/[id]/fulfillment/route.ts', LF will be replaced by CRLF 
+the next time Git touches it
+warning: in the working copy of 'src/api/admin/custom/orders/[id]/route.ts', LF will be replaced by CRLF the next time 
+Git touches it
+warning: in the working copy of 'src/api/admin/custom/orders/_helpers.ts', LF will be replaced by CRLF the next time 
+Git touches it
+warning: in the working copy of 'src/api/admin/custom/orders/route.ts', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'src/tests/integration/orders-global-admin.test.ts', LF will be replaced by CRLF the 
+next time Git touches it
+
+
+[2026-02-04T16:03:43] CMD: git commit -m "fix(admin): custom orders APIs + delivered earnings (passes node --experimental-vm-modules .\node_modules\jest\bin\jest.js --config=jest.integration.config.js src/tests/integration/orders-global-admin.test.ts --runInBand --silent=false)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 28b8429] fix(admin): custom orders APIs + delivered earnings (passes node --experimental-vm-modules .\node_modules\jest\bin\jest.js --config=jest.integration.config.js src/tests/integration/orders-global-admin.test.ts --runInBand --silent=false)
+ 7 files changed, 737 insertions(+), 16 deletions(-)
+ create mode 100644 src/api/admin/custom/orders/[id]/fulfillment/route.ts
+ create mode 100644 src/api/admin/custom/orders/[id]/route.ts
+ create mode 100644 src/api/admin/custom/orders/_helpers.ts
+ create mode 100644 src/api/admin/custom/orders/route.ts
+ create mode 100644 src/tests/integration/orders-global-admin.test.ts
+
+
+[2026-02-04T16:03:57] CMD: rg -n "<Tabs" src\\admin -S
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T16:04:06] CMD: rg -n "from \"@medusajs/ui\"" src\\admin\\routes\\home\\page.tsx | Select-Object -First 5
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T16:04:22] CMD: Get-Content .\\src\\api\\admin\\earnings\\export\\route.ts | Select-Object -First 240
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Earnings Export (PLAN)
+ *
+ * GET /admin/earnings/export
+ *
+ * Returns CSV for the current filter set.
+ */
+
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { FINANCIALS_MODULE } from "../../../../modules/financials"
+
+function parseCommaList(value?: string): string[] {
+  if (!value) return []
+  return value
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean)
+}
+
+function mapPlanStatusToInternal(status: string): string[] {
+  const s = status.trim().toLowerCase()
+  if (s === "completed") return ["available", "paid"]
+  if (s === "pending") return ["pending"]
+  if (s === "paid_out") return ["paid_out"]
+  if (s === "refunded") return ["reversed"]
+  return [status]
+}
+
+function mapPlanTypeToInternal(type: string): string[] {
+  const t = type.trim().toLowerCase()
+  if (t === "commission") return ["product_sale", "platform_fee"]
+  if (t === "consult_fee" || t === "consultation_fee") return ["consultation_fee"]
+  if (t === "service_fee") return ["shipping_fee", "clinician_fee"]
+  return [type]
+}
+
+function asCents(value: any): number {
+  if (value == null) return 0
+  if (typeof value === "number") return Math.trunc(value)
+  if (typeof value === "string") return parseInt(value, 10) || 0
+  if (typeof value === "object" && typeof value.value === "string") return parseInt(value.value, 10) || 0
+  return Number(value) || 0
+}
+
+function csvEscape(value: any): string {
+  const str = value == null ? "" : String(value)
+  if (/[",\r\n]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const financialsService = req.scope.resolve(FINANCIALS_MODULE) as any
+    const query = req.query as Record<string, any>
+
+    const businessIds = parseCommaList(query.business_ids || query.business_id)
+    const statuses = parseCommaList(query.status).flatMap(mapPlanStatusToInternal)
+    const types = parseCommaList(query.type).flatMap(mapPlanTypeToInternal)
+    const q = typeof query.q === "string" ? query.q.trim().toLowerCase() : ""
+
+    const filters: any = {}
+    if (businessIds.length === 1) filters.business_id = businessIds[0]
+    else if (businessIds.length > 1) filters.business_id = businessIds
+    if (statuses.length) filters.status = Array.from(new Set(statuses))
+    if (types.length) filters.type = Array.from(new Set(types))
+    if (query.date_from || query.date_to) {
+      filters.created_at = {}
+      if (query.date_from) filters.created_at.$gte = new Date(String(query.date_from))
+      if (query.date_to) filters.created_at.$lte = new Date(String(query.date_to))
+    }
+
+    const [earnings] = await financialsService.listAndCountEarningEntries(filters, {
+      take: 10000,
+      skip: 0,
+      order: { created_at: "DESC" },
+    })
+
+    let rows = (earnings || []) as any[]
+...(truncated)
+
+[2026-02-04T16:04:52] CMD: Test-Path .\\src\\admin\\routes\\earnings
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+False
+
+
+[2026-02-04T16:05:05] CMD: New-Item -ItemType Directory -Force .\\src\\admin\\routes\\earnings | Out-Null
+CWD: .
+RESULT: PASS (exit 0)
+
+[2026-02-04T16:05:14] CMD: Get-Content .\\src\\api\\admin\\earnings\\summary\\route.ts | Select-Object -First 220
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { FINANCIALS_MODULE } from "../../../../modules/financials"
+
+type EarningsType =
+  | "product_sale"
+  | "consultation_fee"
+  | "shipping_fee"
+  | "platform_fee"
+  | "clinician_fee"
+
+interface SummaryQueryParams {
+  business_id?: string
+  business_ids?: string
+  date_from?: string
+  date_to?: string
+}
+
+function parseCommaList(value?: string): string[] {
+  if (!value) return []
+  return value
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean)
+}
+
+function parseIsoDate(value?: string): Date | undefined {
+  if (!value) return undefined
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return undefined
+  }
+  return date
+}
+
+function asIntegerCents(value: any): number {
+  if (value == null) return 0
+  if (typeof value === "number") return Math.trunc(value)
+  if (typeof value === "string") return parseInt(value, 10) || 0
+  // Medusa BigNumber sometimes serializes as `{ value, precision }`
+  if (typeof value === "object" && typeof value.value === "string") {
+    return parseInt(value.value, 10) || 0
+  }
+  return Number(value) || 0
+}
+
+function getOptionalTenantBusinessId(req: MedusaRequest): string | undefined {
+  const authContext = (req as any).auth_context as
+    | { business_id?: string; metadata?: any; app_metadata?: any }
+    | undefined
+
+  return (
+    authContext?.business_id ||
+    authContext?.metadata?.business_id ||
+    authContext?.app_metadata?.business_id ||
+    (req as any)?.tenant_context?.business_id
+  )
+}
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const financialsService = req.scope.resolve(FINANCIALS_MODULE) as any
+    const query = req.query as SummaryQueryParams
+
+    const tenantBusinessId = getOptionalTenantBusinessId(req)
+
+    const requestedBusinessIds = parseCommaList(query.business_ids || query.business_id)
+    if (tenantBusinessId && requestedBusinessIds.length && !requestedBusinessIds.includes(tenantBusinessId)) {
+      return res.status(403).json({
+        code: "FORBIDDEN",
+        message: "business_id is restricted by tenant context",
+      })
+    }
+
+    const businessIds = tenantBusinessId ? [tenantBusinessId] : requestedBusinessIds
+
+    const dateFrom = parseIsoDate(query.date_from)
+    const dateTo = parseIsoDate(query.date_to)
+    if (query.date_from && !dateFrom) {
+      return res.status(400).json({
+        code: "INVALID_INPUT",
+...(truncated)
+
+[2026-02-04T16:14:58] CMD: Get-Content .\\src\\admin\\routes\\orders-global\\page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import { Container, Heading, Table, Badge } from "@medusajs/ui"
+import { useEffect, useState } from "react"
+
+const OrdersGlobalPage = () => {
+  const [orders, setOrders] = useState<any[]>([])
+  const [businesses, setBusinesses] = useState<Record<string, any>>({})
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  const fetchData = async () => {
+    try {
+      const [bizRes] = await Promise.all([
+        fetch("/admin/businesses", { credentials: "include" }),
+      ])
+      const bizData = await bizRes.json()
+      const bizMap: Record<string, any> = {}
+      for (const b of bizData.businesses || []) {
+        bizMap[b.id] = b
+      }
+      setBusinesses(bizMap)
+    } catch {
+      console.error("Failed to fetch data")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Container>
+        <Heading level="h1">All Orders (Cross-Tenant)</Heading>
+        <p>Loading...</p>
+      </Container>
+    )
+  }
+
+  return (
+    <Container>
+      <Heading level="h1" className="mb-6">
+        All Orders (Cross-Tenant)
+      </Heading>
+
+      <p className="text-gray-500 mb-4">
+        Cross-tenant order view. Use Medusa's built-in Orders page for
+        full order management. This page provides a tenant-aware overview.
+      </p>
+
+      <Table>
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell>Business</Table.HeaderCell>
+            <Table.HeaderCell>Status</Table.HeaderCell>
+            <Table.HeaderCell>Sales Channel</Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {Object.values(businesses).map((biz: any) => (
+            <Table.Row key={biz.id}>
+              <Table.Cell>{biz.name}</Table.Cell>
+              <Table.Cell>
+                <Badge
+                  color={biz.status === "active" ? "green" : "grey"}
+                >
+                  {biz.status}
+                </Badge>
+              </Table.Cell>
+              <Table.Cell>
+                {biz.sales_channel_id ? (
+                  <Badge color="green">Provisioned</Badge>
+                ) : (
+                  <Badge color="grey">None</Badge>
+                )}
+              </Table.Cell>
+            </Table.Row>
+          ))}
+        </Table.Body>
+...(truncated)
+
+[2026-02-04T16:16:35] CMD: Get-Content .\\src\\admin\\routes\\orders-global\\page.tsx | Select-Object -First 120
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import {
+  Avatar,
+  Badge,
+  Button,
+  Container,
+  Heading,
+  Input,
+  Select,
+  Table,
+  Toaster,
+  toast,
+} from "@medusajs/ui"
+import { useEffect, useMemo, useRef, useState } from "react"
+
+type PlanOrderStatus = "pending" | "in_production" | "shipped" | "delivered" | "cancelled"
+
+type OrderRow = {
+  id: string
+  display_id: number | null
+  created_at: string | null
+  total: number
+  currency_code: string
+  plan_status: PlanOrderStatus
+  business_id: string | null
+  business: any | null
+  customer: any | null
+  items: any[]
+  metadata: Record<string, any>
+}
+
+type OrdersListResponse = {
+  orders: OrderRow[]
+  count: number
+  limit: number
+  offset: number
+}
+
+const LIMIT = 25
+
+function formatMoney(cents: number, currency = "USD"): string {
+  const dollars = cents / 100
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(dollars)
+  } catch {
+    return `$${dollars.toFixed(2)}`
+  }
+}
+
+function statusBadge(status: PlanOrderStatus): { label: string; color: "grey" | "blue" | "green" | "orange" | "red" } {
+  if (status === "pending") return { label: "Pending", color: "orange" }
+  if (status === "in_production") return { label: "In Production", color: "blue" }
+  if (status === "shipped") return { label: "Shipped", color: "green" }
+  if (status === "delivered") return { label: "Delivered", color: "grey" }
+  return { label: "Cancelled", color: "red" }
+}
+
+function safeName(person: any): string {
+  const name = `${person?.first_name || ""} ${person?.last_name || ""}`.trim()
+  return name || person?.email || person?.id || "—"
+}
+
+const OrdersGlobalPage = () => {
+  const [businesses, setBusinesses] = useState<any[]>([])
+  const [products, setProducts] = useState<any[]>([])
+
+  const [q, setQ] = useState("")
+  const [statuses, setStatuses] = useState<PlanOrderStatus[]>([])
+  const [businessId, setBusinessId] = useState("")
+  const [productId, setProductId] = useState("")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
+  const [minTotal, setMinTotal] = useState("")
+  const [maxTotal, setMaxTotal] = useState("")
+
+  const [page, setPage] = useState(0)
+...(truncated)
+
+[2026-02-04T16:17:31] CMD: Get-Content .\\src\\admin\\routes\\orders-global\\page.tsx | Select-Object -Skip 1 -First 220
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import {
+  Avatar,
+  Badge,
+  Button,
+  Container,
+  Heading,
+  Input,
+  Select,
+  Table,
+  Toaster,
+  toast,
+} from "@medusajs/ui"
+import { useEffect, useMemo, useRef, useState } from "react"
+
+type PlanOrderStatus = "pending" | "in_production" | "shipped" | "delivered" | "cancelled"
+
+type OrderRow = {
+  id: string
+  display_id: number | null
+  created_at: string | null
+  total: number
+  currency_code: string
+  plan_status: PlanOrderStatus
+  business_id: string | null
+  business: any | null
+  customer: any | null
+  items: any[]
+  metadata: Record<string, any>
+}
+
+type OrdersListResponse = {
+  orders: OrderRow[]
+  count: number
+  limit: number
+  offset: number
+}
+
+const LIMIT = 25
+
+function formatMoney(cents: number, currency = "USD"): string {
+  const dollars = cents / 100
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(dollars)
+  } catch {
+    return `$${dollars.toFixed(2)}`
+  }
+}
+
+function statusBadge(status: PlanOrderStatus): { label: string; color: "grey" | "blue" | "green" | "orange" | "red" } {
+  if (status === "pending") return { label: "Pending", color: "orange" }
+  if (status === "in_production") return { label: "In Production", color: "blue" }
+  if (status === "shipped") return { label: "Shipped", color: "green" }
+  if (status === "delivered") return { label: "Delivered", color: "grey" }
+  return { label: "Cancelled", color: "red" }
+}
+
+function safeName(person: any): string {
+  const name = `${person?.first_name || ""} ${person?.last_name || ""}`.trim()
+  return name || person?.email || person?.id || "—"
+}
+
+const OrdersGlobalPage = () => {
+  const [businesses, setBusinesses] = useState<any[]>([])
+  const [products, setProducts] = useState<any[]>([])
+
+  const [q, setQ] = useState("")
+  const [statuses, setStatuses] = useState<PlanOrderStatus[]>([])
+  const [businessId, setBusinessId] = useState("")
+  const [productId, setProductId] = useState("")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
+  const [minTotal, setMinTotal] = useState("")
+  const [maxTotal, setMaxTotal] = useState("")
+
+  const [page, setPage] = useState(0)
+  const [rows, setRows] = useState<OrderRow[]>([])
+...(truncated)
+
+[2026-02-04T16:17:37] CMD: Get-Content .\\src\\admin\\routes\\orders-global\\page.tsx | Select-Object -Skip 220 -First 200
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+          <Select value={productId} onValueChange={(v) => { setProductId(v); setPage(0) }}>
+            <Select.Trigger className="w-full md:w-[260px]">
+              <Select.Value placeholder="All products" />
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Item value="">All products</Select.Item>
+              {(products || []).map((p: any) => (
+                <Select.Item key={p.id} value={p.id}>
+                  {p.title}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center gap-2">
+          <div className="flex flex-wrap gap-2">
+            {(["pending", "in_production", "shipped", "delivered", "cancelled"] as PlanOrderStatus[]).map((s) => {
+              const active = statuses.includes(s)
+              const b = statusBadge(s)
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  className={`rounded-full border px-3 py-1 text-xs ${active ? "bg-ui-bg-subtle" : "bg-white"}`}
+                  onClick={() => toggleStatus(s)}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Badge color={b.color}>{b.label}</Badge>
+                    {active ? "Included" : "Excluded"}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <div className="flex flex-1 items-center gap-2">
+            <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(0) }} />
+            <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(0) }} />
+            <Input value={minTotal} onChange={(e) => { setMinTotal(e.target.value); setPage(0) }} placeholder="Min total (USD)" className="w-[160px]" />
+            <Input value={maxTotal} onChange={(e) => { setMaxTotal(e.target.value); setPage(0) }} placeholder="Max total (USD)" className="w-[160px]" />
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-white">
+        <Table>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Order ID</Table.HeaderCell>
+              <Table.HeaderCell>Customer</Table.HeaderCell>
+              <Table.HeaderCell>Business</Table.HeaderCell>
+              <Table.HeaderCell>Date</Table.HeaderCell>
+              <Table.HeaderCell className="text-right">Total</Table.HeaderCell>
+              <Table.HeaderCell>Status</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {loading ? (
+              <Table.Row>
+                <Table.Cell colSpan={6}>
+                  <div className="text-sm text-ui-fg-subtle p-3">Loading…</div>
+                </Table.Cell>
+              </Table.Row>
+            ) : rows.length === 0 ? (
+              <Table.Row>
+                <Table.Cell colSpan={6}>
+                  <div className="text-sm text-ui-fg-subtle p-3">No orders found.</div>
+                </Table.Cell>
+              </Table.Row>
+            ) : (
+              rows.map((r) => {
+                const b = statusBadge(r.plan_status)
+                return (
+                  <Table.Row key={r.id}>
+                    <Table.Cell>
+                      <div className="flex flex-col">
+                        <span className="font-mono text-xs">{r.id}</span>
+                        {r.display_id != null ? <span className="text-xs text-ui-fg-subtle">#{r.display_id}</span> : null}
+                      </div>
+                    </Table.Cell>
+...(truncated)
+
+[2026-02-04T16:18:49] CMD: Get-Content .\\src\\admin\\routes\\orders-global\\page.tsx | Select-Object -Skip 260 -First 120
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+            </Select.Content>
+          </Select>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center gap-2">
+          <div className="flex flex-wrap gap-2">
+            {(["pending", "in_production", "shipped", "delivered", "cancelled"] as PlanOrderStatus[]).map((s) => {
+              const active = statuses.includes(s)
+              const b = statusBadge(s)
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  className={`rounded-full border px-3 py-1 text-xs ${active ? "bg-ui-bg-subtle" : "bg-white"}`}
+                  onClick={() => toggleStatus(s)}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Badge color={b.color}>{b.label}</Badge>
+                    {active ? "Included" : "Excluded"}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <div className="flex flex-1 items-center gap-2">
+            <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(0) }} />
+            <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(0) }} />
+            <Input value={minTotal} onChange={(e) => { setMinTotal(e.target.value); setPage(0) }} placeholder="Min total (USD)" className="w-[160px]" />
+            <Input value={maxTotal} onChange={(e) => { setMaxTotal(e.target.value); setPage(0) }} placeholder="Max total (USD)" className="w-[160px]" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant={tab === "orders" ? "primary" : "secondary"} onClick={() => setTab("orders")}>
+            Orders
+          </Button>
+          <Button variant={tab === "items" ? "primary" : "secondary"} onClick={() => setTab("items")}>
+            Order Items
+          </Button>
+          <div className="text-xs text-ui-fg-subtle ml-2">Order Items tab requires `/admin/custom/orders/items`.</div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-white">
+        <Table>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Order ID</Table.HeaderCell>
+              <Table.HeaderCell>Customer</Table.HeaderCell>
+              <Table.HeaderCell>Business</Table.HeaderCell>
+              <Table.HeaderCell>Date</Table.HeaderCell>
+              <Table.HeaderCell className="text-right">Total</Table.HeaderCell>
+              <Table.HeaderCell>Status</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {loading ? (
+              <Table.Row>
+                <Table.Cell colSpan={6}>
+                  <div className="text-sm text-ui-fg-subtle p-3">Loading…</div>
+                </Table.Cell>
+              </Table.Row>
+            ) : rows.length === 0 ? (
+              <Table.Row>
+                <Table.Cell colSpan={6}>
+                  <div className="text-sm text-ui-fg-subtle p-3">No orders found.</div>
+                </Table.Cell>
+              </Table.Row>
+            ) : (
+              rows.map((r) => {
+                const b = statusBadge(r.plan_status)
+                return (
+                  <Table.Row key={r.id}>
+                    <Table.Cell>
+                      <div className="flex flex-col">
+                        <span className="font-mono text-xs">{r.id}</span>
+                        {r.display_id != null ? <span className="text-xs text-ui-fg-subtle">#{r.display_id}</span> : null}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>{safeName(r.customer)}</Table.Cell>
+...(truncated)
+
+[2026-02-04T16:19:57] CMD: Get-Content .\\src\\admin\\routes\\orders-global\\page.tsx | Select-Object -Skip 350 -First 120
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+                      <Badge color={b.color}>{b.label}</Badge>
+                    </Table.Cell>
+                    <Table.Cell onClick={(e) => e.stopPropagation()}>
+                      <Button variant="secondary" size="small" onClick={() => void openOrderDetail(r.id)}>
+                        View
+                      </Button>
+                    </Table.Cell>
+                  </Table.Row>
+                )
+              })
+            )}
+          </Table.Body>
+        </Table>
+      </div>
+
+      <div className="flex items-center justify-between mt-3">
+        <div className="text-xs text-ui-fg-subtle">
+          Showing {rows.length ? offset + 1 : 0}–{Math.min(offset + rows.length, count)} of {count}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" disabled={page <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+            Prev
+          </Button>
+          <div className="text-xs text-ui-fg-subtle">
+            Page {page + 1} / {totalPages}
+          </div>
+          <Button variant="secondary" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>
+            Next
+          </Button>
+        </div>
+      </div>
+    </Container>
+  )
+}
+
+export const config = defineRouteConfig({
+  label: "Orders (Global)",
+  icon: "ShoppingBag",
+})
+
+export default OrdersGlobalPage
+
+
+[2026-02-04T16:20:32] CMD: Get-Content .\\src\\admin\\routes\\orders-global\\page.tsx | Select-Object -Last 60
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+                const b = statusBadge(r.plan_status)
+                return (
+                  <Table.Row key={r.id} onClick={() => void openOrderDetail(r.id)} className="cursor-pointer">
+                    <Table.Cell>
+                      <div className="flex flex-col">
+                        <span className="font-mono text-xs">{r.id}</span>
+                        {r.display_id != null ? <span className="text-xs text-ui-fg-subtle">#{r.display_id}</span> : null}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>{safeName(r.customer)}</Table.Cell>
+                    <Table.Cell>
+                      <div className="flex items-center gap-2">
+                        <Avatar size="2xsmall" fallback={(r.business?.name || "B").slice(0, 1).toUpperCase()} src={r.business?.logo_url || undefined} />
+                        <span>{r.business?.name || r.business_id || "—"}</span>
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>{r.created_at ? new Date(r.created_at).toLocaleString() : "-"}</Table.Cell>
+                    <Table.Cell className="text-right">{formatMoney(r.total || 0, currency)}</Table.Cell>
+                    <Table.Cell>
+                      <Badge color={b.color}>{b.label}</Badge>
+                    </Table.Cell>
+                    <Table.Cell onClick={(e) => e.stopPropagation()}>
+                      <Button variant="secondary" size="small" onClick={() => void openOrderDetail(r.id)}>
+                        View
+                      </Button>
+                    </Table.Cell>
+                  </Table.Row>
+                )
+              })
+            )}
+          </Table.Body>
+        </Table>
+      </div>
+
+      <div className="flex items-center justify-between mt-3">
+        <div className="text-xs text-ui-fg-subtle">
+          Showing {rows.length ? offset + 1 : 0}–{Math.min(offset + rows.length, count)} of {count}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" disabled={page <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+            Prev
+          </Button>
+          <div className="text-xs text-ui-fg-subtle">
+            Page {page + 1} / {totalPages}
+          </div>
+          <Button variant="secondary" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>
+            Next
+          </Button>
+        </div>
+      </div>
+    </Container>
+  )
+}
+
+export const config = defineRouteConfig({
+  label: "Orders (Global)",
+  icon: "ShoppingBag",
+})
+
+export default OrdersGlobalPage
+
+
+[2026-02-04T16:22:36] CMD: Select-String -Path .\\src\\admin\\routes\\orders-global\\page.tsx -Pattern '<Drawer open={detailOpen}' | Select-Object -First 1
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+src\admin\routes\orders-global\page.tsx:466:      <Drawer open={detailOpen} onOpenChange={setDetailOpen}>
+
+
+
+
+[2026-02-04T16:22:45] CMD: Get-Content .\\src\\admin\\routes\\orders-global\\page.tsx | Select-Object -Skip 340 -First 150
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+                  {p.title}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center gap-2">
+          <div className="flex flex-wrap gap-2">
+            {(["pending", "in_production", "shipped", "delivered", "cancelled"] as PlanOrderStatus[]).map((s) => {
+              const active = statuses.includes(s)
+              const b = statusBadge(s)
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  className={`rounded-full border px-3 py-1 text-xs ${active ? "bg-ui-bg-subtle" : "bg-white"}`}
+                  onClick={() => toggleStatus(s)}
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <Badge color={b.color}>{b.label}</Badge>
+                    {active ? "Included" : "Excluded"}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+          <div className="flex flex-1 items-center gap-2">
+            <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setPage(0) }} />
+            <Input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setPage(0) }} />
+            <Input value={minTotal} onChange={(e) => { setMinTotal(e.target.value); setPage(0) }} placeholder="Min total (USD)" className="w-[160px]" />
+            <Input value={maxTotal} onChange={(e) => { setMaxTotal(e.target.value); setPage(0) }} placeholder="Max total (USD)" className="w-[160px]" />
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button variant={tab === "orders" ? "primary" : "secondary"} onClick={() => setTab("orders")}>
+            Orders
+          </Button>
+          <Button variant={tab === "items" ? "primary" : "secondary"} onClick={() => setTab("items")}>
+            Order Items
+          </Button>
+          <div className="text-xs text-ui-fg-subtle ml-2">Order Items tab requires `/admin/custom/orders/items`.</div>
+        </div>
+      </div>
+
+      <div className="rounded-lg border bg-white">
+        <Table>
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell>Order ID</Table.HeaderCell>
+              <Table.HeaderCell>Customer</Table.HeaderCell>
+              <Table.HeaderCell>Business</Table.HeaderCell>
+              <Table.HeaderCell>Date</Table.HeaderCell>
+              <Table.HeaderCell className="text-right">Total</Table.HeaderCell>
+              <Table.HeaderCell>Status</Table.HeaderCell>
+              <Table.HeaderCell>Actions</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {loading ? (
+              <Table.Row>
+                <Table.Cell colSpan={7}>
+                  <div className="text-sm text-ui-fg-subtle p-3">Loading…</div>
+                </Table.Cell>
+              </Table.Row>
+            ) : rows.length === 0 ? (
+              <Table.Row>
+                <Table.Cell colSpan={7}>
+                  <div className="text-sm text-ui-fg-subtle p-3">No orders found.</div>
+                </Table.Cell>
+              </Table.Row>
+            ) : (
+              rows.map((r) => {
+                const b = statusBadge(r.plan_status)
+                return (
+                  <Table.Row key={r.id} onClick={() => void openOrderDetail(r.id)} className="cursor-pointer">
+                    <Table.Cell>
+                      <div className="flex flex-col">
+                        <span className="font-mono text-xs">{r.id}</span>
+...(truncated)
+
+[2026-02-04T16:23:14] CMD: Get-Content .\\src\\admin\\routes\\orders-global\\page.tsx | Select-Object -Skip 395 -First 80
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+              <Table.HeaderCell className="text-right">Total</Table.HeaderCell>
+              <Table.HeaderCell>Status</Table.HeaderCell>
+              <Table.HeaderCell>Actions</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {loading ? (
+              <Table.Row>
+                <Table.Cell colSpan={7}>
+                  <div className="text-sm text-ui-fg-subtle p-3">Loading…</div>
+                </Table.Cell>
+              </Table.Row>
+            ) : rows.length === 0 ? (
+              <Table.Row>
+                <Table.Cell colSpan={7}>
+                  <div className="text-sm text-ui-fg-subtle p-3">No orders found.</div>
+                </Table.Cell>
+              </Table.Row>
+            ) : (
+              rows.map((r) => {
+                const b = statusBadge(r.plan_status)
+                return (
+                  <Table.Row key={r.id} onClick={() => void openOrderDetail(r.id)} className="cursor-pointer">
+                    <Table.Cell>
+                      <div className="flex flex-col">
+                        <span className="font-mono text-xs">{r.id}</span>
+                        {r.display_id != null ? <span className="text-xs text-ui-fg-subtle">#{r.display_id}</span> : null}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>{safeName(r.customer)}</Table.Cell>
+                    <Table.Cell>
+                      <div className="flex items-center gap-2">
+                        <Avatar size="2xsmall" fallback={(r.business?.name || "B").slice(0, 1).toUpperCase()} src={r.business?.logo_url || undefined} />
+                        <span>{r.business?.name || r.business_id || "—"}</span>
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>{r.created_at ? new Date(r.created_at).toLocaleString() : "-"}</Table.Cell>
+                    <Table.Cell className="text-right">{formatMoney(r.total || 0, currency)}</Table.Cell>
+                    <Table.Cell>
+                      <Badge color={b.color}>{b.label}</Badge>
+                    </Table.Cell>
+                    <Table.Cell onClick={(e) => e.stopPropagation()}>
+                      <Button variant="secondary" size="small" onClick={() => void openOrderDetail(r.id)}>
+                        View
+                      </Button>
+                    </Table.Cell>
+                  </Table.Row>
+                )
+              })
+            )}
+          </Table.Body>
+        </Table>
+        </div>
+
+      <div className="flex items-center justify-between mt-3">
+        <div className="text-xs text-ui-fg-subtle">
+          Showing {rows.length ? offset + 1 : 0}–{Math.min(offset + rows.length, count)} of {count}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" disabled={page <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+            Prev
+          </Button>
+          <div className="text-xs text-ui-fg-subtle">
+            Page {page + 1} / {totalPages}
+          </div>
+          <Button variant="secondary" disabled={page + 1 >= totalPages} onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}>
+            Next
+          </Button>
+        </div>
+      </div>
+
+      <Drawer open={detailOpen} onOpenChange={setDetailOpen}>
+        <Drawer.Content className="max-w-[920px]">
+          <Drawer.Header>
+            <Drawer.Title>Order detail</Drawer.Title>
+            <Drawer.Description>{activeOrderId ? activeOrderId : ""}</Drawer.Description>
+          </Drawer.Header>
+          <Drawer.Body>
+            {detailLoading ? (
+              <div className="text-sm text-ui-fg-subtle">Loading...</div>
+...(truncated)
+
+[2026-02-04T16:24:21] CMD: Get-ChildItem -Recurse .\\src\\api\\admin\\custom\\orders | Select-Object FullName
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+FullName                                                                             
+--------                                                                             
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\orders\[id]                     
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\orders\route.ts                 
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\orders\_helpers.ts              
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\orders\[id]\fulfillment         
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\orders\[id]\route.ts            
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\orders\[id]\fulfillment\route.ts
+
+
+
+
+[2026-02-04T16:24:30] CMD: Get-Content .\\src\\api\\admin\\custom\\orders\\_helpers.ts | Select-Object -First 260
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest } from "@medusajs/framework/http"
+
+export type PlanOrderStatus = "pending" | "in_production" | "shipped" | "delivered" | "cancelled"
+
+export function parseCommaList(value?: string): string[] {
+  if (!value) return []
+  return value
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean)
+}
+
+export function parseIsoDate(value?: string): Date | null {
+  if (!value) return null
+  const d = new Date(value)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+
+export function asInt(value: any, fallback: number): number {
+  const n = typeof value === "string" ? parseInt(value, 10) : typeof value === "number" ? value : NaN
+  return Number.isFinite(n) ? Math.trunc(n) : fallback
+}
+
+export function normalizeText(value: any): string {
+  return `${value ?? ""}`.toLowerCase().trim()
+}
+
+export function getOptionalTenantBusinessId(req: MedusaRequest): string | undefined {
+  const authContext = (req as any).auth_context as
+    | { business_id?: string; metadata?: any; app_metadata?: any }
+    | undefined
+
+  return (
+    authContext?.business_id ||
+    authContext?.metadata?.business_id ||
+    authContext?.app_metadata?.business_id ||
+    (req as any)?.tenant_context?.business_id
+  )
+}
+
+export function derivePlanStatusFromOrder(order: any): PlanOrderStatus {
+  const meta = order?.metadata || {}
+  const fs = typeof meta.fulfillment_status === "string" ? meta.fulfillment_status : ""
+
+  if (fs === "pending") return "pending"
+  if (fs === "in_production") return "in_production"
+  if (fs === "shipped") return "shipped"
+  if (fs === "delivered") return "delivered"
+  if (fs === "cancelled") return "cancelled"
+
+  // Backwards-compat fallback to existing custom_status machine.
+  const custom = typeof meta.custom_status === "string" ? meta.custom_status : ""
+  if (custom === "processing") return "in_production"
+  if (custom === "fulfilled") return "shipped"
+  if (custom === "delivered") return "delivered"
+  if (custom === "cancelled" || custom === "refunded") return "cancelled"
+  return "pending"
+}
+
+export function validateNextStatus(from: PlanOrderStatus, to: PlanOrderStatus): boolean {
+  const allowed: Record<PlanOrderStatus, PlanOrderStatus[]> = {
+    pending: ["in_production", "cancelled"],
+    in_production: ["shipped", "cancelled"],
+    shipped: ["delivered", "cancelled"],
+    delivered: [],
+    cancelled: [],
+  }
+  return (allowed[from] || []).includes(to)
+}
+
+
+
+[2026-02-04T16:25:04] CMD: Get-Content .\\src\\tests\\integration\\orders-global-admin.test.ts | Select-Object -First 240
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Orders Global Admin APIs (PLAN)
+ *
+ * Covers custom endpoints used by the Orders Page Expansion UI:
+ * - GET /admin/custom/orders (list)
+ * - GET /admin/custom/orders/:id (detail)
+ * - POST /admin/custom/orders/:id/fulfillment (status transitions + tracking requirement)
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import jwt from "jsonwebtoken"
+import { createTestBusiness, createTestCustomer, createTestEarningEntry, createTestOrder } from "../utils/factories"
+
+jest.setTimeout(60000)
+
+function signAdminToken(userId: string, businessId?: string): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error("JWT_SECRET must be set for integration tests")
+  }
+
+  return jwt.sign(
+    {
+      actor_id: userId,
+      actor_type: "user",
+      auth_identity_id: "",
+      business_id: businessId,
+      app_metadata: businessId ? { business_id: businessId } : {},
+      user_metadata: {},
+    },
+    secret
+  )
+}
+
+medusaIntegrationTestRunner({
+  testSuite: ({ api, getContainer }) => {
+    describe("Orders Global Admin APIs (PLAN)", () => {
+      it("lists orders with filters and returns plan_status mapping", async () => {
+        const container = getContainer()
+        const business = await createTestBusiness(container)
+        const customer = await createTestCustomer(container)
+
+        const o1 = await createTestOrder(container, "pending", {
+          business_id: business.id,
+          customer_id: customer.id,
+          total: 12345,
+          items: [{ title: "Finasteride 1mg", quantity: 1, unit_price: 10000, total: 10000 }],
+          metadata: { fulfillment_status: "pending" },
+        })
+
+        const o2 = await createTestOrder(container, "processing", {
+          business_id: business.id,
+          customer_id: customer.id,
+          total: 22222,
+          items: [{ title: "Sildenafil", quantity: 1, unit_price: 20000, total: 20000 }],
+          metadata: { fulfillment_status: "in_production" },
+        })
+
+        const adminToken = signAdminToken("user_admin_orders_01")
+
+        const list = await api
+          .get(`/admin/custom/orders?limit=25&offset=0&status=pending,in_production`, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .catch((e: any) => e.response)
+
+        if (list.status !== 200) {
+          throw new Error(`Unexpected response: ${list.status} ${JSON.stringify(list.data)}`)
+        }
+
+        const ids = new Set((list.data.orders || []).map((o: any) => o.id))
+        expect(ids.has(o1.id)).toBe(true)
+        expect(ids.has(o2.id)).toBe(true)
+
+        const row = (list.data.orders || []).find((o: any) => o.id === o2.id)
+        expect(row.plan_status).toBe("in_production")
+      })
+
+      it("enforces shipped tracking_number and updates earnings when delivered", async () => {
+        const container = getContainer()
+...(truncated)
+
+[2026-02-04T16:25:17] CMD: New-Item -ItemType Directory -Force .\\src\\api\\admin\\custom\\orders\\items | Out-Null; New-Item -ItemType Directory -Force .\\src\\api\\admin\\custom\\orders\\export | Out-Null; New-Item -ItemType Directory -Force .\\src\\api\\admin\\custom\\orders\\packing-slips\\export | Out-Null; New-Item -ItemType Directory -Force .\\src\\api\\admin\\custom\\orders\\bulk\\fulfillment | Out-Null; New-Item -ItemType Directory -Force .\\src\\api\\admin\\custom\\orders\\[id]\\refund | Out-Null
+CWD: .
+RESULT: PASS (exit 0)
+
+[2026-02-04T16:27:22] CMD: rg -n "createOrderStatusEvents" src\\modules\\business -S
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src\\modules\\business\service.ts:92:    return await this.createOrderStatusEvents({
+
+
+[2026-02-04T16:27:28] CMD: Get-Content .\\src\\modules\\business\\service.ts | Select-Object -Skip 60 -First 140
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+      { business_id: businessId },
+      { order: { created_at: "DESC" } }
+    )
+  }
+
+  async approveConsultSubmission(submissionId: string, reviewedBy: string) {
+    return await this.updateConsultSubmissions(submissionId, {
+      status: "approved",
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date(),
+    })
+  }
+
+  async rejectConsultSubmission(submissionId: string, reviewedBy: string, notes?: string) {
+    return await this.updateConsultSubmissions(submissionId, {
+      status: "rejected",
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date(),
+      notes,
+    })
+  }
+
+  // Order Status Event methods
+  async recordOrderStatusEvent(
+    orderId: string,
+    fromStatus: string,
+    toStatus: string,
+    changedBy?: string,
+    reason?: string,
+    metadata?: Record<string, any>
+  ) {
+    return await this.createOrderStatusEvents({
+      order_id: orderId,
+      from_status: fromStatus,
+      to_status: toStatus,
+      changed_by: changedBy ?? null,
+      reason: reason ?? null,
+      metadata: metadata ?? null,
+    })
+  }
+
+  async listOrderStatusEventsByOrder(orderId: string) {
+    return await this.listOrderStatusEvents(
+      { order_id: orderId },
+      { order: { created_at: "ASC" } }
+    )
+  }
+
+  async getLatestOrderStatusEvent(orderId: string) {
+    const events = await this.listOrderStatusEvents(
+      { order_id: orderId },
+      { order: { created_at: "DESC" }, take: 1 }
+    )
+    return events[0] ?? null
+  }
+}
+
+export default BusinessModuleService
+
+
+[2026-02-04T16:27:39] CMD: Get-Content -LiteralPath '.\\src\\api\\admin\\custom\\orders\\[id]\\fulfillment\\route.ts' | Select-Object -First 260
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Custom Order Fulfillment Status (PLAN)
+ *
+ * POST /admin/custom/orders/:id/fulfillment
+ *
+ * Implements the PLAN fulfillment state machine:
+ * pending → in_production → shipped → delivered
+ *
+ * Rules:
+ * - Mark as shipped requires `tracking_number`.
+ * - Updates `order.metadata.fulfillment_status` and tracking fields.
+ * - On delivered, triggers `financials.makeEarningsAvailable(orderId)` to unlock payouts.
+ */
+
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { Modules } from "@medusajs/framework/utils"
+import { BUSINESS_MODULE } from "../../../../../../modules/business"
+import { FINANCIALS_MODULE } from "../../../../../../modules/financials"
+import {
+  derivePlanStatusFromOrder,
+  getOptionalTenantBusinessId,
+  validateNextStatus,
+  type PlanOrderStatus,
+} from "../../_helpers"
+
+function getAuthActor(req: MedusaRequest): {
+  actor_type: string
+  actor_id: string
+  actor_email: string | null
+  ip_address: string | null
+  user_agent: string | null
+} {
+  const auth = (req as any).auth_context as any
+  const actorId = auth?.actor_id || "unknown"
+  const actorTypeRaw = auth?.actor_type || "business_user"
+  const actorType = actorTypeRaw === "user" ? "business_user" : actorTypeRaw
+  return {
+    actor_type: actorType,
+    actor_id: actorId,
+    actor_email: auth?.actor_email ?? null,
+    ip_address:
+      ((req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ??
+        (req as any).request_context?.ip_address ??
+        (req as any).ip ??
+        null),
+    user_agent: (req.headers["user-agent"] as string | undefined) ?? null,
+  }
+}
+
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const { id } = req.params
+    const body = (req.body ?? {}) as Record<string, any>
+
+    const next = (typeof body.status === "string" ? body.status.trim() : "") as PlanOrderStatus
+    if (!["pending", "in_production", "shipped", "delivered", "cancelled"].includes(next)) {
+      return res.status(400).json({
+        code: "INVALID_INPUT",
+        message: "status must be one of: pending, in_production, shipped, delivered, cancelled",
+      })
+    }
+
+    const trackingNumber = typeof body.tracking_number === "string" ? body.tracking_number.trim() : ""
+    const carrier = typeof body.carrier === "string" ? body.carrier.trim() : ""
+
+    const orderService = req.scope.resolve(Modules.ORDER) as any
+    const businessService = req.scope.resolve(BUSINESS_MODULE) as any
+    const financialsService = req.scope.resolve(FINANCIALS_MODULE) as any
+    const complianceService = req.scope.resolve("complianceModuleService") as any
+
+    const order = await orderService.retrieveOrder(id, { relations: ["items", "shipping_address"] })
+    if (!order) {
+      return res.status(404).json({ code: "NOT_FOUND", message: "Order not found" })
+    }
+
+    const tenantBusinessId = getOptionalTenantBusinessId(req)
+    const businessId = (order?.metadata?.business_id as string | undefined) || null
+    if (tenantBusinessId && businessId && businessId !== tenantBusinessId) {
+      return res.status(404).json({ code: "NOT_FOUND", message: "Order not found" })
+    }
+...(truncated)
+
+[2026-02-04T16:28:41] CMD: Get-Content .\\src\\api\\admin\\custom\\orders\\export\\route.ts | Select-Object -Skip 1 -First 220
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ * Admin Orders Export (PLAN)
+ *
+ * GET /admin/custom/orders/export
+ *
+ * Returns CSV for the current filter set, optionally restricted to selected ids.
+ */
+
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { Modules } from "@medusajs/framework/utils"
+import { BUSINESS_MODULE } from "../../../../../modules/business"
+import {
+  asInt,
+  derivePlanStatusFromOrder,
+  getOptionalTenantBusinessId,
+  normalizeText,
+  parseCommaList,
+  parseIsoDate,
+  type PlanOrderStatus,
+} from "../_helpers"
+
+function unique<T>(values: (T | null | undefined)[]): T[] {
+  return Array.from(new Set(values.filter((v): v is T => v != null)))
+}
+
+function csvEscape(value: any): string {
+  const str = value == null ? "" : String(value)
+  if (/[",\r\n]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
+}
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const orderService = req.scope.resolve(Modules.ORDER) as any
+    const businessService = req.scope.resolve(BUSINESS_MODULE) as any
+
+    const query = req.query as Record<string, any>
+    const q = typeof query.q === "string" ? query.q.trim() : ""
+    const statuses = parseCommaList(query.status) as PlanOrderStatus[]
+    const ids = parseCommaList(query.ids)
+
+    const businessIdRaw = typeof query.business_id === "string" ? query.business_id.trim() : ""
+    const tenantBusinessId = getOptionalTenantBusinessId(req)
+    if (tenantBusinessId && businessIdRaw && businessIdRaw !== tenantBusinessId) {
+      return res.status(403).json({ code: "FORBIDDEN", message: "business_id is restricted by tenant context" })
+    }
+    const effectiveBusinessId = tenantBusinessId || businessIdRaw || ""
+
+    const productId = typeof query.product_id === "string" ? query.product_id.trim() : ""
+
+    const dateFrom = parseIsoDate(typeof query.date_from === "string" ? query.date_from : undefined)
+    const dateTo = parseIsoDate(typeof query.date_to === "string" ? query.date_to : undefined)
+    if (query.date_from && !dateFrom) {
+      return res.status(400).json({ code: "INVALID_INPUT", message: "date_from must be a valid ISO date string" })
+    }
+    if (query.date_to && !dateTo) {
+      return res.status(400).json({ code: "INVALID_INPUT", message: "date_to must be a valid ISO date string" })
+    }
+
+    const minTotal = query.min_total != null ? asInt(query.min_total, NaN as any) : null
+    const maxTotal = query.max_total != null ? asInt(query.max_total, NaN as any) : null
+
+    const scanTarget = 10000
+    const filters: any = {}
+    if (dateFrom || dateTo) {
+      filters.created_at = {}
+      if (dateFrom) filters.created_at.$gte = dateFrom
+      if (dateTo) filters.created_at.$lte = dateTo
+    }
+    if (ids.length) {
+      filters.id = ids
+    }
+
+    const [orders] = await orderService.listAndCountOrders(filters, {
+      take: scanTarget,
+      skip: 0,
+      order: { created_at: "DESC" },
+      select: ["id", "display_id", "created_at", "currency_code", "total", "metadata", "email"],
+      relations: ["items"],
+...(truncated)
+
+[2026-02-04T16:29:08] CMD: Get-Content .\\src\\tests\\utils\\factories.ts | Select-Object -Skip 1 -First 260
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ * Test Data Factories
+ * 
+ * Factory functions to create test data for integration tests.
+ * Follows the factory pattern for creating consistent test entities.
+ */
+
+import { MedusaContainer } from "@medusajs/framework/types"
+import { generateTestId, dateOffset, getServices } from "./test-server"
+
+// ============================================================================
+// Business Factory
+// ============================================================================
+
+export interface BusinessOverrides {
+  id?: string
+  name?: string
+  slug?: string
+  status?: "pending" | "approved" | "active" | "suspended"
+  is_active?: boolean
+  domain?: string
+  sales_channel_id?: string
+  publishable_api_key_id?: string
+  branding_config?: Record<string, any>
+  settings?: Record<string, any>
+}
+
+export async function createTestBusiness(
+  container: MedusaContainer,
+  overrides: BusinessOverrides = {}
+) {
+  const { business } = getServices(container)
+  
+  const id = overrides.id || generateTestId("bus")
+  const name = overrides.name || `Test Business ${id}`
+  const slug = overrides.slug || `test-business-${id}`
+  
+  return await business.createBusinesses({
+    id,
+    name,
+    slug,
+    status: overrides.status || "active",
+    is_active: overrides.is_active !== undefined ? overrides.is_active : true,
+    domain: overrides.domain || null,
+    sales_channel_id: overrides.sales_channel_id || null,
+    publishable_api_key_id: overrides.publishable_api_key_id || null,
+    branding_config: overrides.branding_config || {},
+    settings: overrides.settings || {},
+    domain_config: {},
+    catalog_config: {},
+  })
+}
+
+// ============================================================================
+// Customer Factory
+// ============================================================================
+
+export interface CustomerOverrides {
+  id?: string
+  email?: string
+  first_name?: string
+  last_name?: string
+  phone?: string
+  has_account?: boolean
+  metadata?: Record<string, any>
+}
+
+export async function createTestCustomer(
+  container: MedusaContainer,
+  overrides: CustomerOverrides = {}
+) {
+  const { customer } = getServices(container)
+  
+  const id = overrides.id || generateTestId("cust")
+  
+  return await customer.createCustomers({
+    id,
+    email: overrides.email || `customer_${id}@test.com`,
+    first_name: overrides.first_name || "Test",
+    last_name: overrides.last_name || "Customer",
+    phone: overrides.phone || null,
+...(truncated)
+
+[2026-02-04T16:29:17] CMD: rg -n "function createTestOrder" -n .\\src\\tests\\utils\\factories.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+390:export async function createTestOrder(
+790:export async function createTestOrderStatusEvent(
+
+
+[2026-02-04T16:29:24] CMD: Get-Content .\\src\\tests\\utils\\factories.ts | Select-Object -Skip 380 -First 130
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  customer_id?: string
+  business_id?: string
+  status?: OrderStatus
+  total?: number
+  currency_code?: string
+  items?: OrderItemInput[]
+  metadata?: Record<string, any>
+}
+
+export async function createTestOrder(
+  container: MedusaContainer,
+  status: OrderStatus = "pending",
+  overrides: OrderOverrides = {}
+) {
+  const { order } = getServices(container)
+  
+  const id = overrides.id || generateTestId("order")
+  const total = overrides.total || 100
+  const customStatus = overrides.status || status
+
+  // The Medusa OrderModule has its own DB enum for `order.status`.
+  // Our application-specific lifecycle statuses are stored in metadata.custom_status.
+  const medusaStatus = (() => {
+    if (customStatus === "delivered") return "completed"
+    if (customStatus === "cancelled" || customStatus === "refunded") return "canceled"
+    return "pending"
+  })()
+  
+  // Create order with items
+  const orderData: any = {
+    id,
+    customer_id: overrides.customer_id || null,
+    status: medusaStatus,
+    total,
+    currency_code: overrides.currency_code || "usd",
+    metadata: {
+      ...overrides.metadata,
+      business_id: overrides.business_id,
+      custom_status: customStatus,
+      status_updated_at: new Date().toISOString(),
+    },
+  }
+  
+  // Add items if provided
+  if (overrides.items && overrides.items.length > 0) {
+    orderData.items = overrides.items.map((item, index) => ({
+      id: item.id || `${id}_item_${index}`,
+      title: item.title || `Item ${index + 1}`,
+      quantity: item.quantity || 1,
+      unit_price: item.unit_price || 10,
+      total: item.total || (item.unit_price || 10) * (item.quantity || 1),
+      product_id: item.product_id || null,
+      variant_id: item.variant_id || null,
+    }))
+  }
+  
+  return await order.createOrders(orderData)
+}
+
+// ============================================================================
+// Earning Entry Factory
+// ============================================================================
+
+export type EarningStatus = "pending" | "available" | "paid_out" | "paid" | "reversed"
+export type EarningType = 
+  | "product_sale" 
+  | "consultation_fee" 
+  | "shipping_fee" 
+  | "platform_fee" 
+  | "clinician_fee"
+
+export interface EarningEntryOverrides {
+  id?: string
+  business_id: string
+  order_id?: string
+  line_item_id?: string
+  consultation_id?: string
+  type?: EarningType
+  description?: string
+  gross_amount?: number
+...(truncated)
+
+[2026-02-04T16:30:16] CMD: node --experimental-vm-modules .\\node_modules\\jest\\bin\\jest.js --config=jest.integration.config.js src/tests/integration/orders-global-admin.test.ts --runInBand --silent=false
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+...(truncated)
+      node_modules/@medusajs/utils/dist/common/index.js
+      node_modules/@medusajs/utils/dist/auth/token.js
+      node_modules/@medusajs/utils/dist/auth/index.js
+      node_modules/@medusajs/utils/dist/index.js
+      node_modules/@medusajs/framework/dist/utils/index.js
+      node_modules/@medusajs/test-utils/dist/database.js
+      node_modules/@medusajs/test-utils/dist/index.js
+      src/tests/integration/orders-global-admin.test.ts
+
+      at Object.<anonymous>.exports.default (node_modules/@medusajs/medusa/src/loaders/api.ts:72:11)
+          at async Promise.allSettled (index 2)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at loadEntrypoints (node_modules/@medusajs/medusa/src/loaders/index.ts:117:26)
+      at Object.<anonymous>.exports.default (node_modules/@medusajs/medusa/src/loaders/index.ts:219:7)
+      at bootstrapApp (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/bootstrap-app.ts:24:37)
+      at startApp (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/bootstrap-app.ts:61:9)
+      at MedusaTestRunner.setupApplication (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:200:11)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:265:7)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:7)
+
+  ?  � Orders Global Admin APIs (PLAN) � exports orders to CSV for the current filter set
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions 
+(node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ?  � Orders Global Admin APIs (PLAN) � supports bulk mark as in_production and exposes refund stub endpoint
+
+    An error occurred while registering API Routes. Error: Cannot find module '../_helpers' from 
+'src/api/admin/custom/orders/[id]/refund/route.ts'
+
+    Require stack:
+      src/api/admin/custom/orders/[id]/refund/route.ts
+      node_modules/@medusajs/utils/dist/common/dynamic-import.js
+      node_modules/@medusajs/utils/dist/dal/mikro-orm/custom-db-migrator.js
+      node_modules/@medusajs/utils/dist/dal/index.js
+      node_modules/@medusajs/utils/dist/dml/helpers/entity-builder/apply-searchable.js
+      node_modules/@medusajs/utils/dist/dml/helpers/entity-builder/index.js
+      node_modules/@medusajs/utils/dist/dml/index.js
+      node_modules/@medusajs/utils/dist/modules-sdk/joiner-config-builder.js
+      node_modules/@medusajs/utils/dist/modules-sdk/index.js
+      node_modules/@medusajs/utils/dist/common/define-config.js
+      node_modules/@medusajs/utils/dist/common/index.js
+      node_modules/@medusajs/utils/dist/auth/token.js
+      node_modules/@medusajs/utils/dist/auth/index.js
+      node_modules/@medusajs/utils/dist/index.js
+      node_modules/@medusajs/framework/dist/utils/index.js
+      node_modules/@medusajs/test-utils/dist/database.js
+      node_modules/@medusajs/test-utils/dist/index.js
+      src/tests/integration/orders-global-admin.test.ts
+
+      at Object.<anonymous>.exports.default (node_modules/@medusajs/medusa/src/loaders/api.ts:72:11)
+          at async Promise.allSettled (index 2)
+      at promiseAll (node_modules/@medusajs/utils/src/common/promise-all.ts:27:18)
+      at loadEntrypoints (node_modules/@medusajs/medusa/src/loaders/index.ts:117:26)
+      at Object.<anonymous>.exports.default (node_modules/@medusajs/medusa/src/loaders/index.ts:219:7)
+      at bootstrapApp (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/bootstrap-app.ts:24:37)
+      at startApp (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/bootstrap-app.ts:61:9)
+      at MedusaTestRunner.setupApplication (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:200:11)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:265:7)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:7)
+
+  ?  � Orders Global Admin APIs (PLAN) � supports bulk mark as in_production and exposes refund stub endpoint
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions 
+(node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+Test Suites: 1 failed, 1 total
+Tests:       5 failed, 5 total
+Snapshots:   0 total
+Time:        21.568 s, estimated 31 s
+Ran all test suites matching /src\\tests\\integration\\orders-global-admin.test.ts/i.
+
+
+[2026-02-04T16:31:02] CMD: node --experimental-vm-modules .\\node_modules\\jest\\bin\\jest.js --config=jest.integration.config.js src/tests/integration/orders-global-admin.test.ts --runInBand --silent=false
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:32512) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules .\\node_modules\\jest\\bin\\jest.js -- ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:32512) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+PASS src/tests/integration/orders-global-admin.test.ts (49.087 s)
+    Orders Global Admin APIs (PLAN)
+      v lists orders with filters and returns plan_status mapping (2913 ms)
+      v enforces shipped tracking_number and updates earnings when delivered (6650 ms)
+      v lists order items for the Order Items tab (6179 ms)
+      v exports orders to CSV for the current filter set (5949 ms)
+      v supports bulk mark as in_production and exposes refund stub endpoint (6168 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        49.228 s
+Ran all test suites matching /src\\tests\\integration\\orders-global-admin.test.ts/i.
+
+
+[2026-02-04T16:33:33] CMD: Select-String -Path .\\src\\admin\\routes\\orders-global\\page.tsx -Pattern '<Table.HeaderCell>Order ID</Table.HeaderCell>' -Context 2,20 | Select-Object -First 1
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+  src\admin\routes\orders-global\page.tsx:467:          <Table.Header>
+  src\admin\routes\orders-global\page.tsx:468:            <Table.Row>
+> src\admin\routes\orders-global\page.tsx:469:              <Table.HeaderCell>Order ID</Table.HeaderCell>
+  src\admin\routes\orders-global\page.tsx:470:              <Table.HeaderCell>Customer</Table.HeaderCell>
+  src\admin\routes\orders-global\page.tsx:471:              <Table.HeaderCell>Business</Table.HeaderCell>
+  src\admin\routes\orders-global\page.tsx:472:              <Table.HeaderCell>Date</Table.HeaderCell>
+  src\admin\routes\orders-global\page.tsx:473:              <Table.HeaderCell 
+className="text-right">Total</Table.HeaderCell>
+  src\admin\routes\orders-global\page.tsx:474:              <Table.HeaderCell>Status</Table.HeaderCell>
+  src\admin\routes\orders-global\page.tsx:475:              <Table.HeaderCell>Actions</Table.HeaderCell>
+  src\admin\routes\orders-global\page.tsx:476:            </Table.Row>
+  src\admin\routes\orders-global\page.tsx:477:          </Table.Header>
+  src\admin\routes\orders-global\page.tsx:478:          <Table.Body>
+  src\admin\routes\orders-global\page.tsx:479:            {loading ? (
+  src\admin\routes\orders-global\page.tsx:480:              <Table.Row>
+  src\admin\routes\orders-global\page.tsx:481:                <Table.Cell colSpan={7}>
+  src\admin\routes\orders-global\page.tsx:482:                  <div className="text-sm text-ui-fg-subtle 
+p-3">Loading�</div>
+  src\admin\routes\orders-global\page.tsx:483:                </Table.Cell>
+  src\admin\routes\orders-global\page.tsx:484:              </Table.Row>
+  src\admin\routes\orders-global\page.tsx:485:            ) : rows.length === 0 ? (
+  src\admin\routes\orders-global\page.tsx:486:              <Table.Row>
+  src\admin\routes\orders-global\page.tsx:487:                <Table.Cell colSpan={7}>
+  src\admin\routes\orders-global\page.tsx:488:                  <div className="text-sm text-ui-fg-subtle p-3">No 
+orders found.</div>
+  src\admin\routes\orders-global\page.tsx:489:                </Table.Cell>
+
+
+
+
+[2026-02-04T16:33:47] CMD: Select-String -Path .\\src\\admin\\routes\\orders-global\\page.tsx -Pattern '<Table.Row key={r.id}' -Context 0,6 | Select-Object -First 2
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+> src\admin\routes\orders-global\page.tsx:495:                  <Table.Row key={r.id} onClick={() => void 
+openOrderDetail(r.id)} className="cursor-pointer">
+  src\admin\routes\orders-global\page.tsx:496:                    <Table.Cell>
+  src\admin\routes\orders-global\page.tsx:497:                      <div className="flex flex-col">
+  src\admin\routes\orders-global\page.tsx:498:                        <span className="font-mono text-xs">{r.id}</span>
+  src\admin\routes\orders-global\page.tsx:499:                        {r.display_id != null ? <span className="text-xs 
+text-ui-fg-subtle">#{r.display_id}</span> : null}
+  src\admin\routes\orders-global\page.tsx:500:                      </div>
+  src\admin\routes\orders-global\page.tsx:501:                    </Table.Cell>
+
+
+
+
+[2026-02-04T16:34:41] CMD: Select-String -Path .\\src\\admin\\routes\\orders-global\\page.tsx -Pattern 'detailOpen' -Context 0,8 | Select-Object -First 1
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+> src\admin\routes\orders-global\page.tsx:120:  const [detailOpen, setDetailOpen] = useState(false)
+  src\admin\routes\orders-global\page.tsx:121:  const [detailLoading, setDetailLoading] = useState(false)
+  src\admin\routes\orders-global\page.tsx:122:  const [activeOrderId, setActiveOrderId] = useState<string | null>(null)
+  src\admin\routes\orders-global\page.tsx:123:  const [activeOrder, setActiveOrder] = useState<any | null>(null)
+  src\admin\routes\orders-global\page.tsx:124:
+  src\admin\routes\orders-global\page.tsx:125:  const abortOrders = useRef<AbortController | null>(null)
+  src\admin\routes\orders-global\page.tsx:126:  const abortItems = useRef<AbortController | null>(null)
+  src\admin\routes\orders-global\page.tsx:127:
+  src\admin\routes\orders-global\page.tsx:128:  const offset = page * LIMIT
+
+
+
+
+[2026-02-04T16:35:03] CMD: Select-String -Path .\\src\\admin\\routes\\orders-global\\page.tsx -Pattern 'const bulkMarkInProduction' -Context 0,20 | Select-Object -First 1
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+> src\admin\routes\orders-global\page.tsx:342:  const bulkMarkInProduction = async () => {
+  src\admin\routes\orders-global\page.tsx:343:    const ids = Array.from(selected)
+  src\admin\routes\orders-global\page.tsx:344:    if (!ids.length) {
+  src\admin\routes\orders-global\page.tsx:345:      toast.error("Select at least one order")
+  src\admin\routes\orders-global\page.tsx:346:      return
+  src\admin\routes\orders-global\page.tsx:347:    }
+  src\admin\routes\orders-global\page.tsx:348:
+  src\admin\routes\orders-global\page.tsx:349:    try {
+  src\admin\routes\orders-global\page.tsx:350:      const res = await fetch("/admin/custom/orders/bulk/fulfillment", {
+  src\admin\routes\orders-global\page.tsx:351:        method: "POST",
+  src\admin\routes\orders-global\page.tsx:352:        credentials: "include",
+  src\admin\routes\orders-global\page.tsx:353:        headers: { "Content-Type": "application/json" },
+  src\admin\routes\orders-global\page.tsx:354:        body: JSON.stringify({ order_ids: ids, status: "in_production" 
+}),
+  src\admin\routes\orders-global\page.tsx:355:      })
+  src\admin\routes\orders-global\page.tsx:356:      if (!res.ok) {
+  src\admin\routes\orders-global\page.tsx:357:        const text = await res.text().catch(() => "")
+  src\admin\routes\orders-global\page.tsx:358:        throw new Error(text || `HTTP ${res.status}`)
+  src\admin\routes\orders-global\page.tsx:359:      }
+  src\admin\routes\orders-global\page.tsx:360:      toast.success("Bulk updated", { description: `Marked ${ids.length} 
+order(s) as In Production.` })
+  src\admin\routes\orders-global\page.tsx:361:      setSelected(new Set())
+  src\admin\routes\orders-global\page.tsx:362:      await Promise.all([fetchOrders(), fetchOrderItems()])
+
+
+
+
+[2026-02-04T16:35:13] CMD: Get-Content .\\src\\admin\\routes\\orders-global\\page.tsx | Select-Object -Skip 330 -First 80
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  const printPackingSlips = () => {
+    const ids = Array.from(selected)
+    if (!ids.length) {
+      toast.error("Select at least one order")
+      return
+    }
+    const params = new URLSearchParams()
+    params.set("ids", ids.join(","))
+    window.open(`/admin/custom/orders/packing-slips/export?${params.toString()}`, "_blank", "noopener")
+  }
+
+  const bulkMarkInProduction = async () => {
+    const ids = Array.from(selected)
+    if (!ids.length) {
+      toast.error("Select at least one order")
+      return
+    }
+
+    try {
+      const res = await fetch("/admin/custom/orders/bulk/fulfillment", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_ids: ids, status: "in_production" }),
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+      toast.success("Bulk updated", { description: `Marked ${ids.length} order(s) as In Production.` })
+      setSelected(new Set())
+      await Promise.all([fetchOrders(), fetchOrderItems()])
+    } catch (e) {
+      toast.error("Bulk update failed", { description: e instanceof Error ? e.message : "Unknown error" })
+    }
+  }
+
+  const currency = "USD"
+  const allOnPageSelected = rows.length > 0 && rows.every((r) => selected.has(r.id))
+
+  return (
+    <Container>
+      <Toaster />
+
+      <div className="flex items-start justify-between gap-4 mb-6">
+        <div>
+          <Heading level="h1">Orders (Global)</Heading>
+          <div className="text-sm text-ui-fg-subtle">Cross-tenant order search (PLAN).</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={exportCsv}>
+            Export CSV
+          </Button>
+          <Button variant="secondary" onClick={printPackingSlips} disabled={selected.size === 0}>
+            Print Packing Slips
+          </Button>
+          <Button onClick={bulkMarkInProduction} disabled={selected.size === 0}>
+            Bulk: In Production
+          </Button>
+          <Button variant="secondary" onClick={clearFilters}>
+            Clear
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3 mb-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-2">
+          <Input
+            value={q}
+            onChange={(e) => {
+              setQ(e.target.value)
+              setPage(0)
+            }}
+            placeholder="Search order ID, product name, client, business…"
+            className="w-full md:w-[420px]"
+          />
+          <Select value={businessId} onValueChange={(v) => { setBusinessId(v); setPage(0) }}>
+            <Select.Trigger className="w-full md:w-[260px]">
+              <Select.Value placeholder="All businesses" />
+            </Select.Trigger>
+...(truncated)
+
+[2026-02-04T16:35:41] CMD: Select-String -Path .\\src\\admin\\routes\\orders-global\\page.tsx -Pattern '<Drawer open={detailOpen}' -Context 0,120 | Select-Object -First 1
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+> src\admin\routes\orders-global\page.tsx:712:      <Drawer open={detailOpen} onOpenChange={setDetailOpen}>
+  src\admin\routes\orders-global\page.tsx:713:        <Drawer.Content className="max-w-[920px]">
+  src\admin\routes\orders-global\page.tsx:714:          <Drawer.Header>
+  src\admin\routes\orders-global\page.tsx:715:            <Drawer.Title>Order detail</Drawer.Title>
+  src\admin\routes\orders-global\page.tsx:716:            <Drawer.Description>{activeOrderId ? activeOrderId : 
+""}</Drawer.Description>
+  src\admin\routes\orders-global\page.tsx:717:          </Drawer.Header>
+  src\admin\routes\orders-global\page.tsx:718:          <Drawer.Body>
+  src\admin\routes\orders-global\page.tsx:719:            {detailLoading ? (
+  src\admin\routes\orders-global\page.tsx:720:              <div className="text-sm text-ui-fg-subtle">Loading...</div>
+  src\admin\routes\orders-global\page.tsx:721:            ) : !activeOrder ? (
+  src\admin\routes\orders-global\page.tsx:722:              <div className="text-sm text-ui-fg-subtle">No order 
+loaded.</div>
+  src\admin\routes\orders-global\page.tsx:723:            ) : (
+  src\admin\routes\orders-global\page.tsx:724:              <div className="space-y-4">
+  src\admin\routes\orders-global\page.tsx:725:                <div className="flex items-center justify-between gap-3">
+  src\admin\routes\orders-global\page.tsx:726:                  <div>
+  src\admin\routes\orders-global\page.tsx:727:                    <div className="text-xs 
+text-ui-fg-subtle">Order</div>
+  src\admin\routes\orders-global\page.tsx:728:                    <div className="font-mono 
+text-sm">{activeOrder.id}</div>
+  src\admin\routes\orders-global\page.tsx:729:                    {activeOrder.display_id != null ? (
+  src\admin\routes\orders-global\page.tsx:730:                      <div className="text-xs 
+text-ui-fg-subtle">#{activeOrder.display_id}</div>
+  src\admin\routes\orders-global\page.tsx:731:                    ) : null}
+  src\admin\routes\orders-global\page.tsx:732:                    <div className="text-xs text-ui-fg-subtle mt-1">
+  src\admin\routes\orders-global\page.tsx:733:                      Placed: {activeOrder.created_at ? new 
+Date(activeOrder.created_at).toLocaleString() : "-"}
+  src\admin\routes\orders-global\page.tsx:734:                    </div>
+  src\admin\routes\orders-global\page.tsx:735:                  </div>
+  src\admin\routes\orders-global\page.tsx:736:                  <Badge 
+color={statusBadge(activeOrder.plan_status).color}>
+  src\admin\routes\orders-global\page.tsx:737:                    {statusBadge(activeOrder.plan_status).label}
+  src\admin\routes\orders-global\page.tsx:738:                  </Badge>
+  src\admin\routes\orders-global\page.tsx:739:                </div>
+  src\admin\routes\orders-global\page.tsx:740:
+  src\admin\routes\orders-global\page.tsx:741:                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  src\admin\routes\orders-global\page.tsx:742:                  <div className="rounded border p-3">
+  src\admin\routes\orders-global\page.tsx:743:                    <div className="text-xs font-medium 
+mb-2">Customer</div>
+  src\admin\routes\orders-global\page.tsx:744:                    <div 
+className="text-sm">{safeName(activeOrder.customer)}</div>
+  src\admin\routes\orders-global\page.tsx:745:                    <div className="text-xs text-ui-fg-subtle">
+  src\admin\routes\orders-global\page.tsx:746:                      {activeOrder.customer?.email || activeOrder.email 
+|| ""}
+  src\admin\routes\orders-global\page.tsx:747:                    </div>
+  src\admin\routes\orders-global\page.tsx:748:                    <div className="text-xs text-ui-fg-subtle mt-2">
+  src\admin\routes\orders-global\page.tsx:749:                      Shipping:{" "}
+  src\admin\routes\orders-global\page.tsx:750:                      {activeOrder.shipping_address
+  src\admin\routes\orders-global\page.tsx:751:                        ? `${activeOrder.shipping_address.address_1 || 
+""} ${activeOrder.shipping_address.city || ""} ${activeOrder.shipping_address.province || ""} 
+${activeOrder.shipping_address.postal_code || ""}`
+  src\admin\routes\orders-global\page.tsx:752:                        : "�"}
+  src\admin\routes\orders-global\page.tsx:753:                    </div>
+  src\admin\routes\orders-global\page.tsx:754:                  </div>
+  src\admin\routes\orders-global\page.tsx:755:                  <div className="rounded border p-3">
+  src\admin\routes\orders-global\page.tsx:756:                    <div className="text-xs font-medium 
+mb-2">Business</div>
+  src\admin\routes\orders-global\page.tsx:757:                    <div className="flex items-center gap-2">
+  src\admin\routes\orders-global\page.tsx:758:                      <Avatar
+  src\admin\routes\orders-global\page.tsx:759:                        size="2xsmall"
+  src\admin\routes\orders-global\page.tsx:760:                        fallback={(activeOrder.business?.name || 
+"B").slice(0, 1).toUpperCase()}
+  src\admin\routes\orders-global\page.tsx:761:                        src={activeOrder.business?.logo_url || undefined}
+  src\admin\routes\orders-global\page.tsx:762:                      />
+  src\admin\routes\orders-global\page.tsx:763:                      <div 
+className="text-sm">{activeOrder.business?.name || activeOrder.business_id || "�"}</div>
+  src\admin\routes\orders-global\page.tsx:764:                    </div>
+  src\admin\routes\orders-global\page.tsx:765:                    <div className="text-xs text-ui-fg-subtle mt-2">
+  src\admin\routes\orders-global\page.tsx:766:                      Platform commission: 
+{formatMoney(activeOrder.platform_commission_cents || 0, currency)}
+  src\admin\routes\orders-global\page.tsx:767:                    </div>
+  src\admin\routes\orders-global\page.tsx:768:                  </div>
+  src\admin\routes\orders-global\page.tsx:769:                </div>
+  src\admin\routes\orders-global\page.tsx:770:
+  src\admin\routes\orders-global\page.tsx:771:                <div className="rounded border p-3">
+  src\admin\routes\orders-global\page.tsx:772:                  <div className="text-xs font-medium mb-2">Line 
+items</div>
+  src\admin\routes\orders-global\page.tsx:773:                  <div className="space-y-2">
+...(truncated)
+
+[2026-02-04T16:37:24] CMD: Select-String -Path .\\src\\admin\\routes\\earnings\\page.tsx -Pattern 'const EarningsPage' -Context 0,10 | Select-Object -First 1
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+> src\admin\routes\earnings\page.tsx:123:const EarningsPage = () => {
+  src\admin\routes\earnings\page.tsx:124:  const [businesses, setBusinesses] = useState<any[]>([])
+  src\admin\routes\earnings\page.tsx:125:  const businessById = useMemo(() => new Map((businesses || []).map((b: any) 
+=> [b.id, b])), [businesses])
+  src\admin\routes\earnings\page.tsx:126:
+  src\admin\routes\earnings\page.tsx:127:  const [summary, setSummary] = useState<EarningsSummary | null>(null)
+  src\admin\routes\earnings\page.tsx:128:  const [summaryLoading, setSummaryLoading] = useState(true)
+  src\admin\routes\earnings\page.tsx:129:
+  src\admin\routes\earnings\page.tsx:130:  const [rows, setRows] = useState<EarningRow[]>([])
+  src\admin\routes\earnings\page.tsx:131:  const [count, setCount] = useState(0)
+  src\admin\routes\earnings\page.tsx:132:  const [loading, setLoading] = useState(true)
+  src\admin\routes\earnings\page.tsx:133:
+
+
+
+
+[2026-02-04T16:38:04] CMD: Select-String -Path .\\src\\admin\\routes\\earnings\\page.tsx -Pattern 'font-mono text-xs' -Context 1,3 | Select-Object -First 4
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+  src\admin\routes\earnings\page.tsx:507:                    <Table.Cell>
+> src\admin\routes\earnings\page.tsx:508:                      {e.order_id ? <span className="font-mono 
+text-xs">{e.order_id}</span> : <span className="text-ui-fg-subtle">-</span>}
+  src\admin\routes\earnings\page.tsx:509:                    </Table.Cell>
+  src\admin\routes\earnings\page.tsx:510:                    <Table.Cell>
+  src\admin\routes\earnings\page.tsx:511:                      <div className="flex items-center gap-2">
+  src\admin\routes\earnings\page.tsx:593:                    <Table.Cell>
+> src\admin\routes\earnings\page.tsx:594:                      <span className="font-mono text-xs">{p.id}</span>
+  src\admin\routes\earnings\page.tsx:595:                    </Table.Cell>
+  src\admin\routes\earnings\page.tsx:596:                    <Table.Cell>{p.created_at ? new 
+Date(p.created_at).toLocaleString() : "-"}</Table.Cell>
+  src\admin\routes\earnings\page.tsx:597:                    <Table.Cell 
+className="text-right">{formatMoney(asCents(p.amount), currency)}</Table.Cell>
+
+
+
+
+[2026-02-04T16:38:25] CMD: Get-Content .\\src\\admin\\routes\\earnings\\page.tsx | Select-Object -Last 80
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+              Clear all
+            </Button>
+            <Drawer.Close asChild>
+              <Button>Done</Button>
+            </Drawer.Close>
+          </Drawer.Footer>
+        </Drawer.Content>
+      </Drawer>
+
+      <Drawer open={payoutOpen} onOpenChange={setPayoutOpen}>
+        <Drawer.Content className="max-w-[560px]">
+          <Drawer.Header>
+            <Drawer.Title>Request payout</Drawer.Title>
+            <Drawer.Description>Method: Stripe/ACH/Wire. Amount max = available payout for the selected business.</Drawer.Description>
+          </Drawer.Header>
+          <Drawer.Body>
+            <div className="space-y-4">
+              <div className="text-xs text-ui-fg-subtle">
+                {selectedBusinessIds.length === 1
+                  ? `Business: ${(businessById.get(selectedBusinessIds[0])?.name as string) || selectedBusinessIds[0]}`
+                  : "Select exactly one business in Filters to request a payout."}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <div className="text-xs font-medium mb-1">Method</div>
+                  <Select value={payoutMethod} onValueChange={(v) => setPayoutMethod(v as any)}>
+                    <Select.Trigger>
+                      <Select.Value />
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="stripe_connect">Stripe</Select.Item>
+                      <Select.Item value="ach">ACH</Select.Item>
+                      <Select.Item value="wire">Wire</Select.Item>
+                    </Select.Content>
+                  </Select>
+                  <div className="text-xs text-ui-fg-subtle mt-1">Estimated arrival: {estimateArrival(payoutMethod)}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-medium mb-1">Amount (USD)</div>
+                  <Input value={payoutAmount} onChange={(e) => setPayoutAmount(e.target.value)} placeholder="0.00" />
+                  <div className="text-xs text-ui-fg-subtle mt-1">Max available: {formatMoney(availablePayout, currency)}</div>
+                </div>
+              </div>
+
+              {payoutMethod === "ach" || payoutMethod === "wire" ? (
+                <div>
+                  <div className="text-xs font-medium mb-1">Destination account</div>
+                  <Input value={destinationAccount} onChange={(e) => setDestinationAccount(e.target.value)} placeholder="Bank account / routing ref" />
+                </div>
+              ) : null}
+
+              <label className="flex items-start gap-2 text-sm">
+                <input type="checkbox" checked={confirmPayout} onChange={(e) => setConfirmPayout(e.target.checked)} />
+                <span>Are you sure you want to request this payout? This will lock eligible earnings as paid out.</span>
+              </label>
+            </div>
+          </Drawer.Body>
+          <Drawer.Footer className="flex items-center justify-end gap-2">
+            <Drawer.Close asChild>
+              <Button variant="secondary" disabled={creatingPayout}>
+                Cancel
+              </Button>
+            </Drawer.Close>
+            <Button disabled={creatingPayout || selectedBusinessIds.length !== 1} onClick={requestPayout}>
+              {creatingPayout ? "Requesting…" : "Request payout"}
+            </Button>
+          </Drawer.Footer>
+        </Drawer.Content>
+      </Drawer>
+    </Container>
+  )
+}
+
+export const config = defineRouteConfig({
+  label: "Earnings",
+  icon: "CurrencyDollar",
+})
+
+export default EarningsPage
+...(truncated)
+
+[2026-02-04T16:38:55] CMD: npm run build
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 build
+> medusa build
+
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from D:\GitHub\TheRxSpot_Marketplace\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa\server" folder
+[32minfo[39m:    Compiling frontend source...
+[96msrc/api/admin/custom/orders/export/route.ts[0m:[93m99[0m:[93m34[0m - [91merror[0m[90m TS2339: 
+[0mProperty 'name' does not exist on type '{}'.
+
+[7m99[0m         business_name: business?.name || "",
+[7m  [0m [91m                                 ~~~~[0m
+[96msrc/api/admin/custom/orders/items/route.ts[0m:[93m102[0m:[93m97[0m - [91merror[0m[90m TS2345: 
+[0mArgument of type 'unknown[]' is not assignable to parameter of type 'string[]'.
+  Type 'unknown' is not assignable to type 'string'.
+
+[7m102[0m     const customers = await listByIds<any>(customerService.listCustomers.bind(customerService), 
+customerIds, customerIds.length)
+[7m   [0m [91m                                                                                                
+~~~~~~~~~~~[0m
+[96msrc/api/admin/custom/orders/packing-slips/export/route.ts[0m:[93m93[0m:[93m31[0m - [91merror[0m[90m 
+TS2339: [0mProperty 'name' does not exist on type '{}'.
+
+[7m93[0m               <div>${esc(biz?.name || bizId || "�")}</div>
+[7m  [0m [91m                              ~~~~[0m
+[96msrc/api/admin/custom/orders/route.ts[0m:[93m97[0m:[93m97[0m - [91merror[0m[90m TS2345: [0mArgument of 
+type 'unknown[]' is not assignable to parameter of type 'string[]'.
+  Type 'unknown' is not assignable to type 'string'.
+
+[7m97[0m     const customers = await listByIds<any>(customerService.listCustomers.bind(customerService), 
+customerIds, customerIds.length)
+[7m  [0m [91m                                                                                                
+~~~~~~~~~~~[0m
+
+[33mwarn[39m:    Backend build completed with errors (10.04s)
+[32minfo[39m:    Frontend build completed successfully (40.09s)
+
+
+[2026-02-04T16:40:48] CMD: npm run build
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 build
+> medusa build
+
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from D:\GitHub\TheRxSpot_Marketplace\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa\server" folder
+[32minfo[39m:    Compiling frontend source...
+[32minfo[39m:    Backend build completed successfully (9.89s)
+[32minfo[39m:    Frontend build completed successfully (39.61s)
+
+
+[2026-02-04T16:41:49] CMD: node --experimental-vm-modules .\\node_modules\\jest\\bin\\jest.js --config=jest.integration.config.js src/tests/integration/earnings-management-admin.test.ts --runInBand --silent=false
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:4208) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules .\\node_modules\\jest\\bin\\jest.js -- ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:4208) Exp...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+PASS src/tests/integration/earnings-management-admin.test.ts (30.264 s)
+    Earnings Management Admin APIs (PLAN)
+      v lists earnings with plan status/type mapping and supports CSV export (2820 ms)
+      v allows platform-wide summary when no business_id is provided (6111 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        30.402 s
+Ran all test suites matching /src\\tests\\integration\\earnings-management-admin.test.ts/i.
+
+
+[2026-02-04T16:42:38] CMD: node --experimental-vm-modules .\\node_modules\\jest\\bin\\jest.js --config=jest.integration.config.js src/tests/integration/orders-global-admin.test.ts --runInBand --silent=false
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:25896) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules .\\node_modules\\jest\\bin\\jest.js -- ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:25896) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+PASS src/tests/integration/orders-global-admin.test.ts (48.875 s)
+    Orders Global Admin APIs (PLAN)
+      v lists orders with filters and returns plan_status mapping (2954 ms)
+      v enforces shipped tracking_number and updates earnings when delivered (6511 ms)
+      v lists order items for the Order Items tab (5915 ms)
+      v exports orders to CSV for the current filter set (5986 ms)
+      v supports bulk mark as in_production and exposes refund stub endpoint (6289 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        49.016 s, estimated 50 s
+Ran all test suites matching /src\\tests\\integration\\orders-global-admin.test.ts/i.
+
+
+[2026-02-04T16:43:42] CMD: Select-String -Path .\\PRD_CHECKLIST.md -Pattern 'Earnings Management Page' -Context 0,4
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+> PRD_CHECKLIST.md:199:- [ ] Earnings Management Page (12h)
+  PRD_CHECKLIST.md:200:  - [ ] Create src/admin/routes/earnings/page.tsx
+  PRD_CHECKLIST.md:201:  - [ ] Summary Cards (top row, 5 metrics):
+  PRD_CHECKLIST.md:202:  - [ ] Pending Payout (amount available to withdraw)
+  PRD_CHECKLIST.md:203:  - [ ] Total Earnings (lifetime, all businesses)
+
+
+
+
+[2026-02-04T16:43:52] CMD: Get-Content .\\PRD_CHECKLIST.md | Select-Object -Skip 180 -First 110
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  - [ ] [Mark Complete] (if scheduled)
+  - [ ] [Approve] (if completed)
+  - [ ] [Reject] (if completed) → requires rejection reason
+  - [ ] Rejection reason field (if rejected)
+- [ ] Documents Section:
+  - [ ] Uploaded documents list (filename, type, size, uploaded by, timestamp)
+  - [ ] [Download] button per document
+  - [ ] [Upload New Document] button → file picker
+  - [ ] Document preview (PDFs render inline, images show thumbnail)
+  - [ ] Support drag-and-drop upload
+- [ ] Notes Section:
+  - [ ] Clinician notes (rich text editor)
+  - [ ] Admin notes (internal, not visible to patient)
+  - [ ] Auto-save every 5 seconds
+- [ ] Status History Timeline:
+  - [ ] Visual timeline showing all status changes
+  - [ ] User who made change, timestamp, old status → new status
+  - [ ] Related events (document uploaded, clinician assigned)
+- [ ] Earnings Management Page (12h)
+  - [ ] Create src/admin/routes/earnings/page.tsx
+  - [ ] Summary Cards (top row, 5 metrics):
+  - [ ] Pending Payout (amount available to withdraw)
+  - [ ] Total Earnings (lifetime, all businesses)
+  - [ ] Commission Balance (platform's earned commission)
+  - [ ] Available Payout (cleared funds ready for transfer)
+  - [ ] Commission Pending (commission on pending orders)
+  - [ ] Earnings Table:
+  - [ ] Columns: Order ID, Business, Date, Type (Commission/Consult Fee/Service Fee), Amount, Payment Method, Status
+  - [ ] Color-coded amounts: positive (green text), negative (red text for refunds)
+  - [ ] Clickable order ID → opens order detail
+  - [ ] Business column shows logo + name
+  - [ ] Status badges: Completed/Pending/Paid Out/Refunded
+  - [ ] Search & Filters:
+  - [ ] Search by order ID
+  - [ ] Filter by business (multi-select dropdown)
+  - [ ] Filter by type (commission/consult fee/service fee)
+  - [ ] Filter by status (completed/pending/paid out)
+  - [ ] Date range picker (last 7 days, 30 days, 90 days, custom)
+  - [ ] Payout Request Flow:
+  - [ ] [Request Payout] button (top right)
+  - [ ] Modal: Select payout method (Stripe/ACH/Wire), enter amount (max = available)
+  - [ ] Display estimated arrival (Stripe=2 days, ACH=3-5 days, Wire=1 day)
+  - [ ] Require confirmation ("Are you sure you want to request $X payout?")
+  - [ ] Create payout record, send email confirmation
+  - [ ] Payout History Section (below earnings table):
+  - [ ] List all payout requests
+  - [ ] Columns: ID, Date Requested, Amount, Method, Status (Pending/In Transit/Completed/Failed), Arrival Date
+  - [ ] Download receipt/proof of transfer
+  - [ ] Export Functions:
+  - [ ] Export earnings to CSV (filtered by current filters)
+  - [ ] Export payout history to PDF
+  - [ ] Generate monthly earnings report (P&L statement)
+- [ ] Orders Page Expansion (10h)
+  - [ ] Expand src/admin/routes/orders-global/page.tsx
+  - [ ] Advanced Search:
+  - [ ] Search by order ID (exact match)
+  - [ ] Search by product name (partial match)
+  - [ ] Search by client name (first + last name)
+  - [ ] Search by business name
+  - [ ] Filters:
+  - [ ] Status filter (multi-select: Pending/In Production/Shipped/Delivered/Cancelled)
+  - [ ] Business filter (dropdown of all businesses)
+  - [ ] Product filter (dropdown of all products)
+  - [ ] Date range (order placed between X and Y)
+  - [ ] Price range (min/max)
+  - [ ] Tabbed Interface:
+  - [ ] Orders Tab (summary view):
+  - [ ] Table: Order ID, Customer, Business, Date, Total, Status, Actions
+  - [ ] Clicking row opens order detail modal
+  - [ ] Order Items Tab (line items view):
+  - [ ] Table: Order ID, Product, Variant, Quantity, Unit Price, Total, Status
+  - [ ] Useful for inventory/fulfillment tracking
+  - [ ] Order Detail Modal:
+  - [ ] Header: Order ID, Status, Placed Date
+  - [ ] Customer info: Name, Email, Phone, Shipping Address
+  - [ ] Business info: Name, Logo, Location
+  - [ ] Line items breakdown:
+  - [ ] Product name, variant, quantity, unit price, total
+  - [ ] Consultation fee (if applicable)
+  - [ ] Pricing breakdown:
+...(truncated)
+
+[2026-02-04T16:45:20] CMD: if (Test-Path .\\docs\\API.md) { 'EXISTS' } else { 'MISSING' }
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+EXISTS
+
+
+[2026-02-04T16:45:27] CMD: Get-Content .\\docs\\API.md | Select-Object -First 80
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+# API Reference (Custom Endpoints)
+
+This project uses Medusa v2 file-based routing under `src/api/**/route.ts`.
+
+## Authentication Notes
+
+- **Store** endpoints require a **publishable API key** header: `x-publishable-api-key`.
+- **Store customer auth** can be a session cookie or a Bearer JWT (depends on your auth flow).
+- **Admin** endpoints require admin authentication (Bearer JWT for a `user` actor, or Basic auth with a secret `sk_` API key).
+
+---
+
+## Store: Consultation Approval
+
+### `GET /store/consultations/approvals?product_id={id}`
+
+Checks whether the authenticated customer has a valid **approved** consultation for the given product within the last **90 days**.
+
+**Headers**
+- `x-publishable-api-key: <publishable_token>`
+- `Authorization: Bearer <customer_jwt>`
+- `x-business-slug: <tenant_slug>` (required for tenant resolution in this repo)
+
+**Response 200**
+```json
+{
+  "has_valid_approval": true,
+  "consultation_id": "consult_123",
+  "expires_at": "2026-05-01T12:00:00.000Z"
+}
+```
+
+**Response 200 (no valid approval)**
+```json
+{
+  "has_valid_approval": false,
+  "consultation_id": null,
+  "expires_at": null
+}
+```
+
+**Example**
+```bash
+curl -sS -X GET \
+  "http://localhost:9000/store/consultations/approvals?product_id=prod_123" \
+  -H "x-publishable-api-key: pk_..." \
+  -H "x-business-slug: acme" \
+  -H "Authorization: Bearer <customer_jwt>"
+```
+
+---
+
+## Admin: Assign Clinician
+
+### `POST /admin/consultations/{id}/assign`
+
+Assigns a clinician to a consultation. If the consultation is still `draft` (treated as "pending" in PLAN terms), the endpoint will move it to `scheduled` and set `scheduled_at` if missing.
+
+Creates a compliance audit log entry and emits a best-effort event `consultation.assigned`.
+
+**Headers**
+- `Authorization: Bearer <admin_user_jwt>`
+
+**Body**
+```json
+{
+  "clinician_id": "clin_123"
+}
+```
+
+**Response 200**
+```json
+{
+  "consultation": {
+    "id": "consult_123",
+    "business_id": "bus_123",
+    "status": "scheduled",
+    "clinician_id": "clin_123",
+    "scheduled_at": "2026-02-04T13:00:00.000Z",
+    "updated_at": "2026-02-04T13:00:01.000Z"
+...(truncated)
+
+[2026-02-04T16:45:39] CMD: Select-String -Path .\\docs\\API.md -Pattern 'Admin: Earnings' -Context 0,1
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+> docs\API.md:225:## Admin: Earnings Summary (PLAN)
+  docs\API.md:226:
+
+
+
+
+[2026-02-04T16:45:47] CMD: Get-Content .\\docs\\API.md | Select-Object -Skip 210 -First 220
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+- `disposition=inline|attachment` (stream mode; defaults to `inline` for PDFs)
+- `signed_url=1` (return JSON with `download_url` instead of streaming)
+- `expires_in=300` (signed URL mode; seconds)
+
+**Example (stream to file)**
+```bash
+curl -sS -L \
+  "http://localhost:9000/admin/documents/doc_123/download" \
+  -H "Authorization: Bearer <admin_user_jwt>" \
+  -o downloaded.pdf
+```
+
+---
+
+## Admin: Earnings Summary (PLAN)
+
+### `GET /admin/earnings/summary`
+
+Returns integer-cent totals for a business over an optional date range.
+
+**Headers**
+- `Authorization: Bearer <admin_user_jwt>`
+
+**Query params**
+- `business_id` (required): the business to summarize
+- `date_from` (optional, ISO date): filter `created_at >= date_from`
+- `date_to` (optional, ISO date): filter `created_at <= date_to`
+
+**Response 200**
+```json
+{
+  "business_id": "bus_123",
+  "date_from": "2026-02-01T00:00:00.000Z",
+  "date_to": "2026-02-04T23:59:59.000Z",
+  "pending_payout": 12000,
+  "total_earnings": 45000,
+  "commission_balance": 33000,
+  "available_payout": 33000,
+  "breakdown": {
+    "commission": 15000,
+    "consultation_fee": 20000,
+    "service_fee": 10000
+  }
+}
+```
+
+**Response 400**
+```json
+{
+  "code": "INVALID_INPUT",
+  "message": "business_id is required"
+}
+```
+
+**Example**
+```bash
+curl -sS -X GET \
+  "http://localhost:9000/admin/earnings/summary?business_id=bus_123&date_from=2026-02-01T00:00:00.000Z&date_to=2026-02-04T23:59:59.000Z" \
+  -H "Authorization: Bearer <admin_user_jwt>"
+```
+
+---
+
+## Admin: Payout Requests (PLAN)
+
+### `POST /admin/payouts`
+
+Creates a payout request from the business's **available** earnings balance.
+
+- Amounts are integer **cents**.
+- Uses basic idempotency via `Idempotency-Key` (header) or `idempotency_key` (body).
+- Marks selected earnings as `paid_out` and links them to the created payout.
+- Writes a compliance audit log entry and emits a best-effort `payout.requested` event (email infra is not wired yet).
+
+**Headers**
+- `Authorization: Bearer <admin_user_jwt>`
+- `Idempotency-Key: <unique_key>` (optional but recommended)
+
+**Body (amount-based payout)**
+```json
+...(truncated)
+
+[2026-02-04T16:45:56] CMD: Select-String -Path .\\docs\\API.md -Pattern '/admin/custom/orders'
+CWD: .
+RESULT: PASS (exit 0)
+
+[2026-02-04T16:46:07] CMD: Get-Content .\\docs\\API.md | Select-Object -Last 40
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  "method": "ach",
+  "destination_account": "acct_ach_123"
+}
+```
+
+**Response 201**
+```json
+{
+  "payout": {
+    "id": "payout_123",
+    "business_id": "bus_123",
+    "status": "pending",
+    "method": "stripe_connect",
+    "net_amount": 25000
+  }
+}
+```
+
+**Response 200 (idempotent re-play)**
+```json
+{
+  "payout": { "id": "payout_123" },
+  "idempotent": true
+}
+```
+
+**Error codes (examples)**
+- `NO_AVAILABLE_BALANCE` (no earnings available)
+- `AMOUNT_EXCEEDS_AVAILABLE` (amount is greater than available balance)
+- `AMOUNT_MISMATCH` (when `earning_entry_ids` is provided, `amount` must match sum)
+
+**Example**
+```bash
+curl -sS -X POST \
+  "http://localhost:9000/admin/payouts" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin_user_jwt>" \
+  -H "Idempotency-Key: payout_bus_123_20260204_0001" \
+  -d '{ "business_id": "bus_123", "amount": 25000, "method": "stripe_connect" }'
+```
+
+
+[2026-02-04T16:47:21] CMD: Write-Output 'NOTE: Earnings+Orders work: npm run build PASS; jest earnings-management-admin + orders-global-admin PASS. UI manual smoke not run here (requires medusa develop + browser). Endpoints added: /admin/custom/orders/items, /admin/custom/orders/export, /admin/custom/orders/packing-slips/export, /admin/custom/orders/bulk/fulfillment, /admin/custom/orders/:id/refund (stub).'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+NOTE: Earnings+Orders work: npm run build PASS; jest earnings-management-admin + orders-global-admin PASS. UI manual smoke not run here (requires medusa develop + browser). Endpoints added: /admin/custom/orders/items, /admin/custom/orders/export, /admin/custom/orders/packing-slips/export, /admin/custom/orders/bulk/fulfillment, /admin/custom/orders/:id/refund (stub).
+
+
+[2026-02-04T16:47:45] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M PRD_CHECKLIST.md
+ M docs/API.md
+ M progress.txt
+ M src/admin/routes/orders-global/page.tsx
+ M src/api/admin/custom/orders/route.ts
+ M src/tests/integration/orders-global-admin.test.ts
+?? packages/
+?? render.yaml
+?? src/admin/routes/earnings/
+?? src/api/admin/custom/orders/[id]/refund/
+?? src/api/admin/custom/orders/bulk/
+?? src/api/admin/custom/orders/export/
+?? src/api/admin/custom/orders/items/
+?? src/api/admin/custom/orders/packing-slips/
+?? src/store/
+?? src/types/
+
+

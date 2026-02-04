@@ -1,15 +1,14 @@
 /**
- * Admin Custom Orders (PLAN)
+ * Admin Orders Export (PLAN)
  *
- * GET /admin/custom/orders
+ * GET /admin/custom/orders/export
  *
- * Used by Orders Page Expansion. Provides cross-tenant order listing with
- * tenant scoping if a business_id exists in the auth context.
+ * Returns CSV for the current filter set, optionally restricted to selected ids.
  */
 
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
-import { BUSINESS_MODULE } from "../../../../modules/business"
+import { BUSINESS_MODULE } from "../../../../../modules/business"
 import {
   asInt,
   derivePlanStatusFromOrder,
@@ -18,35 +17,30 @@ import {
   parseCommaList,
   parseIsoDate,
   type PlanOrderStatus,
-} from "./_helpers"
+} from "../_helpers"
 
 function unique<T>(values: (T | null | undefined)[]): T[] {
   return Array.from(new Set(values.filter((v): v is T => v != null)))
 }
 
-async function listByIds<T>(
-  fn: (filters: any, options: any) => Promise<[T[], number] | T[]>,
-  ids: string[],
-  take: number
-): Promise<T[]> {
-  if (!ids.length) return []
-  const res: any = await fn({ id: ids }, { take })
-  return Array.isArray(res?.[0]) ? (res[0] as T[]) : (res as T[])
+function csvEscape(value: any): string {
+  const str = value == null ? "" : String(value)
+  if (/[",\r\n]/.test(str)) {
+    return `"${str.replace(/"/g, '""')}"`
+  }
+  return str
 }
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   try {
     const orderService = req.scope.resolve(Modules.ORDER) as any
-    const customerService = req.scope.resolve(Modules.CUSTOMER) as any
     const businessService = req.scope.resolve(BUSINESS_MODULE) as any
 
     const query = req.query as Record<string, any>
-    const limit = Math.min(Math.max(asInt(query.limit, 25), 1), 100)
-    const offset = Math.max(asInt(query.offset, 0), 0)
-
     const q = typeof query.q === "string" ? query.q.trim() : ""
-
     const statuses = parseCommaList(query.status) as PlanOrderStatus[]
+    const ids = parseCommaList(query.ids)
+
     const businessIdRaw = typeof query.business_id === "string" ? query.business_id.trim() : ""
     const tenantBusinessId = getOptionalTenantBusinessId(req)
     if (tenantBusinessId && businessIdRaw && businessIdRaw !== tenantBusinessId) {
@@ -68,38 +62,36 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const minTotal = query.min_total != null ? asInt(query.min_total, NaN as any) : null
     const maxTotal = query.max_total != null ? asInt(query.max_total, NaN as any) : null
 
-    const scanTarget = q || statuses.length || effectiveBusinessId || productId || dateFrom || dateTo || minTotal != null || maxTotal != null
-      ? 10000
-      : Math.min(Math.max(offset + limit, 200), 10000)
-
+    const scanTarget = 10000
     const filters: any = {}
     if (dateFrom || dateTo) {
       filters.created_at = {}
       if (dateFrom) filters.created_at.$gte = dateFrom
       if (dateTo) filters.created_at.$lte = dateTo
     }
+    if (ids.length) {
+      filters.id = ids
+    }
 
     const [orders] = await orderService.listAndCountOrders(filters, {
       take: scanTarget,
       skip: 0,
       order: { created_at: "DESC" },
-      select: ["id", "display_id", "created_at", "currency_code", "total", "metadata", "customer_id", "email", "status"],
-      relations: ["items", "shipping_address", "shipping_methods"],
+      select: ["id", "display_id", "created_at", "currency_code", "total", "metadata", "email"],
+      relations: ["items"],
     })
 
     const bizIds = unique((orders || []).map((o: any) => o?.metadata?.business_id as string | undefined))
     const businesses = bizIds.length
-      ? await businessService.listBusinesses({ id: bizIds }, { take: bizIds.length }).catch(() => [])
-      : []
-    const bizById = new Map((businesses || []).map((b: any) => [b.id, b]))
-
-    const customerIds = unique<string>((orders || []).map((o: any) => o?.customer_id as string | undefined))
-    const customers = await listByIds<any>(customerService.listCustomers.bind(customerService), customerIds, customerIds.length)
-    const customerById = new Map((customers || []).map((c: any) => [c.id, c]))
+      ? ((await businessService
+          .listBusinesses({ id: bizIds }, { take: bizIds.length })
+          .catch(() => [])) as any[])
+      : ([] as any[])
+    const bizById = new Map<string, any>((businesses || []).map((b: any) => [b.id, b]))
 
     let rows = (orders || []).map((o: any) => {
       const businessId = (o?.metadata?.business_id as string | undefined) || null
-      const customer = o.customer_id ? customerById.get(o.customer_id) ?? null : null
+      const business = businessId ? (bizById.get(businessId) as any) ?? null : null
       return {
         id: o.id,
         display_id: o.display_id ?? null,
@@ -107,60 +99,79 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         total: o.total ?? 0,
         currency_code: o.currency_code ?? "usd",
         plan_status: derivePlanStatusFromOrder(o),
-        customer,
-        shipping_address: o.shipping_address ?? null,
         business_id: businessId,
-        business: businessId ? bizById.get(businessId) ?? null : null,
-        items: o.items ?? [],
-        metadata: o.metadata ?? {},
+        business_name: business?.name || "",
+        tracking_number: o?.metadata?.tracking_number || "",
+        carrier: o?.metadata?.carrier || "",
+        email: o.email || o?.metadata?.email || "",
+        items_text: (o.items || []).map((it: any) => it.title).join(" | "),
+        item_product_ids: (o.items || []).map((it: any) => it.product_id).filter(Boolean),
       }
     })
 
-    if (effectiveBusinessId) {
-      rows = rows.filter((r: any) => r.business_id === effectiveBusinessId)
-    }
-
+    if (effectiveBusinessId) rows = rows.filter((r: any) => r.business_id === effectiveBusinessId)
     if (statuses.length) {
       const set = new Set(statuses)
       rows = rows.filter((r: any) => set.has(r.plan_status))
     }
-
-    if (productId) {
-      rows = rows.filter((r: any) => (r.items || []).some((it: any) => it.product_id === productId))
-    }
-
-    if (minTotal != null && Number.isFinite(minTotal as any)) {
-      rows = rows.filter((r: any) => (r.total ?? 0) >= (minTotal as any))
-    }
-    if (maxTotal != null && Number.isFinite(maxTotal as any)) {
-      rows = rows.filter((r: any) => (r.total ?? 0) <= (maxTotal as any))
-    }
+    if (productId) rows = rows.filter((r: any) => (r.item_product_ids || []).includes(productId))
+    if (minTotal != null && Number.isFinite(minTotal as any)) rows = rows.filter((r: any) => (r.total ?? 0) >= (minTotal as any))
+    if (maxTotal != null && Number.isFinite(maxTotal as any)) rows = rows.filter((r: any) => (r.total ?? 0) <= (maxTotal as any))
 
     if (q) {
       const qq = normalizeText(q)
       rows = rows.filter((r: any) => {
         if (normalizeText(r.id).includes(qq)) return true
         if (`${r.display_id ?? ""}`.includes(qq)) return true
-        const businessName = normalizeText(r.business?.name || "")
-        if (businessName.includes(qq)) return true
-        const custName = normalizeText(`${r.customer?.first_name || ""} ${r.customer?.last_name || ""}`)
-        if (custName.includes(qq)) return true
-        const email = normalizeText(r.customer?.email || r.metadata?.email || "")
-        if (email.includes(qq)) return true
-        const itemTitles = normalizeText((r.items || []).map((it: any) => it.title).join(" "))
-        if (itemTitles.includes(qq)) return true
+        if (normalizeText(r.business_name).includes(qq)) return true
+        if (normalizeText(r.email).includes(qq)) return true
+        if (normalizeText(r.items_text).includes(qq)) return true
         return false
       })
     }
 
-    const count = rows.length
-    const page = rows.slice(offset, offset + limit)
+    const header = [
+      "order_id",
+      "display_id",
+      "created_at",
+      "business_id",
+      "business_name",
+      "email",
+      "currency",
+      "total_cents",
+      "plan_status",
+      "carrier",
+      "tracking_number",
+      "items",
+    ]
 
-    return res.json({ orders: page, count, limit, offset })
+    const lines = [header.join(",")]
+    for (const r of rows) {
+      lines.push(
+        [
+          csvEscape(r.id),
+          csvEscape(r.display_id ?? ""),
+          csvEscape(r.created_at ? new Date(r.created_at).toISOString() : ""),
+          csvEscape(r.business_id ?? ""),
+          csvEscape(r.business_name ?? ""),
+          csvEscape(r.email ?? ""),
+          csvEscape(r.currency_code ?? "usd"),
+          csvEscape(r.total ?? 0),
+          csvEscape(r.plan_status ?? ""),
+          csvEscape(r.carrier ?? ""),
+          csvEscape(r.tracking_number ?? ""),
+          csvEscape(r.items_text ?? ""),
+        ].join(",")
+      )
+    }
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8")
+    res.setHeader("Content-Disposition", `attachment; filename=\"orders_export.csv\"`)
+    return res.send(lines.join("\n"))
   } catch (error) {
     return res.status(500).json({
       code: "INTERNAL_ERROR",
-      message: "Failed to list orders",
+      message: "Failed to export orders",
       error: error instanceof Error ? error.message : "Unknown error",
     })
   }

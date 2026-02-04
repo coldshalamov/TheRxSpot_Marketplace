@@ -145,7 +145,127 @@ medusaIntegrationTestRunner({
         const updated = await financials.retrieveEarningEntry(earning.id)
         expect(updated.status === "available" || updated.status === "paid_out" || updated.status === "paid").toBe(true)
       })
+
+      it("lists order items for the Order Items tab", async () => {
+        const container = getContainer()
+        const business = await createTestBusiness(container)
+        const customer = await createTestCustomer(container)
+
+        const order = await createTestOrder(container, "pending", {
+          business_id: business.id,
+          customer_id: customer.id,
+          total: 12345,
+          items: [{ title: "Finasteride 1mg", quantity: 2, unit_price: 5000, total: 10000 }],
+          metadata: { fulfillment_status: "pending" },
+        })
+
+        const adminToken = signAdminToken("user_admin_orders_03")
+
+        const items = await api
+          .get(`/admin/custom/orders/items?limit=25&offset=0&q=finasteride`, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .catch((e: any) => e.response)
+
+        if (items.status !== 200) {
+          throw new Error(`Unexpected response: ${items.status} ${JSON.stringify(items.data)}`)
+        }
+
+        const found = (items.data.items || []).find((it: any) => it.order_id === order.id)
+        expect(!!found).toBe(true)
+        expect(String(found.product_title).toLowerCase()).toContain("finasteride")
+      })
+
+      it("exports orders to CSV for the current filter set", async () => {
+        const container = getContainer()
+        const business = await createTestBusiness(container)
+        const customer = await createTestCustomer(container)
+
+        const order = await createTestOrder(container, "pending", {
+          business_id: business.id,
+          customer_id: customer.id,
+          total: 10000,
+          items: [{ title: "Sildenafil", quantity: 1, unit_price: 10000, total: 10000 }],
+          metadata: { fulfillment_status: "pending" },
+        })
+
+        const adminToken = signAdminToken("user_admin_orders_04")
+
+        const csv = await api
+          .get(`/admin/custom/orders/export?ids=${order.id}`, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .catch((e: any) => e.response)
+
+        if (csv.status !== 200) {
+          throw new Error(`Unexpected response: ${csv.status} ${JSON.stringify(csv.data)}`)
+        }
+
+        const ct = `${csv.headers?.["content-type"] || ""}`
+        expect(ct.includes("text/csv")).toBe(true)
+        expect(String(csv.data)).toContain(order.id)
+      })
+
+      it("supports bulk mark as in_production and exposes refund stub endpoint", async () => {
+        const container = getContainer()
+        const business = await createTestBusiness(container)
+        const customer = await createTestCustomer(container)
+
+        const o1 = await createTestOrder(container, "pending", {
+          business_id: business.id,
+          customer_id: customer.id,
+          total: 10000,
+          items: [{ title: "Tadalafil", quantity: 1, unit_price: 10000, total: 10000 }],
+          metadata: { fulfillment_status: "pending" },
+        })
+
+        const o2 = await createTestOrder(container, "pending", {
+          business_id: business.id,
+          customer_id: customer.id,
+          total: 11000,
+          items: [{ title: "Minoxidil", quantity: 1, unit_price: 11000, total: 11000 }],
+          metadata: { fulfillment_status: "pending" },
+        })
+
+        const adminToken = signAdminToken("user_admin_orders_05")
+
+        const bulk = await api
+          .post(
+            `/admin/custom/orders/bulk/fulfillment`,
+            { order_ids: [o1.id, o2.id], status: "in_production" },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          .catch((e: any) => e.response)
+
+        if (bulk.status !== 200) {
+          throw new Error(`Unexpected response: ${bulk.status} ${JSON.stringify(bulk.data)}`)
+        }
+        expect(bulk.data.updated).toBe(2)
+
+        const list = await api
+          .get(`/admin/custom/orders?limit=25&offset=0&status=in_production`, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .catch((e: any) => e.response)
+
+        if (list.status !== 200) {
+          throw new Error(`Unexpected response: ${list.status} ${JSON.stringify(list.data)}`)
+        }
+        const ids = new Set((list.data.orders || []).map((o: any) => o.id))
+        expect(ids.has(o1.id)).toBe(true)
+        expect(ids.has(o2.id)).toBe(true)
+
+        const refund = await api
+          .post(
+            `/admin/custom/orders/${o1.id}/refund`,
+            { reason: "test_refund" },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          .catch((e: any) => e.response)
+
+        expect(refund.status).toBe(501)
+        expect(refund.data.code).toBe("NOT_IMPLEMENTED")
+      })
     })
   },
 })
-
