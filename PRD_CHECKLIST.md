@@ -276,8 +276,8 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
 
 ## Week 5-6: Storefront Completion
 - [ ] Consultation-Gating Logic (8h)
-  - [ ] Create TheRxSpot_Marketplace-storefront/src/lib/data/consultation-approval.ts
-- [ ] export async function checkConsultApproval(productId: string) {
+  - [x] Create TheRxSpot_Marketplace-storefront/src/lib/data/consultation-approval.ts
+- [x] export async function checkConsultApproval(productId: string) {
     - [ ] const response = await fetch(
         - [ ] `${MEDUSA_BACKEND_URL}/store/consultations/approvals?product_id=${productId}`,
         - [ ] { credentials: 'include' }
@@ -290,28 +290,28 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
         - [ ] expires_at: data.expires_at
     - [ ] }
 - [ ] }
-  - [ ] Update TheRxSpot_Marketplace-storefront/src/modules/products/components/product-actions/index.tsx
-  - [ ] Add consultation requirement check on mount
-  - [ ] Show "Consultation Required" banner if product.metadata.requires_consult === 'true'
+  - [x] Update TheRxSpot_Marketplace-storefront/src/modules/products/components/product-actions/index.tsx
+  - [x] Add consultation requirement check on mount
+  - [x] Show "Consultation Required" banner if product.metadata.requires_consult === 'true'
   - [ ] Display consultation fee from product.metadata.consult_fee
-  - [ ] Block "Add to Cart" if consultation not approved
-  - [ ] Show [Complete Consultation] button â†’ opens consultation modal
-  - [ ] After consultation submitted, show "Consultation Pending Approval" message
-  - [ ] Poll for approval status every 10 seconds (if user stays on page)
-  - [ ] Enable "Add to Cart" once approval detected
-  - [ ] Update TheRxSpot_Marketplace-storefront/src/components/consult-form.tsx
-  - [ ] Add loading states during submission
-  - [ ] Show success message with estimated review time
+  - [x] Block "Add to Cart" if consultation not approved
+  - [x] Show [Complete Consultation] button â†’ opens consultation modal
+  - [x] After consultation submitted, show "Consultation Pending Approval" message
+  - [x] Poll for approval status every 10 seconds (if user stays on page)
+  - [x] Enable "Add to Cart" once approval detected
+  - [x] Update TheRxSpot_Marketplace-storefront/src/components/consult-form.tsx
+  - [x] Add loading states during submission
+  - [x] Show success message with estimated review time
   - [ ] Provide option to browse other products while waiting
   - [ ] Send email to customer: "Your consultation request has been received"
-  - [ ] Add consultation fee to cart line items
-  - [ ] When consultation-gated product added, add separate line item for consultation fee
+  - [x] Add consultation fee to cart line items
+  - [x] When consultation-gated product added, add separate line item for consultation fee
   - [ ] Line item: Consultation Fee - {Product Name}, price from metadata
-  - [ ] Link consultation fee line item to consultation record
-  - [ ] Update TheRxSpot_Marketplace-storefront/src/modules/cart/templates/summary.tsx
-  - [ ] Show consultation fees separately in cart summary
-  - [ ] Display: "Consultation Fee(s): $X", "Medication Total: $Y", "Order Total: $Z"
-  - [ ] Show expiration date for consultation approval (90 days from approval)
+  - [x] Link consultation fee line item to consultation record
+  - [x] Update TheRxSpot_Marketplace-storefront/src/modules/cart/templates/summary.tsx
+  - [x] Show consultation fees separately in cart summary
+  - [x] Display: "Consultation Fee(s): $X", "Medication Total: $Y", "Order Total: $Z"
+  - [x] Show expiration date for consultation approval (90 days from approval)
 - [ ] Cart & Checkout Enhancements (10h)
   - [ ] Cart Page Improvements:
   - [ ] Show consultation approval status per product
