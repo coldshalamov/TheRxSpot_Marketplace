@@ -1075,3 +1075,35 @@ ERROR: Add-Content : A positional parameter cannot be found that accepts argumen
 [2026-02-04 09:48:29] COMMAND: ='--experimental-vm-modules'; npx jest src/tests/integration/financial-apis.test.ts --silent=false --runInBand --forceExit
 RESULT: PASS
 DETAIL: (pre-commit docs) 1 suite, 3 tests passed
+
+[2026-02-04 09:49:24] COMMAND: git add src/api/admin/earnings/summary/route.ts src/api/admin/payouts/route.ts src/modules/financials/models/earning-entry.ts src/modules/financials/models/payout.ts src/modules/financials/service.ts src/tests/utils/factories.ts src/modules/financials/migrations/Migration20260204000003.ts src/modules/financials/migrations/Migration20260204000004.ts src/modules/financials/migrations/Migration20260204000005.ts src/modules/financials/migrations/Migration20260204000006.ts src/tests/integration/financial-apis.test.ts
+RESULT: PASS
+
+COMMAND: git diff --cached --stat
+RESULT: PASS
+
+COMMAND: git commit -m "feat(financials): earnings summary + payouts (passes: =--experimental-vm-modules; npx jest src/tests/integration/financial-apis.test.ts --runInBand --forceExit)"
+RESULT: PASS
+NOTE: PowerShell expanded  inside the double-quoted commit message; amended commit message to preserve literal.
+
+COMMAND: git commit --amend -m 'feat(financials): earnings summary + payouts (passes: =--experimental-vm-modules; npx jest src/tests/integration/financial-apis.test.ts --runInBand --forceExit)'
+RESULT: PASS
+
+COMMAND: git add docs/API.md PRD_CHECKLIST.md progress.txt
+RESULT: PASS
+
+COMMAND: git add progress.txt
+RESULT: PASS
+
+COMMAND: git commit -m 'docs: financial APIs + checklist/progress (passes: =--experimental-vm-modules; npx jest src/tests/integration/financial-apis.test.ts --runInBand --forceExit)'
+RESULT: PASS
+
+COMMAND: git status --porcelain=v1
+RESULT: PASS
+
+[2026-02-04 09:50:29] COMMAND: git status --porcelain=v1
+RESULT: PASS
+DETAIL: progress.txt modified after appending final git-operation journal entries
+
+[2026-02-04 09:50:49] BACKFILL: COMMAND: git add progress.txt
+RESULT: PASS
