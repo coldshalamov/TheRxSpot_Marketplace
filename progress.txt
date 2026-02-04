@@ -948,3 +948,22 @@ curl -sS -X POST "http://localhost:9000/admin/consultations/consult_123/assign" 
 
 # POST /admin/consultations/{id}/status
 curl -sS -X POST "http://localhost:9000/admin/consultations/consult_123/status" -H "Content-Type: application/json" -H "Authorization: Bearer <admin_user_jwt>" -d '{ "status": "completed" }'
+[2026-02-04 08:36:55] COMMAND: git stash push -k -u -m "temp-unstaged-before-commit-A"
+RESULT: PASS
+
+[2026-02-04 08:36:55] COMMAND: ='--experimental-vm-modules'; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: PASS
+DETAIL: (pre-commit A) 1 suite, 5 tests passed
+
+[2026-02-04 08:36:55] COMMAND: git commit -m "feat(consultations): APIs + migrations + tests (passes: NODE_OPTIONS=--experimental-vm-modules npx jest src/tests/integration/consultation-apis.test.ts --runInBand --forceExit)"
+RESULT: PASS
+
+[2026-02-04 08:36:55] COMMAND: git stash pop
+RESULT: PASS
+
+[2026-02-04 08:36:55] COMMAND: ='--experimental-vm-modules'; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: PASS
+DETAIL: (pre-commit docs) 1 suite, 5 tests passed
+
+[2026-02-04 08:36:55] COMMAND: git commit -m "docs: consultation API examples + checklist/progress (passes: NODE_OPTIONS=--experimental-vm-modules npx jest src/tests/integration/consultation-apis.test.ts --runInBand --forceExit)"
+RESULT: PASS
