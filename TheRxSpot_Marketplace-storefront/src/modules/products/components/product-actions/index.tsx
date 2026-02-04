@@ -14,7 +14,7 @@ import MobileActions from "./mobile-actions"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { ConsultForm } from "@/components/consult-form"
-import { checkConsultApproval } from "@/lib/data/consultations"
+import { checkConsultApproval } from "@lib/data/consultation-approval"
 
 type ProductActionsProps = {
   product: HttpTypes.StoreProduct

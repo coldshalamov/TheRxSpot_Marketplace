@@ -33078,3 +33078,461 @@ OUTPUT:
 ?? src/types/
 
 
+[2026-02-04T18:03:48] CMD: git add -A -- progress.txt 'TheRxSpot_Marketplace-storefront/src/modules/cart/templates/summary.tsx'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'TheRxSpot_Marketplace-storefront/src/modules/cart/templates/summary.tsx', LF 
+will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add -A -- progress.txt 'TheRxSpot_Marketplace-storefront/src/modu ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+
+
+[2026-02-04T18:03:57] CMD: git commit -m 'feat(storefront): separate consult fees in cart summary (cd TheRxSpot_Marketplace-storefront && npm run build)'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 9a5f03b] feat(storefront): separate consult fees in cart summary (cd TheRxSpot_Marketplace-storefront && npm run build)
+ 2 files changed, 302 insertions(+)
+
+
+[2026-02-04T18:04:29] CMD: rg -n 'complete|/store/carts.*complete' src/api/middlewares/consult-gating.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+146:        message: "This product requires a completed consultation before purchase. Please complete a consultation first.",
+
+
+[2026-02-04T18:04:38] CMD: Get-Content -LiteralPath 'src/api/middlewares/consult-gating.ts' | Select-Object -Skip 80 -First 160
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+export const consultGatingMiddleware = async (
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction
+) => {
+  // Only intercept cart modification endpoints
+  if (!isCartModificationEndpoint(req)) {
+    return next()
+  }
+
+  const productModuleService = req.scope.resolve(Modules.PRODUCT)
+  const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
+  
+  // Get the request body
+  const body = req.body as any
+  
+  // Extract all product/variant IDs from request
+  const items = extractProductIdsFromCartBody(body)
+  
+  // If no items to validate, proceed
+  if (items.length === 0) {
+    return next()
+  }
+  
+  // Validate each item for consult requirements
+  for (const item of items) {
+    const resolvedProductId = await resolveProductId(
+      productModuleService, 
+      item.productId || null, 
+      item.variantId || null
+    )
+    
+    if (!resolvedProductId) {
+      continue
+    }
+    
+    // Check if product requires consultation
+    const requiresConsult = await checkProductRequiresConsult(productModuleService, resolvedProductId)
+    
+    if (!requiresConsult) {
+      continue
+    }
+    
+    // Get customer ID from authenticated session
+    const customerId = await getCustomerId(req)
+    
+    if (!customerId) {
+      return res.status(401).json({
+        code: "UNAUTHORIZED",
+        product_id: resolvedProductId,
+        message: "Customer must be logged in to purchase this product",
+      })
+    }
+    
+    // Check for valid consult approval
+    const hasApproval = await checkConsultApproval(
+      businessModuleService,
+      customerId,
+      resolvedProductId
+    )
+    
+    if (!hasApproval) {
+      return res.status(403).json({
+        code: "CONSULT_REQUIRED",
+        product_id: resolvedProductId,
+        message: "This product requires a completed consultation before purchase. Please complete a consultation first.",
+      })
+    }
+  }
+  
+  // All items validated successfully
+  next()
+}
+
+/**
+ * Batch validation helper for bulk operations
+ * Returns all validation errors at once rather than failing on first
+ */
+export async function validateCartItemsForConsult(
+  req: MedusaRequest,
+...(truncated)
+
+[2026-02-04T18:04:48] CMD: rg -n 'function isCartModificationEndpoint|isCartModificationEndpoint' src/api/middlewares/consult-gating.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+26:function isCartModificationEndpoint(req: MedusaRequest): boolean {
+87:  if (!isCartModificationEndpoint(req)) {
+
+
+[2026-02-04T18:04:59] CMD: Get-Content -LiteralPath 'src/api/middlewares/consult-gating.ts' -TotalCount 80
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse, MedusaNextFunction } from "@medusajs/framework/http"
+import { Modules } from "@medusajs/framework/utils"
+import { BUSINESS_MODULE } from "../../modules/business"
+
+/**
+ * Extended cart modification endpoints that require consult gating
+ * CRITICAL FIX: Covers all cart endpoints to prevent bypass attacks
+ */
+const CART_MODIFICATION_ENDPOINTS = [
+  // Cart creation with pre-populated items (bypass attack vector)
+  { pattern: /^\/store\/carts$/, method: "POST" },
+  // Standard line item operations
+  { pattern: /^\/store\/carts\/[^\/]+\/line-items/, method: "POST" },
+  { pattern: /^\/store\/carts\/[^\/]+\/items/, method: "POST" },
+  // Batch operations (bypass attack vector)
+  { pattern: /^\/store\/carts\/[^\/]+\/line-items\/batch/, method: "POST" },
+  { pattern: /^\/store\/carts\/[^\/]+\/items\/batch/, method: "POST" },
+  // Update operations that could add items
+  { pattern: /^\/store\/carts\/[^\/]+$/, method: "POST" },
+  { pattern: /^\/store\/carts\/[^\/]+$/, method: "PUT" },
+]
+
+/**
+ * Check if the current request is a cart modification endpoint
+ */
+function isCartModificationEndpoint(req: MedusaRequest): boolean {
+  const path = req.path || req.originalUrl || ""
+  const method = req.method || "GET"
+  
+  return CART_MODIFICATION_ENDPOINTS.some(endpoint => {
+    const methodMatch = endpoint.method === method
+    const pathMatch = endpoint.pattern.test(path)
+    return methodMatch && pathMatch
+  })
+}
+
+/**
+ * Extract all product/variant IDs from cart creation request body
+ * Handles both direct items array and nested metadata
+ */
+function extractProductIdsFromCartBody(body: any): Array<{ productId?: string; variantId?: string; quantity?: number }> {
+  const items: Array<{ productId?: string; variantId?: string; quantity?: number }> = []
+  
+  if (!body) return items
+  
+  // Direct items array in cart creation (bypass attack vector)
+  if (body.items && Array.isArray(body.items)) {
+    for (const item of body.items) {
+      items.push({
+        productId: item.product_id,
+        variantId: item.variant_id,
+        quantity: item.quantity,
+      })
+    }
+  }
+  
+  // Single item in body
+  if (body.product_id || body.variant_id) {
+    items.push({
+      productId: body.product_id,
+      variantId: body.variant_id,
+      quantity: body.quantity,
+    })
+  }
+  
+  return items
+}
+
+/**
+ * Middleware to validate cart items require consultation approval
+ * CRITICAL FIX: Intercepts ALL cart modification endpoints to prevent bypass attacks
+ * 
+ * SECURITY COVERAGE:
+ * - POST /store/carts (with pre-populated items - bypass vector)
+ * - POST /store/carts/:id/line-items
+ * - POST /store/carts/:id/line-items/batch (bypass vector)
+ * - POST /store/carts/:id/items
+ * - POST /store/carts/:id/items/batch (bypass vector)
+ * - POST/PUT /store/carts/:id (update operations)
+ */
+...(truncated)
+
+[2026-02-04T18:05:13] CMD: rg -n 'Consult gating|checkConsultApproval|Add to Cart|Consultation fee|cart line item' PRD_CHECKLIST.md
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+259:  - [x] Consultation fee (if applicable)
+280:- [ ] export async function checkConsultApproval(productId: string) {
+297:  - [ ] Block "Add to Cart" if consultation not approved
+301:  - [ ] Enable "Add to Cart" once approval detected
+307:  - [ ] Add consultation fee to cart line items
+412:  - [ ] Consultation fee (if applicable)
+564:- [ ] // Consultation fee (if applicable)
+739:  - [ ] Consultation fee earning (if applicable)
+760:- [ ] 6. Verify "Add to Cart" is disabled
+776:- [ ] 18. Verify "Add to Cart" is now enabled
+777:- [ ] 19. Click "Add to Cart" â†’ verify cart updated
+
+
+[2026-02-04T18:05:23] CMD: Get-Content -LiteralPath 'PRD_CHECKLIST.md' | Select-Object -Skip 250 -First 90
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  - [x] Table: Order ID, Product, Variant, Quantity, Unit Price, Total, Status
+  - [x] Useful for inventory/fulfillment tracking
+  - [x] Order Detail Modal:
+  - [x] Header: Order ID, Status, Placed Date
+  - [x] Customer info: Name, Email, Phone, Shipping Address
+  - [x] Business info: Name, Logo, Location
+  - [x] Line items breakdown:
+  - [x] Product name, variant, quantity, unit price, total
+  - [x] Consultation fee (if applicable)
+  - [x] Pricing breakdown:
+  - [x] Subtotal, Consultation Fee(s), Tax, Shipping, Total
+  - [x] Platform commission (calculated, shown to admin only)
+  - [ ] Fulfillment info:
+  - [ ] Shipping method, carrier, tracking number
+  - [ ] Estimated delivery date
+  - [x] [Mark as Shipped] button â†’ prompts for tracking number
+  - [x] Status timeline: Pending â†’ In Production â†’ Shipped â†’ Delivered
+  - [x] Related consultation (linked, if consultation-gated product)
+  - [x] Payment info: Method, Transaction ID, Status
+  - [x] [Refund Order] button (if eligible)
+  - [x] Bulk Actions:
+  - [x] Select multiple orders
+  - [x] Bulk export to CSV
+  - [x] Bulk update status (e.g., mark multiple as "In Production")
+  - [x] Bulk print packing slips
+
+## Week 5-6: Storefront Completion
+- [ ] Consultation-Gating Logic (8h)
+  - [ ] Create TheRxSpot_Marketplace-storefront/src/lib/data/consultation-approval.ts
+- [ ] export async function checkConsultApproval(productId: string) {
+    - [ ] const response = await fetch(
+        - [ ] `${MEDUSA_BACKEND_URL}/store/consultations/approvals?product_id=${productId}`,
+        - [ ] { credentials: 'include' }
+    - [ ] )
+    - [ ] if (!response.ok) return { approved: false, reason: 'API error' }
+    - [ ] const data = await response.json()
+    - [ ] return {
+        - [ ] approved: data.has_valid_approval,
+        - [ ] consultation_id: data.consultation_id,
+        - [ ] expires_at: data.expires_at
+    - [ ] }
+- [ ] }
+  - [ ] Update TheRxSpot_Marketplace-storefront/src/modules/products/components/product-actions/index.tsx
+  - [ ] Add consultation requirement check on mount
+  - [ ] Show "Consultation Required" banner if product.metadata.requires_consult === 'true'
+  - [ ] Display consultation fee from product.metadata.consult_fee
+  - [ ] Block "Add to Cart" if consultation not approved
+  - [ ] Show [Complete Consultation] button â†’ opens consultation modal
+  - [ ] After consultation submitted, show "Consultation Pending Approval" message
+  - [ ] Poll for approval status every 10 seconds (if user stays on page)
+  - [ ] Enable "Add to Cart" once approval detected
+  - [ ] Update TheRxSpot_Marketplace-storefront/src/components/consult-form.tsx
+  - [ ] Add loading states during submission
+  - [ ] Show success message with estimated review time
+  - [ ] Provide option to browse other products while waiting
+  - [ ] Send email to customer: "Your consultation request has been received"
+  - [ ] Add consultation fee to cart line items
+  - [ ] When consultation-gated product added, add separate line item for consultation fee
+  - [ ] Line item: Consultation Fee - {Product Name}, price from metadata
+  - [ ] Link consultation fee line item to consultation record
+  - [ ] Update TheRxSpot_Marketplace-storefront/src/modules/cart/templates/summary.tsx
+  - [ ] Show consultation fees separately in cart summary
+  - [ ] Display: "Consultation Fee(s): $X", "Medication Total: $Y", "Order Total: $Z"
+  - [ ] Show expiration date for consultation approval (90 days from approval)
+- [ ] Cart & Checkout Enhancements (10h)
+  - [ ] Cart Page Improvements:
+  - [ ] Show consultation approval status per product
+  - [ ] Display consultation expiration countdown (e.g., "Approval valid for 87 days")
+  - [ ] Allow removing consultation fee if product removed
+  - [ ] Add "Save for Later" functionality
+  - [ ] Show estimated delivery date per item
+  - [ ] Checkout Validation:
+  - [ ] Pre-submit validation in TheRxSpot_Marketplace-storefront/src/modules/checkout/components/submit-button/index.tsx
+  - [ ] Check all consultation-gated products have valid approvals
+  - [ ] Show error modal listing products without approval
+  - [ ] Block checkout submission if any approvals missing or expired
+  - [ ] Validate shipping address is in serviceable states
+  - [ ] Confirm email address (double-entry field)
+  - [ ] Checkout Steps:
+  - [ ] Step 1: Shipping Address (validate serviceable state)
+...(truncated)
+
+[2026-02-04T18:06:18] CMD: npm run build
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: FAIL (exit 1)
+OUTPUT:
+
+> medusa-next@1.0.3 build
+> next build
+
+   ? Next.js 15.3.9
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+node.exe : Failed to compile.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./src/lib/data/consultation-approval.ts
+Error:   [31mx[0m Only async functions are allowed to be exported in a "use server" file.
+
+   ,-[[36;1;4mD:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront\src\lib\data\consultation-approval.ts[
+0m:3:1]
+ [2m1[0m | "use server"
+ [2m2[0m | 
+ [2m3[0m | export { checkConsultApproval } from "./consultations"
+   : [35;1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+ [2m4[0m | 
+   `----
+
+Import trace for requested module:
+./src/lib/data/consultation-approval.ts
+./src/modules/products/components/product-actions/index.tsx
+
+
+> Build failed because of webpack errors
+
+
+[2026-02-04T18:06:59] CMD: npm run build
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: FAIL (exit 1)
+OUTPUT:
+
+> medusa-next@1.0.3 build
+> next build
+
+   ? Next.js 15.3.9
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+node.exe : Failed to compile.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./src/lib/data/consultation-approval.ts
+Error:   [31mx[0m It is not allowed to define inline "use server" annotated Server Actions in Client Components.
+  [31m|[0m To use Server Actions in a Client Component, you can either export them from a separate file with "use 
+server" at the top, or pass them down through props from a Server Component.
+  [31m|[0m
+  [31m|[0m Read more: https://nextjs.org/docs/app/api-reference/functions/server-actions#with-client-components
+
+   ,-[[36;1;4mD:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront\src\lib\data\consultation-approval.ts[
+0m:2:1]
+ [2m1[0m | export async function checkConsultApproval(productId: string) {
+ [2m2[0m |   "use server"
+   : [35;1m  ^^^^^^^^^^^^[0m
+ [2m3[0m |   const mod = await import("./consultations")
+ [2m4[0m |   return mod.checkConsultApproval(productId)
+ [2m5[0m | }
+   `----
+
+Import trace for requested module:
+./src/lib/data/consultation-approval.ts
+./src/modules/products/components/product-actions/index.tsx
+
+
+> Build failed because of webpack errors
+
+
+[2026-02-04T18:07:35] CMD: npm run build
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: PASS (exit 0)
+OUTPUT:
+
+> medusa-next@1.0.3 build
+> next build
+
+   ? Next.js 15.3.9
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ? Compiled successfully in 15.0s
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+   Generating static pages (0/5) ...
+   Generating static pages (1/5) 
+   Generating static pages (2/5) 
+   Generating static pages (3/5) 
+ ? Generating static pages (5/5)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
++ ƒ /_not-found                            143 B         102 kB
++ ƒ /[countryCode]                         616 B         357 kB
++ ƒ /[countryCode]/checkout              27.1 kB         418 kB
++ ƒ /[countryCode]/consultations           173 B         105 kB
++ ƒ /[countryCode]/consultations/[id]      143 B         102 kB
++ ƒ /[countryCode]/products/[handle]     18.4 kB         393 kB
++ ? /opengraph-image.jpg                     0 B            0 B
++ ? /twitter-image.jpg                       0 B            0 B
++ First Load JS shared by all             102 kB
+  + chunks/4bd1b696-1248763718f1c864.js  53.2 kB
+  + chunks/684-46b7d319baf0c9b8.js       46.6 kB
+  + other shared chunks (total)          2.06 kB
+
+
+ƒ Middleware                               33 kB
+
+?  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+
+[2026-02-04T18:08:32] CMD: git status -sb
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+## main...origin/main [ahead 47]
+ M TheRxSpot_Marketplace-storefront/src/modules/products/components/product-actions/index.tsx
+ M progress.txt
+?? TheRxSpot_Marketplace-storefront/src/lib/data/consultation-approval.ts
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
