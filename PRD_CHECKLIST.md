@@ -1,0 +1,1003 @@
+﻿# PRD Checklist (PLAN.txt: Weeks 1-10)
+
+Generated: 2026-02-04T02:05:20.7534423-05:00
+
+Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
+
+
+## Week 1-2: Backend Stabilization
+- [ ] Build & Configuration
+  - [x] Fix encryption utility missing error
+  - [x] Create src/utils/encryption.ts with AES-256-GCM implementation
+  - [x] Add key rotation support
+  - [x] Implement PHI field encryption decorators
+  - [x] Fix implicit field errors in models
+  - [x] Remove explicit created_at, updated_at, deleted_at from all models
+  - [x] Let Medusa auto-generate timestamp fields
+  - [x] Add missing environment variable validation
+  - [x] Create src/utils/env-validator.ts
+  - [x] Validate all required env vars at startup
+  - [x] Add type-safe env config object
+  - [ ] Verify all module migrations run successfully
+  - [ ] Test medusa db:migrate on clean database
+  - [ ] Add rollback scripts for each migration
+  - [ ] Document migration order dependencies
+- [ ] API Completeness
+  - [ ] Consultation Approval Endpoint (2h)
+  - [ ] GET /store/consultations/approvals?product_id={id}
+  - [ ] Check customer has approved consultation within 90 days
+  - [ ] Return approval status, consultation_id, expiry
+  - [ ] Add to src/api/store/consultations/approvals/route.ts
+  - [ ] Consultation Assignment Endpoint (1h)
+  - [ ] POST /admin/consultations/{id}/assign
+  - [ ] Assign clinician to consultation
+  - [ ] Send notification to clinician
+  - [ ] Update consultation status
+  - [ ] Consultation Status Update (1h)
+  - [ ] POST /admin/consultations/{id}/status
+  - [ ] Support transitions: pending â†’ scheduled â†’ completed â†’ approved/rejected
+  - [ ] Validate state machine transitions
+  - [ ] Log status changes in audit log
+  - [ ] Document Upload/Download (3h)
+  - [ ] POST /admin/consultations/{id}/documents
+  - [ ] GET /admin/documents?consultation_id={id}
+  - [ ] GET /admin/documents/{id}/download
+  - [ ] Support PDF, JPG, PNG (prescriptions, medical records)
+  - [ ] Virus scanning with ClamAV
+  - [ ] S3 storage integration
+  - [ ] Earnings Summary Endpoint (2h)
+  - [ ] GET /admin/earnings/summary
+  - [ ] Calculate: pending payout, total earnings, commission balance
+  - [ ] Filter by business_id, date range
+  - [ ] Return breakdown by type (commission, consultation fee, service fee)
+  - [ ] Payout Request Endpoint (2h)
+  - [ ] POST /admin/payouts
+  - [ ] Create payout request from available balance
+  - [ ] Support Stripe Connect, ACH, wire transfer
+  - [ ] Email confirmation to business owner
+  - [ ] Update earnings status to 'paid_out'
+- [ ] Data Model Enhancements
+  - [ ] Add indexes for performance
+  - [ ] consultations.patient_id, consultations.status, consultations.scheduled_at
+  - [ ] orders.business_id, orders.status, orders.created_at
+  - [ ] products.business_id, products.status
+  - [ ] earnings.business_id, earnings.status, earnings.created_at
+  - [ ] Add soft delete support to all custom models
+  - [ ] Ensure deleted_at timestamp tracked
+  - [ ] Filter deleted records in list queries
+  - [ ] Add restore endpoints for accidental deletions
+  - [ ] Add audit logging to sensitive operations
+  - [ ] Log all consultation status changes
+  - [ ] Log all earnings/payout operations
+  - [ ] Log business provisioning/deactivation
+  - [ ] Store IP address, user agent, timestamp
+
+## Week 3-4: Admin Dashboard Completion
+- [ ] Dashboard Home Page (8h)
+  - [ ] Create src/admin/routes/home/page.tsx
+  - [ ] Metrics Cards (top row, 5 cards):
+  - [ ] Total Businesses (with % change vs last month)
+  - [ ] Active Consultations (scheduled today)
+  - [ ] Pending Reviews (consultations awaiting approval)
+  - [ ] Revenue This Month (gross + platform commission)
+  - [ ] Orders In Progress (in_production + shipped)
+  - [ ] Quick Actions Section:
+  - [ ] [Create Business] button â†’ /businesses/new
+  - [ ] [Schedule Consultation] â†’ /consultations/new
+  - [ ] [View Earnings] â†’ /earnings
+  - [ ] [Generate Report] â†’ modal with date range selector
+  - [ ] Recent Activity Feed (last 20 events):
+  - [ ] Fetch from audit_logs table
+  - [ ] Display: timestamp, user, action, entity
+  - [ ] Color-coded by action type (create=green, update=blue, delete=red)
+  - [ ] Clickable links to entities
+  - [ ] Charts:
+  - [ ] Revenue trend (last 30 days, line chart)
+  - [ ] Consultations by status (pie chart)
+  - [ ] Orders by business (bar chart, top 10)
+  - [ ] Add real-time updates with polling (30s interval)
+- [ ] Users Management Page (10h)
+  - [ ] Create src/admin/routes/users/page.tsx
+  - [ ] Table Columns:
+  - [ ] Avatar (initials if no image)
+  - [ ] Name (first + last, sortable)
+  - [ ] Email (with copy button)
+  - [ ] Phone (formatted +1-XXX-XXX-XXXX)
+  - [ ] Date of Birth (MM/DD/YYYY, age calculated)
+  - [ ] Status (Active/Inactive badge)
+  - [ ] Role (Customer/Admin/Clinician)
+  - [ ] Joined Date (relative time, e.g. "3 days ago")
+  - [ ] Actions (View, Edit, Deactivate)
+  - [ ] Search & Filters:
+  - [ ] Global search (name, email, phone)
+  - [ ] Filter by status (Active/Inactive)
+  - [ ] Filter by role (Customer/Admin/Clinician)
+  - [ ] Date range filter (joined between X and Y)
+  - [ ] Pagination: Server-side, 25 per page
+  - [ ] Bulk Actions:
+  - [ ] Select all checkbox
+  - [ ] Bulk deactivate
+  - [ ] Bulk export to CSV
+  - [ ] User Detail Modal:
+  - [ ] Personal info (editable)
+  - [ ] Order history (linked to orders page)
+  - [ ] Consultation history (linked to consultations page)
+  - [ ] Activity log (last 50 actions)
+  - [ ] Deactivation reason (if inactive)
+- [ ] Consultations Management Page (16h)
+  - [ ] Create src/admin/routes/consultations/page.tsx (list view)
+  - [ ] Table Columns:
+  - [ ] ID (CO-{number}, clickable)
+  - [ ] Client Name (linked to user profile)
+  - [ ] Provider (clinician name or "Unassigned")
+  - [ ] Business (business name with logo)
+  - [ ] Scheduled Date/Time (with timezone)
+  - [ ] State (patient state, e.g. "FL")
+  - [ ] Status (badge: Pending/Scheduled/Completed/Approved/Rejected)
+  - [ ] Mode (icon: video/audio/form)
+  - [ ] Product (linked medication)
+  - [ ] Type (Initial/Follow-up)
+  - [ ] Actions (View, Assign, Approve, Reject)
+  - [ ] Search & Filters:
+  - [ ] Search by client name, clinician name, order ID
+  - [ ] Filter by status (multi-select)
+  - [ ] Filter by mode (video/audio/form)
+  - [ ] Filter by type (initial/follow-up)
+  - [ ] Filter by business (dropdown)
+  - [ ] Date range filter (scheduled between X and Y)
+  - [ ] Filter by state (for compliance review)
+  - [ ] Bulk Actions:
+  - [ ] Bulk assign to clinician
+  - [ ] Bulk export to PDF report
+  - [ ] Create src/admin/routes/consultations/[id]/page.tsx (detail view)
+  - [ ] Detail Layout:
+- [ ] Header Section:
+  - [ ] Consultation ID (large, copyable)
+  - [ ] Status badge (with last updated timestamp)
+  - [ ] [Print] and [Export PDF] buttons
+- [ ] Patient Information Card:
+  - [ ] Full name, DOB, age
+  - [ ] Phone (formatted, click-to-call if web calling enabled)
+  - [ ] Email (click-to-email)
+  - [ ] Address (full, with map link)
+  - [ ] State (highlighted for compliance)
+- [ ] Consultation Details Card:
+  - [ ] Linked product (name, dosage, image)
+  - [ ] Mode (video/audio/form with icon)
+  - [ ] Type (initial/follow-up)
+  - [ ] Scheduled date/time (with timezone, countdown if upcoming)
+  - [ ] Chief complaint (patient's primary concern)
+  - [ ] Medical history (formatted, expandable)
+  - [ ] Current medications (list)
+  - [ ] Allergies (highlighted in red if any)
+- [ ] Clinician Assignment Section:
+  - [ ] Current clinician (avatar + name)
+  - [ ] [Reassign] button â†’ modal with clinician dropdown
+  - [ ] Clinician availability indicator (available/busy)
+- [ ] Status Management Section:
+  - [ ] Status timeline (visual stepper: Pending â†’ Scheduled â†’ Completed â†’ Approved)
+  - [ ] Status action buttons:
+  - [ ] [Schedule] (if pending)
+  - [ ] [Mark Complete] (if scheduled)
+  - [ ] [Approve] (if completed)
+  - [ ] [Reject] (if completed) â†’ requires rejection reason
+  - [ ] Rejection reason field (if rejected)
+- [ ] Documents Section:
+  - [ ] Uploaded documents list (filename, type, size, uploaded by, timestamp)
+  - [ ] [Download] button per document
+  - [ ] [Upload New Document] button â†’ file picker
+  - [ ] Document preview (PDFs render inline, images show thumbnail)
+  - [ ] Support drag-and-drop upload
+- [ ] Notes Section:
+  - [ ] Clinician notes (rich text editor)
+  - [ ] Admin notes (internal, not visible to patient)
+  - [ ] Auto-save every 5 seconds
+- [ ] Status History Timeline:
+  - [ ] Visual timeline showing all status changes
+  - [ ] User who made change, timestamp, old status â†’ new status
+  - [ ] Related events (document uploaded, clinician assigned)
+- [ ] Earnings Management Page (12h)
+  - [ ] Create src/admin/routes/earnings/page.tsx
+  - [ ] Summary Cards (top row, 5 metrics):
+  - [ ] Pending Payout (amount available to withdraw)
+  - [ ] Total Earnings (lifetime, all businesses)
+  - [ ] Commission Balance (platform's earned commission)
+  - [ ] Available Payout (cleared funds ready for transfer)
+  - [ ] Commission Pending (commission on pending orders)
+  - [ ] Earnings Table:
+  - [ ] Columns: Order ID, Business, Date, Type (Commission/Consult Fee/Service Fee), Amount, Payment Method, Status
+  - [ ] Color-coded amounts: positive (green text), negative (red text for refunds)
+  - [ ] Clickable order ID â†’ opens order detail
+  - [ ] Business column shows logo + name
+  - [ ] Status badges: Completed/Pending/Paid Out/Refunded
+  - [ ] Search & Filters:
+  - [ ] Search by order ID
+  - [ ] Filter by business (multi-select dropdown)
+  - [ ] Filter by type (commission/consult fee/service fee)
+  - [ ] Filter by status (completed/pending/paid out)
+  - [ ] Date range picker (last 7 days, 30 days, 90 days, custom)
+  - [ ] Payout Request Flow:
+  - [ ] [Request Payout] button (top right)
+  - [ ] Modal: Select payout method (Stripe/ACH/Wire), enter amount (max = available)
+  - [ ] Display estimated arrival (Stripe=2 days, ACH=3-5 days, Wire=1 day)
+  - [ ] Require confirmation ("Are you sure you want to request $X payout?")
+  - [ ] Create payout record, send email confirmation
+  - [ ] Payout History Section (below earnings table):
+  - [ ] List all payout requests
+  - [ ] Columns: ID, Date Requested, Amount, Method, Status (Pending/In Transit/Completed/Failed), Arrival Date
+  - [ ] Download receipt/proof of transfer
+  - [ ] Export Functions:
+  - [ ] Export earnings to CSV (filtered by current filters)
+  - [ ] Export payout history to PDF
+  - [ ] Generate monthly earnings report (P&L statement)
+- [ ] Orders Page Expansion (10h)
+  - [ ] Expand src/admin/routes/orders-global/page.tsx
+  - [ ] Advanced Search:
+  - [ ] Search by order ID (exact match)
+  - [ ] Search by product name (partial match)
+  - [ ] Search by client name (first + last name)
+  - [ ] Search by business name
+  - [ ] Filters:
+  - [ ] Status filter (multi-select: Pending/In Production/Shipped/Delivered/Cancelled)
+  - [ ] Business filter (dropdown of all businesses)
+  - [ ] Product filter (dropdown of all products)
+  - [ ] Date range (order placed between X and Y)
+  - [ ] Price range (min/max)
+  - [ ] Tabbed Interface:
+  - [ ] Orders Tab (summary view):
+  - [ ] Table: Order ID, Customer, Business, Date, Total, Status, Actions
+  - [ ] Clicking row opens order detail modal
+  - [ ] Order Items Tab (line items view):
+  - [ ] Table: Order ID, Product, Variant, Quantity, Unit Price, Total, Status
+  - [ ] Useful for inventory/fulfillment tracking
+  - [ ] Order Detail Modal:
+  - [ ] Header: Order ID, Status, Placed Date
+  - [ ] Customer info: Name, Email, Phone, Shipping Address
+  - [ ] Business info: Name, Logo, Location
+  - [ ] Line items breakdown:
+  - [ ] Product name, variant, quantity, unit price, total
+  - [ ] Consultation fee (if applicable)
+  - [ ] Pricing breakdown:
+  - [ ] Subtotal, Consultation Fee(s), Tax, Shipping, Total
+  - [ ] Platform commission (calculated, shown to admin only)
+  - [ ] Fulfillment info:
+  - [ ] Shipping method, carrier, tracking number
+  - [ ] Estimated delivery date
+  - [ ] [Mark as Shipped] button â†’ prompts for tracking number
+  - [ ] Status timeline: Pending â†’ In Production â†’ Shipped â†’ Delivered
+  - [ ] Related consultation (linked, if consultation-gated product)
+  - [ ] Payment info: Method, Transaction ID, Status
+  - [ ] [Refund Order] button (if eligible)
+  - [ ] Bulk Actions:
+  - [ ] Select multiple orders
+  - [ ] Bulk export to CSV
+  - [ ] Bulk update status (e.g., mark multiple as "In Production")
+  - [ ] Bulk print packing slips
+
+## Week 5-6: Storefront Completion
+- [ ] Consultation-Gating Logic (8h)
+  - [ ] Create TheRxSpot_Marketplace-storefront/src/lib/data/consultation-approval.ts
+- [ ] export async function checkConsultApproval(productId: string) {
+    - [ ] const response = await fetch(
+        - [ ] `${MEDUSA_BACKEND_URL}/store/consultations/approvals?product_id=${productId}`,
+        - [ ] { credentials: 'include' }
+    - [ ] )
+    - [ ] if (!response.ok) return { approved: false, reason: 'API error' }
+    - [ ] const data = await response.json()
+    - [ ] return {
+        - [ ] approved: data.has_valid_approval,
+        - [ ] consultation_id: data.consultation_id,
+        - [ ] expires_at: data.expires_at
+    - [ ] }
+- [ ] }
+  - [ ] Update TheRxSpot_Marketplace-storefront/src/modules/products/components/product-actions/index.tsx
+  - [ ] Add consultation requirement check on mount
+  - [ ] Show "Consultation Required" banner if product.metadata.requires_consult === 'true'
+  - [ ] Display consultation fee from product.metadata.consult_fee
+  - [ ] Block "Add to Cart" if consultation not approved
+  - [ ] Show [Complete Consultation] button â†’ opens consultation modal
+  - [ ] After consultation submitted, show "Consultation Pending Approval" message
+  - [ ] Poll for approval status every 10 seconds (if user stays on page)
+  - [ ] Enable "Add to Cart" once approval detected
+  - [ ] Update TheRxSpot_Marketplace-storefront/src/components/consult-form.tsx
+  - [ ] Add loading states during submission
+  - [ ] Show success message with estimated review time
+  - [ ] Provide option to browse other products while waiting
+  - [ ] Send email to customer: "Your consultation request has been received"
+  - [ ] Add consultation fee to cart line items
+  - [ ] When consultation-gated product added, add separate line item for consultation fee
+  - [ ] Line item: Consultation Fee - {Product Name}, price from metadata
+  - [ ] Link consultation fee line item to consultation record
+  - [ ] Update TheRxSpot_Marketplace-storefront/src/modules/cart/templates/summary.tsx
+  - [ ] Show consultation fees separately in cart summary
+  - [ ] Display: "Consultation Fee(s): $X", "Medication Total: $Y", "Order Total: $Z"
+  - [ ] Show expiration date for consultation approval (90 days from approval)
+- [ ] Cart & Checkout Enhancements (10h)
+  - [ ] Cart Page Improvements:
+  - [ ] Show consultation approval status per product
+  - [ ] Display consultation expiration countdown (e.g., "Approval valid for 87 days")
+  - [ ] Allow removing consultation fee if product removed
+  - [ ] Add "Save for Later" functionality
+  - [ ] Show estimated delivery date per item
+  - [ ] Checkout Validation:
+  - [ ] Pre-submit validation in TheRxSpot_Marketplace-storefront/src/modules/checkout/components/submit-button/index.tsx
+  - [ ] Check all consultation-gated products have valid approvals
+  - [ ] Show error modal listing products without approval
+  - [ ] Block checkout submission if any approvals missing or expired
+  - [ ] Validate shipping address is in serviceable states
+  - [ ] Confirm email address (double-entry field)
+  - [ ] Checkout Steps:
+  - [ ] Step 1: Shipping Address (validate serviceable state)
+  - [ ] Step 2: Shipping Method (show estimated delivery)
+  - [ ] Step 3: Payment (Stripe Elements)
+  - [ ] Step 4: Review (show breakdown, terms & conditions checkbox)
+  - [ ] Order Confirmation Page:
+  - [ ] Order number (large, copyable)
+  - [ ] Confirmation email sent message
+  - [ ] Order summary (items, prices, shipping)
+  - [ ] Estimated delivery date
+  - [ ] [View Order Status] button â†’ links to customer portal
+  - [ ] [Continue Shopping] button
+- [ ] Multi-Tenant Branding Polish (6h)
+  - [ ] Update TheRxSpot_Marketplace-storefront/src/modules/layout/templates/nav/index.tsx
+  - [ ] Inject business logo from business.logo_url
+  - [ ] Fallback to business name if logo missing
+  - [ ] Apply primary color to nav background (from business.branding_config.primary_color)
+  - [ ] Apply accent color to buttons/links
+  - [ ] Update TheRxSpot_Marketplace-storefront/src/modules/layout/templates/footer/index.tsx
+  - [ ] Show business tagline
+  - [ ] Show business address (if physical location)
+  - [ ] Show business phone (click-to-call on mobile)
+  - [ ] Apply secondary color to footer background
+  - [ ] Update TheRxSpot_Marketplace-storefront/src/app/layout.tsx
+  - [ ] Inject custom HTML head from business.branding_config.custom_html_head (for Google Analytics, etc.)
+  - [ ] Set page title to {business.name} - {page}
+  - [ ] Set favicon to business logo or fallback icon
+  - [ ] Apply CSS variables globally
+  - [ ] Update button styles to use --color-primary
+  - [ ] Update link styles to use --color-accent
+  - [ ] Update badge styles to use --color-secondary
+  - [ ] Add business tagline to homepage hero section
+  - [ ] Large headline: {business.tagline}
+  - [ ] Subheadline: {business.description}
+  - [ ] CTA button: "Browse Products" (styled with primary color)
+- [ ] Category Pages (6h)
+  - [ ] Create TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/categories/[handle]/page.tsx
+  - [ ] Page Layout:
+  - [ ] Breadcrumb: Home > Categories > {Category Name}
+  - [ ] Category header: Name, Description, Product Count
+  - [ ] Product grid (same as homepage, 3-column responsive)
+  - [ ] Filtering & Sorting:
+  - [ ] Filter by product type (Initial/Refill)
+  - [ ] Filter by price range (slider)
+  - [ ] Sort by: Name, Price (low to high), Price (high to low), Newest
+  - [ ] API Integration:
+  - [ ] Fetch products: GET /store/products?category_id={id}&sales_channel_id={channel}
+  - [ ] Filter on client side or add server-side query params
+  - [ ] Empty State:
+  - [ ] If no products: "No products found in this category"
+  - [ ] Show "Browse All Products" link
+- [ ] Customer Portal (18h)
+  - [ ] Create TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/account/page.tsx (overview)
+  - [ ] Profile Card:
+  - [ ] Name, Email, Phone (editable)
+  - [ ] Profile picture upload
+  - [ ] [Edit Profile] button â†’ inline editing
+  - [ ] Quick Stats:
+  - [ ] Total Orders, Active Consultations, Documents Available
+  - [ ] Recent Orders (last 5):
+  - [ ] Order ID, Date, Total, Status
+  - [ ] [View All Orders] link
+  - [ ] Upcoming Consultations (next 3):
+  - [ ] Date/Time, Mode, Provider, Product
+  - [ ] [View All Consultations] link
+  - [ ] Quick Actions:
+  - [ ] [Reorder Previous Purchase]
+  - [ ] [Schedule Consultation]
+  - [ ] [Download Documents]
+  - [ ] Create TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/account/orders/page.tsx
+  - [ ] Orders List:
+  - [ ] Table: Order ID, Date, Products, Total, Status, Actions
+  - [ ] Status badges: Pending/In Production/Shipped/Delivered
+  - [ ] Clickable row â†’ opens order detail
+  - [ ] Search & Filters:
+  - [ ] Search by order ID or product name
+  - [ ] Filter by status
+  - [ ] Date range filter
+  - [ ] Pagination: 10 orders per page
+  - [ ] Create TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/account/orders/[id]/page.tsx
+  - [ ] Order Header: ID, Status, Placed Date
+  - [ ] Line Items:
+  - [ ] Product image, name, variant, quantity, price
+  - [ ] Consultation fee (if applicable)
+  - [ ] Pricing Breakdown: Subtotal, Consult Fees, Tax, Shipping, Total
+  - [ ] Shipping Info:
+  - [ ] Address, Method, Tracking Number (if shipped)
+  - [ ] Track Package button (links to carrier tracking)
+  - [ ] Estimated Delivery Date
+  - [ ] Status Timeline: Visual stepper showing order progress
+  - [ ] Actions:
+  - [ ] [Download Invoice] (PDF)
+  - [ ] [Reorder] (adds items to cart)
+  - [ ] [Contact Support] (opens support modal)
+  - [ ] Create TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/account/consultations/page.tsx
+  - [ ] Consultations List:
+  - [ ] Table: ID, Date/Time, Provider, Product, Status, Mode, Actions
+  - [ ] Status badges: Pending/Scheduled/Completed/Approved/Rejected
+  - [ ] Clickable row â†’ opens consultation detail
+  - [ ] Filters:
+  - [ ] Filter by status
+  - [ ] Date range filter
+  - [ ] Actions:
+  - [ ] [Schedule New Consultation]
+  - [ ] Create TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/account/consultations/[id]/page.tsx
+  - [ ] Consultation Header: ID, Status, Scheduled Date
+  - [ ] Details:
+  - [ ] Provider name, specialty
+  - [ ] Product linked to consultation
+  - [ ] Mode, Type
+  - [ ] Chief complaint, medical history (readonly)
+  - [ ] Documents:
+  - [ ] List of uploaded documents (prescription, medical records)
+  - [ ] Download buttons
+  - [ ] Actions:
+  - [ ] [Reschedule] (if scheduled, not yet completed)
+  - [ ] [Cancel] (if pending or scheduled, shows confirmation modal)
+  - [ ] [Download Summary] (PDF)
+  - [ ] Create TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/account/settings/page.tsx
+  - [ ] Personal Information: Editable form (name, DOB, phone, email)
+  - [ ] Shipping Addresses: List of saved addresses, add/edit/delete
+  - [ ] Payment Methods: List of saved cards (Stripe), add/remove
+  - [ ] Communication Preferences: Email/SMS notifications checkboxes
+  - [ ] Password Change: Current password, new password, confirm
+  - [ ] Account Deletion: [Delete My Account] button â†’ confirmation flow
+
+## Week 7-8: Payment Integration
+- [ ] Stripe Configuration (4h)
+  - [ ] Install Stripe dependencies
+  - [ ] Backend: npm install @medusajs/medusa-payment-stripe
+  - [ ] Storefront: Already has @stripe/stripe-js, @stripe/react-stripe-js
+  - [ ] Update medusa-config.ts
+- [ ] modules: {
+    - [ ] // ... existing modules
+    - [ ] paymentProviders: {
+        - [ ] resolve: "@medusajs/medusa-payment-stripe",
+        - [ ] options: {
+            - [ ] apiKey: process.env.STRIPE_SECRET_KEY,
+            - [ ] webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+            - [ ] // Enable Stripe Connect for multi-tenant payouts
+            - [ ] stripeConnect: {
+            - [ ] enabled: true,
+            - [ ] application_fee_percent: 5 // Platform commission
+            - [ ] }
+        - [ ] }
+    - [ ] }
+- [ ] }
+  - [ ] Add environment variables
+- [ ] STRIPE_SECRET_KEY=sk_test_...
+- [ ] STRIPE_PUBLISHABLE_KEY=pk_test_...
+- [ ] STRIPE_WEBHOOK_SECRET=whsec_...
+  - [ ] Set up Stripe webhook endpoint
+  - [ ] Register webhook URL: https://yourapi.com/webhooks/stripe
+  - [ ] Listen for events: payment_intent.succeeded, payment_intent.payment_failed, charge.refunded
+- [ ] Payment Intent with Fee Split (8h)
+  - [ ] Create custom payment service at src/modules/payment/stripe-service.ts
+  - [ ] Extend Medusa's Stripe provider
+  - [ ] Override createPaymentIntent method
+  - [ ] Calculate totals:
+- [ ] const consultFees = cart.items
+    - [ ] .filter(item => item.metadata?.consult_fee)
+    - [ ] .reduce((sum, item) => sum + parseFloat(item.metadata.consult_fee), 0)
+- [ ] const medicationTotal = cart.subtotal
+- [ ] const platformFee = this.calculatePlatformFee(cart, consultFees)
+- [ ] const intent = await stripe.paymentIntents.create({
+    - [ ] amount: cart.total, // in cents
+    - [ ] currency: cart.region.currency_code,
+    - [ ] metadata: {
+        - [ ] cart_id: cart.id,
+        - [ ] business_id: cart.context.business_id,
+        - [ ] consult_fees: consultFees,
+        - [ ] medication_total: medicationTotal,
+        - [ ] platform_fee: platformFee
+    - [ ] },
+    - [ ] application_fee_amount: platformFee, // Platform's cut
+    - [ ] // If using Stripe Connect, transfer to business account:
+    - [ ] transfer_data: {
+        - [ ] destination: business.stripe_account_id
+    - [ ] }
+- [ ] })
+  - [ ] Implement calculatePlatformFee method
+- [ ] calculatePlatformFee(cart: Cart, consultFees: number) {
+    - [ ] const business = cart.metadata.business
+    - [ ] const commissionRate = business.commission_rate || 0.05
+    - [ ] // Commission applies to total (medication + consult fees)
+    - [ ] return Math.round(cart.total * commissionRate)
+- [ ] }
+  - [ ] Handle payment confirmation
+  - [ ] Listen for payment_intent.succeeded webhook
+  - [ ] Complete the cart â†’ create order
+  - [ ] Record earnings entry in financials module
+  - [ ] Send order confirmation email
+- [ ] Webhook Handler (6h)
+  - [ ] Create src/api/webhooks/stripe/route.ts
+- [ ] import Stripe from 'stripe'
+- [ ] export async function POST(req: MedusaRequest, res: MedusaResponse) {
+    - [ ] const sig = req.headers['stripe-signature']
+    - [ ] const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+    - [ ] let event: Stripe.Event
+    - [ ] try {
+        - [ ] event = stripe.webhooks.constructEvent(
+            - [ ] req.body,
+            - [ ] sig,
+            - [ ] process.env.STRIPE_WEBHOOK_SECRET
+        - [ ] )
+    - [ ] } catch (err) {
+        - [ ] return res.status(400).send(`Webhook Error: ${err.message}`)
+    - [ ] }
+    - [ ] switch (event.type) {
+        - [ ] case 'payment_intent.succeeded':
+            - [ ] await handlePaymentSuccess(event.data.object)
+            - [ ] break
+        - [ ] case 'payment_intent.payment_failed':
+            - [ ] await handlePaymentFailure(event.data.object)
+            - [ ] break
+        - [ ] case 'charge.refunded':
+            - [ ] await handleRefund(event.data.object)
+            - [ ] break
+    - [ ] }
+    - [ ] res.json({ received: true })
+- [ ] }
+  - [ ] Implement handlePaymentSuccess
+  - [ ] Retrieve cart from metadata
+  - [ ] Complete order
+  - [ ] Create earning records:
+- [ ] // Platform commission
+- [ ] await financialsModuleService.recordEarning({
+    - [ ] business_id: cart.business_id,
+    - [ ] order_id: order.id,
+    - [ ] type: 'commission',
+    - [ ] amount: paymentIntent.metadata.platform_fee,
+    - [ ] status: 'completed',
+    - [ ] payment_method: 'stripe',
+    - [ ] transaction_id: paymentIntent.id
+- [ ] })
+- [ ] // Consultation fee (if applicable)
+- [ ] if (consultFees > 0) {
+    - [ ] await financialsModuleService.recordEarning({
+        - [ ] business_id: cart.business_id,
+        - [ ] order_id: order.id,
+        - [ ] type: 'consultation_fee',
+        - [ ] amount: consultFees,
+        - [ ] status: 'completed'
+    - [ ] })
+- [ ] }
+  - [ ] Send order confirmation email
+  - [ ] Update inventory
+  - [ ] Implement handlePaymentFailure
+  - [ ] Log failure reason
+  - [ ] Send email to customer with retry link
+  - [ ] Keep cart active (don't delete)
+  - [ ] Implement handleRefund
+  - [ ] Update order status to 'refunded'
+  - [ ] Reverse earning entries (create negative earning records)
+  - [ ] Send refund confirmation email
+- [ ] Checkout UI Integration (6h)
+  - [ ] Update TheRxSpot_Marketplace-storefront/src/modules/checkout/components/payment-wrapper/index.tsx
+  - [ ] Load Stripe publishable key from tenant config or env
+  - [ ] Initialize Stripe Elements
+- [ ] const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+- [ ] <Elements stripe={stripe}>
+    - [ ] <CheckoutForm cart={cart} />
+- [ ] </Elements>
+  - [ ] Create CheckoutForm component
+  - [ ] Use <PaymentElement /> from Stripe React
+  - [ ] Handle form submission:
+- [ ] const handleSubmit = async (e) => {
+    - [ ] e.preventDefault()
+    - [ ] // Validate consultations first
+    - [ ] await validateConsultations()
+    - [ ] // Create payment intent on backend
+    - [ ] const { client_secret } = await fetch('/store/payment-intents', {
+        - [ ] method: 'POST',
+        - [ ] body: JSON.stringify({ cart_id: cart.id })
+    - [ ] }).then(r => r.json())
+    - [ ] // Confirm payment with Stripe
+    - [ ] const { error, paymentIntent } = await stripe.confirmPayment({
+        - [ ] elements,
+        - [ ] clientSecret: client_secret,
+        - [ ] confirmParams: {
+            - [ ] return_url: `${window.location.origin}/order/confirmed`
+        - [ ] }
+    - [ ] })
+    - [ ] if (error) {
+        - [ ] setError(error.message)
+    - [ ] } else if (paymentIntent.status === 'succeeded') {
+        - [ ] // Redirect to confirmation page
+        - [ ] router.push('/order/confirmed')
+    - [ ] }
+- [ ] }
+  - [ ] Show loading spinner during payment processing
+  - [ ] Display error messages (card declined, etc.)
+  - [ ] Show order total with breakdown before submission
+- [ ] Stripe Connect for Business Payouts (8h)
+  - [ ] Add Stripe Connect onboarding flow
+  - [ ] When admin creates business, initiate Stripe Connect account creation
+  - [ ] Generate account link: stripe.accountLinks.create({ account: business.stripe_account_id, type: 'account_onboarding' })
+  - [ ] Redirect business owner to Stripe onboarding
+  - [ ] Store stripe_account_id on business record
+  - [ ] Update business provisioning in src/api/admin/businesses/[id]/provision/route.ts
+  - [ ] Create Stripe Connect account
+  - [ ] Set business capabilities (card_payments, transfers)
+  - [ ] Enable automated payouts or manual request
+  - [ ] Add payout request functionality
+  - [ ] Admin earnings page â†’ [Request Payout] button
+  - [ ] Create payout: stripe.payouts.create({ amount, currency, destination: business.stripe_account_id })
+  - [ ] Track payout status in payouts table
+  - [ ] Update earnings status to 'paid_out'
+  - [ ] Display Stripe Connect status in admin dashboard
+  - [ ] Show onboarding completion status
+  - [ ] Display available balance
+  - [ ] Show next payout date (if automated)
+
+## Week 9-10: Testing, Seeding & Polish
+- [ ] Demo Data Seeding (12h)
+  - [ ] Expand src/scripts/seed.ts with comprehensive demo data
+  - [ ] Platform Admin:
+- [ ] {
+    - [ ] email: "admin@platform.com",
+    - [ ] password: bcrypt.hashSync("Admin123!", 10),
+    - [ ] role: "admin"
+- [ ] }
+  - [ ] Sample Business "The Rx Spot":
+- [ ] {
+    - [ ] name: "The Rx Spot",
+    - [ ] slug: "therxspot",
+    - [ ] domain: "patients.therxspot.com",
+    - [ ] logo_url: "https://i.imgur.com/therxspot-logo.png",
+    - [ ] tagline: "Your Partner in Weight Management",
+    - [ ] description: "Premium telehealth services for weight loss and wellness",
+    - [ ] branding_config: {
+        - [ ] primary_color: "#0f766e",
+        - [ ] secondary_color: "#f0fdfa",
+        - [ ] accent_color: "#14b8a6",
+        - [ ] custom_html_head: "<!-- Google Analytics -->"
+    - [ ] },
+    - [ ] commission_rate: 0.05,
+    - [ ] service_fee_mode: "percentage",
+    - [ ] service_fee_amount: 0.03,
+    - [ ] status: "active"
+- [ ] }
+  - [ ] Sample Location "Florida Virtual Clinic":
+- [ ] {
+    - [ ] business_id: therxspot.id,
+    - [ ] name: "Florida Virtual Clinic",
+    - [ ] phone: "+1-555-123-4567",
+    - [ ] address: {
+        - [ ] street: "123 Virtual Avenue",
+        - [ ] city: "Miami",
+        - [ ] state: "FL",
+        - [ ] zip: "33101"
+    - [ ] },
+    - [ ] serviceable_states: ["FL", "NY", "CA", "TX"],
+    - [ ] operation_type: "virtual"
+- [ ] }
+  - [ ] 6 Sample Products:
+  - [ ] Tirzepatide 25mg (2 variants: 2.5mg, 5mg)
+  - [ ] Semaglutide 10mg (2 variants: 0.25mg, 0.5mg)
+  - [ ] Liraglutide 18mg (1 variant)
+  - [ ] Phentermine 37.5mg (1 variant)
+  - [ ] Each product:
+  - [ ] Professional images
+  - [ ] Detailed descriptions (benefits, usage, side effects)
+  - [ ] Metadata: requires_consult: "true", consult_fee: "50.00", product_type: "Initial"
+  - [ ] Category assignment (Weight Management)
+  - [ ] 3 Sample Clinicians:
+- [ ] [
+    - [ ] {
+        - [ ] first_name: "Dr. Sarah",
+        - [ ] last_name: "Smith",
+        - [ ] npi: "1234567890",
+        - [ ] license_number: "FL123456",
+        - [ ] license_state: "FL",
+        - [ ] specialties: ["Family Medicine", "Weight Management"],
+        - [ ] active: true
+    - [ ] },
+    - [ ] // 2 more clinicians
+- [ ] ]
+  - [ ] 5 Sample Customers with varied demographics:
+- [ ] [
+    - [ ] {
+        - [ ] email: "john.doe@example.com",
+        - [ ] password: bcrypt.hashSync("Customer123!", 10),
+        - [ ] first_name: "John",
+        - [ ] last_name: "Doe",
+        - [ ] phone: "+15551234567",
+        - [ ] billing_address: { street: "456 Main St", city: "Tampa", state: "FL", zip: "33602" },
+        - [ ] shipping_address: { street: "456 Main St", city: "Tampa", state: "FL", zip: "33602" }
+    - [ ] },
+    - [ ] // 4 more customers
+- [ ] ]
+  - [ ] 10 Sample Consultations (varied statuses):
+  - [ ] 2 pending (awaiting clinician assignment)
+  - [ ] 2 scheduled (upcoming in next 7 days)
+  - [ ] 3 completed (awaiting approval)
+  - [ ] 2 approved (within last 30 days)
+  - [ ] 1 rejected (with rejection reason)
+  - [ ] Each consultation linked to customer, product, clinician (if assigned)
+  - [ ] 8 Sample Orders (varied statuses):
+  - [ ] 2 pending (payment just completed)
+  - [ ] 2 in_production (being fulfilled)
+  - [ ] 2 shipped (tracking numbers assigned)
+  - [ ] 2 delivered (completed in last 30 days)
+  - [ ] Each order:
+  - [ ] Linked to customer, business, location
+  - [ ] Line items with products + consultation fees
+  - [ ] Shipping address
+  - [ ] Payment info (Stripe test payment ID)
+  - [ ] Earnings Records for each order:
+  - [ ] Commission earning (5% of order total)
+  - [ ] Consultation fee earning (if applicable)
+  - [ ] Status: completed for delivered orders, pending for others
+  - [ ] Run seeding: npm run seed
+  - [ ] Verify data integrity (foreign keys, relationships)
+- [ ] End-to-End Testing (16h)
+  - [ ] Scenario 1: Admin Business Creation (1h)
+- [ ] 1. Login as admin@platform.com
+- [ ] 2. Navigate to /businesses
+- [ ] 3. Click [Create Business]
+- [ ] 4. Fill form: Name, Slug, Domain, Logo URL, Commission Rate
+- [ ] 5. Submit â†’ verify business created
+- [ ] 6. Click business name â†’ open detail
+- [ ] 7. Click [Provision] â†’ verify sales channel created
+- [ ] 8. Copy API key â†’ save for API testing
+- [ ] 9. Verify business status = "Active"
+  - [ ] Scenario 2: Complete Customer Purchase Flow (Consult-Gated) (2h)
+- [ ] 1. Navigate to storefront: /us/therxspot/{locationId}
+- [ ] 2. Verify business branding (logo, colors, tagline displayed)
+- [ ] 3. Browse product categories
+- [ ] 4. Click "Tirzepatide 25mg" product
+- [ ] 5. Verify "Consultation Required" banner shown
+- [ ] 6. Verify "Add to Cart" is disabled
+- [ ] 7. Click [Complete Consultation]
+- [ ] 8. Fill eligibility form:
+      - [ ] - Chief complaint: "Weight loss goals"
+      - [ ] - Medical history: "No significant history"
+      - [ ] - Current medications: "None"
+      - [ ] - Allergies: "None"
+- [ ] 9. Submit form â†’ verify success message
+- [ ] 10. Verify consultation created in database
+- [ ] 11. Switch to admin panel (/app)
+- [ ] 12. Navigate to Consultations â†’ find new consultation (status: Pending)
+- [ ] 13. Open consultation detail
+- [ ] 14. Assign clinician from dropdown â†’ save
+- [ ] 15. Upload test prescription PDF
+- [ ] 16. Update status to "Approved" â†’ save
+- [ ] 17. Switch back to storefront (refresh product page)
+- [ ] 18. Verify "Add to Cart" is now enabled
+- [ ] 19. Click "Add to Cart" â†’ verify cart updated
+- [ ] 20. Open cart â†’ verify consultation fee shown separately ($50)
+- [ ] 21. Verify total = Medication ($299) + Consult Fee ($50) = $349
+- [ ] 22. Click [Checkout]
+- [ ] 23. Enter shipping address (in serviceable state: FL)
+- [ ] 24. Select shipping method
+- [ ] 25. Enter Stripe test card: 4242 4242 4242 4242, exp: 12/25, CVV: 123
+- [ ] 26. Click [Place Order]
+- [ ] 27. Verify payment processing spinner
+- [ ] 28. Verify redirect to order confirmation page
+- [ ] 29. Verify order ID displayed, email confirmation message
+- [ ] 30. Check admin orders page â†’ verify new order (status: Pending)
+- [ ] 31. Check admin earnings page â†’ verify commission recorded ($17.45 = 5% of $349)
+  - [ ] Scenario 3: Multi-Tenant Isolation (1h)
+- [ ] 1. Create second business "Competitor Clinic" in admin
+- [ ] 2. Provision with separate sales channel
+- [ ] 3. Create product "Product A" assigned to Business A sales channel
+- [ ] 4. Create product "Product B" assigned to Business B sales channel
+- [ ] 5. Navigate to Business A storefront â†’ verify only Product A visible
+- [ ] 6. Navigate to Business B storefront â†’ verify only Product B visible
+- [ ] 7. Create order in Business A â†’ verify order shows in Business A admin only
+- [ ] 8. Verify earnings isolated (Business A earnings != Business B earnings)
+  - [ ] Scenario 4: Consultation Management (1h)
+- [ ] 1. Login as admin
+- [ ] 2. Navigate to Consultations page
+- [ ] 3. Filter by status: "Pending"
+- [ ] 4. Open first consultation detail
+- [ ] 5. Verify patient info displayed correctly
+- [ ] 6. Assign clinician from dropdown â†’ verify saved
+- [ ] 7. Upload prescription PDF â†’ verify file uploaded
+- [ ] 8. Add clinician notes: "Patient approved for treatment"
+- [ ] 9. Update status to "Completed" â†’ verify status history updated
+- [ ] 10. Verify customer can view completed status in portal
+- [ ] 11. Download prescription PDF â†’ verify download works
+  - [ ] Scenario 5: Earnings & Payouts (1h)
+- [ ] 1. Navigate to Earnings page
+- [ ] 2. Verify summary cards show correct totals
+- [ ] 3. Filter by business: "The Rx Spot"
+- [ ] 4. Filter by date range: Last 30 days
+- [ ] 5. Verify earnings list matches filters
+- [ ] 6. Click [Request Payout]
+- [ ] 7. Enter amount: $500 (must be <= available balance)
+- [ ] 8. Select method: Stripe
+- [ ] 9. Submit â†’ verify payout request created
+- [ ] 10. Verify payout appears in Payout History (status: Pending)
+- [ ] 11. Verify commission balance updated (decreased by $500)
+  - [ ] Scenario 6: Customer Portal Navigation (1h)
+- [ ] 1. Login as customer (john.doe@example.com)
+- [ ] 2. Navigate to /account
+- [ ] 3. Verify profile info displayed
+- [ ] 4. Verify recent orders shown (last 5)
+- [ ] 5. Click [View All Orders]
+- [ ] 6. Verify orders list displayed
+- [ ] 7. Click order ID â†’ verify order detail modal opens
+- [ ] 8. Verify line items, pricing, status timeline
+- [ ] 9. Click [Download Invoice] â†’ verify PDF downloaded
+- [ ] 10. Navigate to /account/consultations
+- [ ] 11. Verify consultations list displayed
+- [ ] 12. Click consultation ID â†’ verify detail shown
+- [ ] 13. Verify documents downloadable
+  - [ ] Scenario 7: Payment Failure Handling (1h)
+- [ ] 1. Add product to cart, proceed to checkout
+- [ ] 2. Enter Stripe test card for failure: 4000 0000 0000 0002
+- [ ] 3. Submit payment â†’ verify failure message
+- [ ] 4. Verify cart still active (not deleted)
+- [ ] 5. Verify no order created
+- [ ] 6. Retry with valid card â†’ verify success
+  - [ ] Scenario 8: Consultation Rejection (1h)
+- [ ] 1. Submit consultation request as customer
+- [ ] 2. Login as admin â†’ navigate to consultation
+- [ ] 3. Update status to "Rejected", enter reason: "Medical history concerns"
+- [ ] 4. Submit â†’ verify status updated
+- [ ] 5. Verify customer sees rejection in portal
+- [ ] 6. Verify customer cannot add product to cart (still blocked)
+- [ ] 7. Verify rejection reason displayed to customer
+  - [ ] Scenario 9: Order Fulfillment (1h)
+- [ ] 1. Navigate to admin orders page
+- [ ] 2. Filter by status: "Pending"
+- [ ] 3. Open order detail
+- [ ] 4. Click [Mark as In Production] â†’ verify status updated
+- [ ] 5. Wait or manually trigger next step
+- [ ] 6. Click [Mark as Shipped]
+- [ ] 7. Enter tracking number: 1Z999AA10123456784
+- [ ] 8. Submit â†’ verify status updated
+- [ ] 9. Verify customer receives email with tracking info
+- [ ] 10. Verify tracking number displayed in customer portal
+  - [ ] Scenario 10: Category Browsing (30min)
+- [ ] 1. Navigate to storefront homepage
+- [ ] 2. Click "Weight Management" category
+- [ ] 3. Verify category page loaded
+- [ ] 4. Verify products filtered to category
+- [ ] 5. Apply filter: Product Type = "Initial"
+- [ ] 6. Verify filtered results
+- [ ] 7. Sort by: Price (low to high)
+- [ ] 8. Verify sorted correctly
+  - [ ] Integration Tests (run existing suite):
+- [ ] npm run test:integration:custom  # Should pass all 7 tests
+- [ ] npm run test:consult-gating      # Test consultation-gating logic
+- [ ] npm run test:consultation        # Test consultation CRUD
+- [ ] npm run test:earnings            # Test earnings calculation
+- [ ] npm run test:payment             # Test Stripe payment flow
+- [ ] UI/UX Polish (12h)
+  - [ ] Admin Dashboard:
+  - [ ] Consistent loading states: skeleton screens for tables, cards
+  - [ ] Empty state messages: "No consultations yet. Create your first one!"
+  - [ ] Error handling: toast notifications (success=green, error=red, info=blue)
+  - [ ] Confirmation modals for destructive actions (delete business, reject consultation)
+  - [ ] Keyboard navigation: tab index on all interactive elements
+  - [ ] Responsive tables: horizontal scroll on mobile, stacked cards on small screens
+  - [ ] Tooltips for icons (hover to see description)
+  - [ ] Consistent spacing: 4px grid (margins, paddings)
+  - [ ] Animation polish: 200ms transitions on hover, focus states
+  - [ ] Storefront:
+  - [ ] Product image optimization: lazy loading, responsive images (srcset)
+  - [ ] Loading spinners during API calls (fetch consultations, add to cart)
+  - [ ] Form validation: inline errors, helpful messages ("Email must be valid format")
+  - [ ] Success animations: confetti on order confirmation page (react-confetti)
+  - [ ] Mobile-responsive navigation: hamburger menu on small screens
+  - [ ] Accessible color contrast: ensure WCAG AA compliance (4.5:1 for text)
+  - [ ] Focus states: visible outlines for keyboard navigation
+  - [ ] Sticky cart button: "View Cart (3 items)" fixed to bottom on scroll
+  - [ ] Global Polish:
+  - [ ] Consistent typography: use unified font scale (12px, 14px, 16px, 20px, 24px, 32px)
+  - [ ] Unified spacing: 4px, 8px, 12px, 16px, 24px, 32px, 48px
+  - [ ] Button styles: primary (filled), secondary (outline), tertiary (text only)
+  - [ ] Input styles: consistent height (40px), padding, border radius
+  - [ ] Badge styles: consistent padding (4px 8px), border radius (12px), font size (12px)
+  - [ ] Card styles: consistent shadow, border radius, padding
+  - [ ] Modal styles: centered, backdrop blur, slide-in animation
+  - [ ] Toast notifications: positioned top-right, auto-dismiss after 5s, stacked
+- [ ] Performance Optimization (8h)
+  - [ ] Backend:
+  - [ ] Add database indexes:
+  - [ ] CREATE INDEX idx_consultations_patient ON consultations(patient_id)
+  - [ ] CREATE INDEX idx_consultations_status ON consultations(status)
+  - [ ] CREATE INDEX idx_orders_business ON orders(business_id)
+  - [ ] CREATE INDEX idx_earnings_business ON earnings(business_id)
+  - [ ] Enable query result caching with Redis:
+  - [ ] Cache product listings (TTL: 5 minutes)
+  - [ ] Cache business branding config (TTL: 1 hour)
+  - [ ] Cache consultation approvals (TTL: 1 minute)
+  - [ ] Optimize N+1 queries:
+  - [ ] Use include to join related entities (orders â†’ line items, consultations â†’ clinician)
+  - [ ] Batch API calls in admin dashboard (fetch consultations + clinicians in single request)
+  - [ ] Enable response compression (gzip):
+  - [ ] Add to medusa-config.ts: compression: { enabled: true }
+  - [ ] Storefront:
+  - [ ] Image optimization:
+  - [ ] Use Next.js <Image> component (automatic optimization)
+  - [ ] Lazy load images below fold
+  - [ ] Serve WebP format with JPEG fallback
+  - [ ] Code splitting:
+  - [ ] Dynamic imports for large components: const CheckoutForm = dynamic(() => import('./CheckoutForm'))
+  - [ ] Split consultation modal into separate chunk
+  - [ ] Prefetch critical routes:
+  - [ ] Prefetch /checkout when cart has items
+  - [ ] Prefetch /account when logged in
+  - [ ] Bundle optimization:
+  - [ ] Run npm run analyze to check bundle size
+  - [ ] Remove unused dependencies
+  - [ ] Tree-shake Lodash (use lodash-es)
+  - [ ] Performance Targets:
+  - [ ] Backend API responses < 200ms (90th percentile)
+  - [ ] Storefront page load < 2s (3G network)
+  - [ ] Lighthouse score > 90 (Performance, Accessibility, Best Practices, SEO)
+  - [ ] Monitoring:
+  - [ ] Add performance monitoring (Sentry Performance)
+  - [ ] Track API endpoint response times
+  - [ ] Track frontend page load metrics (FCP, LCP, TTI)
+  - [ ] Set up alerts for performance regressions
+- [ ] Documentation (6h)
+  - [ ] Create DEMO_GUIDE.md in repository root
+- [ ] # Demo Guide: TheRxSpot Marketplace
+- [ ] ## Demo Credentials
+- [ ] - **Admin**: admin@platform.com / Admin123!
+- [ ] - **Customer**: john.doe@example.com / Customer123!
+- [ ] ## Demo Business
+- [ ] - **Name**: The Rx Spot
+- [ ] - **Storefront URL**: http://localhost:8000/us/therxspot/{locationId}
+- [ ] - **Admin URL**: http://localhost:9000/app
+- [ ] ## Demo Flow Script (15 minutes)
+- [ ] ### Part 1: Admin Creates Business (2 min)
+- [ ] 1. Login at http://localhost:9000/app
+- [ ] 2. Navigate to Businesses â†’ show "The Rx Spot"
+- [ ] 3. Open business detail â†’ show sales channel, API key
+- [ ] 4. Highlight multi-tenant architecture
+- [ ] ### Part 2: Customer Browses Storefront (3 min)
+- [ ] 1. Open http://localhost:8000/us/therxspot/{locationId}
+- [ ] 2. Point out branded logo, colors, tagline
+- [ ] 3. Browse products â†’ select Tirzepatide
+- [ ] 4. Highlight "Consultation Required" notice
+- [ ] ### Part 3: Consultation Flow (5 min)
+- [ ] 1. Click "Complete Consultation" â†’ fill form
+- [ ] 2. Submit â†’ switch to admin panel
+- [ ] 3. Navigate to Consultations â†’ find pending consultation
+- [ ] 4. Assign clinician â†’ upload prescription â†’ approve
+- [ ] 5. Emphasize compliance workflow
+- [ ] ### Part 4: Complete Purchase (3 min)
+- [ ] 1. Return to storefront â†’ add product to cart
+- [ ] 2. Show cart breakdown (consult + medication)
+- [ ] 3. Checkout â†’ use Stripe test card
+- [ ] 4. Show order confirmation
+- [ ] ### Part 5: Admin Order Management (2 min)
+- [ ] 1. Navigate to Orders â†’ show new order
+- [ ] 2. Open detail â†’ update status
+- [ ] 3. Navigate to Earnings â†’ show commission
+- [ ] ## Talking Points
+- [ ] - **Multi-tenant**: Unlimited businesses, isolated data
+- [ ] - **Consultation-gating**: Ensures compliance, prevents unauthorized purchases
+- [ ] - **Automated financials**: Real-time commission tracking
+- [ ] - **White-label branding**: Each business has custom look/feel
+- [ ] - **HIPAA-ready**: Audit logging, encrypted PHI
+  - [ ] Update README.md with setup instructions
+  - [ ] Prerequisites (Node.js 20+, PostgreSQL 15+, Redis)
+  - [ ] Installation steps
+  - [ ] Environment variable configuration
+  - [ ] Database migration
+  - [ ] Seeding demo data
+  - [ ] Running backend + storefront
+  - [ ] Create API documentation
+  - [ ] Use Swagger/OpenAPI for auto-generated docs
+  - [ ] Document all admin + store endpoints
+  - [ ] Include request/response examples
+  - [ ] Authentication requirements
+  - [ ] Rate limiting info
+- [ ] 150% POLISH (Weeks 11-18)
+- [ ] Goal: Production-ready platform with enterprise polish
