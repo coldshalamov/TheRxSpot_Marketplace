@@ -56,21 +56,21 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
   - [x] Support Stripe Connect, ACH, wire transfer
   - [ ] Email confirmation to business owner
   - [x] Update earnings status to 'paid_out'
-- [ ] Data Model Enhancements
-  - [ ] Add indexes for performance
-  - [ ] consultations.patient_id, consultations.status, consultations.scheduled_at
-  - [ ] orders.business_id, orders.status, orders.created_at
-  - [ ] products.business_id, products.status
-  - [ ] earnings.business_id, earnings.status, earnings.created_at
-  - [ ] Add soft delete support to all custom models
-  - [ ] Ensure deleted_at timestamp tracked
-  - [ ] Filter deleted records in list queries
-  - [ ] Add restore endpoints for accidental deletions
-  - [ ] Add audit logging to sensitive operations
-  - [ ] Log all consultation status changes
+- [x] Data Model Enhancements
+  - [x] Add indexes for performance
+  - [x] consultations.patient_id, consultations.status, consultations.scheduled_at
+  - [x] orders.business_id, orders.status, orders.created_at
+  - [x] products.business_id, products.status
+  - [x] earnings.business_id, earnings.status, earnings.created_at
+  - [x] Add soft delete support to all custom models
+  - [x] Ensure deleted_at timestamp tracked
+  - [x] Filter deleted records in list queries
+  - [x] Add restore endpoints for accidental deletions
+  - [x] Add audit logging to sensitive operations
+  - [x] Log all consultation status changes
   - [x] Log all earnings/payout operations
-  - [ ] Log business provisioning/deactivation
-  - [ ] Store IP address, user agent, timestamp
+  - [x] Log business provisioning/deactivation
+  - [x] Store IP address, user agent, timestamp
 
 ## Week 3-4: Admin Dashboard Completion
 - [ ] Dashboard Home Page (8h)
