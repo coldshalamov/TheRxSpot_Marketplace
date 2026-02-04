@@ -14,6 +14,7 @@ import {
   MedusaResponse,
 } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../../modules/compliance/service"
+import { CONSULTATION_MODULE } from "../../../modules/consultation"
 import { uploadSingleDocument, handleMulterError, virusScanMiddleware } from "../../middlewares/document-upload"
 import { logAuditEvent } from "../../middlewares/audit-logging"
 
@@ -49,6 +50,56 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const complianceService: ComplianceModuleService = req.scope.resolve(
       "complianceModuleService"
     )
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE) as any
+
+    const authContext = (req as any).auth_context as
+      | {
+          actor_id?: string
+          actor_type?: string
+          business_id?: string
+          metadata?: Record<string, any>
+          app_metadata?: Record<string, any>
+        }
+      | undefined
+
+    const actorId = authContext?.actor_id || null
+    if (!actorId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Unauthorized",
+        code: "UNAUTHORIZED",
+      })
+    }
+
+    const tenantBusinessId =
+      authContext?.business_id ||
+      authContext?.metadata?.business_id ||
+      authContext?.app_metadata?.business_id ||
+      (req as any)?.tenant_context?.business_id
+
+    // Resolve "business_staff" vs "clinician" for access control.
+    // Clinicians can be represented as admin `user` actors with a clinician record linked by `user_id`.
+    let userType: "business_staff" | "clinician" = "business_staff"
+    let clinicianId: string | null = null
+
+    if (authContext?.actor_type === "clinician") {
+      userType = "clinician"
+      clinicianId = actorId
+    } else {
+      try {
+        const [clinicians] = await consultationService.listAndCountClinicians(
+          { user_id: actorId },
+          { take: 1 }
+        )
+        const clinician = clinicians?.[0]
+        if (clinician?.id) {
+          userType = "clinician"
+          clinicianId = clinician.id as string
+        }
+      } catch {
+        // Ignore lookup errors and treat as business staff.
+      }
+    }
 
     // Parse query parameters
     const query = req.query as Record<string, any>
@@ -76,12 +127,68 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       }
     }
     
+    // Access control + tenant scoping:
+    // - Clinicians can only list documents for a consultation they are assigned to.
+    // - Business staff can list documents for their business (or explicit business_id if no tenant info).
+    const consultationId = typeof query.consultation_id === "string" ? query.consultation_id.trim() : ""
+
+    let resolvedBusinessId = tenantBusinessId || (typeof query.business_id === "string" ? query.business_id.trim() : "")
+
+    if (consultationId) {
+      const [consultations] = await consultationService.listAndCountConsultations(
+        { id: consultationId },
+        { take: 1 }
+      )
+      const consultation = consultations?.[0]
+      if (!consultation) {
+        return res.status(404).json({
+          error: "Consultation not found",
+          message: "Consultation not found",
+          code: "NOT_FOUND",
+        })
+      }
+
+      if (tenantBusinessId && consultation.business_id !== tenantBusinessId) {
+        return res.status(404).json({
+          error: "Consultation not found",
+          message: "Consultation not found",
+          code: "NOT_FOUND",
+        })
+      }
+
+      if (userType === "clinician") {
+        if (!consultation.clinician_id || consultation.clinician_id !== clinicianId) {
+          return res.status(403).json({
+            error: "Access denied",
+            message: "Only the assigned clinician can view consultation documents",
+            code: "FORBIDDEN",
+          })
+        }
+      }
+
+      resolvedBusinessId = consultation.business_id
+    } else if (userType === "clinician") {
+      return res.status(400).json({
+        error: "Missing required filters",
+        message: "consultation_id is required for clinician document listing",
+        code: "INVALID_INPUT",
+      })
+    }
+
+    if (!resolvedBusinessId) {
+      return res.status(400).json({
+        error: "Missing required filters",
+        message: "business_id is required",
+        code: "INVALID_INPUT",
+      })
+    }
+
     const filters = {
-      business_id: query.business_id,
+      business_id: resolvedBusinessId,
       // HIPAA-008: These should ideally be moved to POST /admin/documents/search
       // But we support them here for backwards compatibility with security warning
       patient_id: query.patient_id,
-      consultation_id: query.consultation_id,
+      consultation_id: consultationId || undefined,
       order_id: query.order_id,
       type: query.type,
       access_level: query.access_level,

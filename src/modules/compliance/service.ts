@@ -135,7 +135,8 @@ class ComplianceModuleService extends ComplianceBaseService {
   async uploadDocument(
     file: { buffer: Buffer; originalname: string; mimetype: string; size: number },
     metadata: UploadDocumentDTO,
-    uploadedBy: string
+    uploadedBy: string,
+    uploadedByActorType: CreateAuditLogDTO["actor_type"] = "business_user"
   ): Promise<any> {
     // Validate file type
     if (!validateFileType(file.mimetype)) {
@@ -203,7 +204,7 @@ class ComplianceModuleService extends ComplianceBaseService {
 
     // Log audit event
     await this.logAuditEvent({
-      actor_type: "business_user",
+      actor_type: uploadedByActorType,
       actor_id: uploadedBy,
       action: "create",
       entity_type: "document",
@@ -269,7 +270,8 @@ class ComplianceModuleService extends ComplianceBaseService {
 
     // Log audit event
     await this.logAuditEvent({
-      actor_type: userType === "patient" ? "customer" : "business_user",
+      actor_type:
+        userType === "patient" ? "customer" : userType === "clinician" ? "clinician" : "business_user",
       actor_id: requestedBy,
       action: "download",
       entity_type: "document",
@@ -285,6 +287,48 @@ class ComplianceModuleService extends ComplianceBaseService {
       url,
       expires_at: new Date(Date.now() + expiresInSeconds * 1000),
     }
+  }
+
+  /**
+   * Download the document content (buffer) with access control, audit logging, and counters.
+   *
+   * Used for local development where a "signed URL" may not be directly reachable
+   * unless static file serving is explicitly configured.
+   */
+  async downloadDocumentContent(
+    documentId: string,
+    requestedBy: string,
+    userType: Parameters<typeof canDownloadDocument>[2]
+  ): Promise<{ document: any; buffer: Buffer }> {
+    const document = await this.getDocumentById(documentId)
+
+    if (!document) {
+      throw new Error(`Document not found: ${documentId}`)
+    }
+
+    if (!canDownloadDocument(document, requestedBy, userType)) {
+      throw new Error("Access denied: You do not have permission to download this document")
+    }
+
+    const buffer = await this.storageProvider.download(document.storage_key)
+
+    await this.incrementDownloadCount(documentId, requestedBy)
+
+    await this.logAuditEvent({
+      actor_type:
+        userType === "patient" ? "customer" : userType === "clinician" ? "clinician" : "business_user",
+      actor_id: requestedBy,
+      action: "download",
+      entity_type: "document",
+      entity_id: documentId,
+      business_id: document.business_id,
+      consultation_id: document.consultation_id,
+      order_id: document.order_id,
+      metadata: { fileName: document.file_name, mode: "stream" },
+      risk_level: "low",
+    })
+
+    return { document, buffer }
   }
 
   /**
@@ -353,7 +397,7 @@ class ComplianceModuleService extends ComplianceBaseService {
 
     const beforeData = { title: document.title, description: document.description, access_level: document.access_level }
     
-    const updated = await this.updateDocuments(id, data)
+    const updated = await this.updateDocuments({ id, ...(data as any) })
 
     // Log audit event
     await this.logAuditEvent({
@@ -411,7 +455,7 @@ class ComplianceModuleService extends ComplianceBaseService {
       if (whereFilters.date_to) queryFilters.created_at.$lte = whereFilters.date_to
     }
 
-    const [documents, count] = await this.listDocumentsWithCount(queryFilters, {
+    const [documents, count] = await this.listAndCountDocuments(queryFilters, {
       skip,
       take,
       order: { created_at: "DESC" },
@@ -424,7 +468,7 @@ class ComplianceModuleService extends ComplianceBaseService {
    * Get document by ID
    */
   async getDocumentById(documentId: string): Promise<any | null> {
-    const [documents] = await this.listDocumentsWithCount({ id: documentId }, { take: 1 })
+    const [documents] = await this.listAndCountDocuments({ id: documentId }, { take: 1 })
     return documents[0] ?? null
   }
 
@@ -490,7 +534,8 @@ class ComplianceModuleService extends ComplianceBaseService {
       throw new Error(`Document not found: ${documentId}`)
     }
 
-    await this.updateDocuments(documentId, {
+    await this.updateDocuments({
+      id: documentId,
       download_count: (document.download_count || 0) + 1,
       last_downloaded_at: new Date(),
       last_downloaded_by: downloadedBy,
@@ -541,7 +586,7 @@ class ComplianceModuleService extends ComplianceBaseService {
       if (whereFilters.date_to) queryFilters.created_at.$lte = whereFilters.date_to
     }
 
-    const [logs, count] = await this.listAuditLogsWithCount(queryFilters, {
+    const [logs, count] = await this.listAndCountAuditLogs(queryFilters, {
       skip,
       take,
       order: { created_at: "DESC" },
@@ -564,13 +609,13 @@ class ComplianceModuleService extends ComplianceBaseService {
     }
 
     // Get total events
-    const [allLogs, totalEvents] = await this.listAuditLogsWithCount(queryFilters)
+    const [allLogs, totalEvents] = await this.listAndCountAuditLogs(queryFilters)
 
     // Get events by type
     const eventsByType: { action: string; count: number }[] = []
     const actions = ["create", "read", "update", "delete", "download", "login", "logout", "export"]
     for (const action of actions) {
-      const [, count] = await this.listAuditLogsWithCount({ ...queryFilters, action })
+      const [, count] = await this.listAndCountAuditLogs({ ...queryFilters, action })
       if (count > 0) {
         eventsByType.push({ action, count })
       }
@@ -580,14 +625,14 @@ class ComplianceModuleService extends ComplianceBaseService {
     const eventsByRiskLevel: { risk_level: string; count: number }[] = []
     const riskLevels = ["low", "medium", "high", "critical"]
     for (const level of riskLevels) {
-      const [, count] = await this.listAuditLogsWithCount({ ...queryFilters, risk_level: level })
+      const [, count] = await this.listAndCountAuditLogs({ ...queryFilters, risk_level: level })
       if (count > 0) {
         eventsByRiskLevel.push({ risk_level: level, count })
       }
     }
 
     // Get flagged events count
-    const [, flaggedEvents] = await this.listAuditLogsWithCount({
+    const [, flaggedEvents] = await this.listAndCountAuditLogs({
       ...queryFilters,
       flagged: true,
     })

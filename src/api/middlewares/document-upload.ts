@@ -18,8 +18,6 @@ const ALLOWED_MIME_TYPES = [
   "application/pdf",
   "image/jpeg",
   "image/png",
-  "image/tiff",
-  "image/tif",
 ]
 
 // Map MIME types to expected file extensions
@@ -27,8 +25,6 @@ const MIME_TO_EXTENSIONS: Record<string, string[]> = {
   "application/pdf": [".pdf"],
   "image/jpeg": [".jpg", ".jpeg"],
   "image/png": [".png"],
-  "image/tiff": [".tiff", ".tif"],
-  "image/tif": [".tiff", ".tif"],
 }
 
 // ClamAV instance (lazy loaded)
@@ -184,7 +180,12 @@ async function validateFileContent(
   expectedMimeType: string
 ): Promise<{ valid: boolean; detectedMimeType?: string }> {
   try {
-    const { fileTypeFromBuffer } = await import("file-type")
+    // NOTE: keep a real runtime dynamic import here so Jest/SWC doesn't rewrite it to `require()`.
+    // `file-type` is ESM and should be loaded via `import()` in Node.
+    const dynamicImport = (moduleName: string) =>
+      Function("m", "return import(m)")(moduleName) as Promise<any>
+
+    const { fileTypeFromBuffer } = await dynamicImport("file-type")
     const fileType = await fileTypeFromBuffer(buffer)
     
     if (!fileType) {
@@ -352,8 +353,6 @@ export function validateFileExtension(
     "application/pdf": [".pdf"],
     "image/jpeg": [".jpg", ".jpeg"],
     "image/png": [".png"],
-    "image/tiff": [".tiff", ".tif"],
-    "image/tif": [".tiff", ".tif"],
   }
 
   const allowedExts = mimeToExt[mimetype.toLowerCase()]
