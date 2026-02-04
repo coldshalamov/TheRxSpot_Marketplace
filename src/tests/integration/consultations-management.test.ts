@@ -7,6 +7,10 @@
  * - POST /admin/custom/consultations/:id/notes (notes autosave)
  * - GET /admin/custom/consultations/export (HTML export for "Export PDF" flow)
  * - GET /admin/custom/consultations/:id/export (HTML export for "Export PDF" flow)
+ * - POST /admin/consultations/:id/documents (document upload)
+ * - GET /admin/documents?consultation_id=... (document list)
+ * - GET /admin/documents/:id/download (document download)
+ * - GET /admin/audit-logs?consultation_id=... (timeline source)
  */
 
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
@@ -329,6 +333,117 @@ medusaIntegrationTestRunner({
         expect(detailRes.headers.get("content-type") || "").toContain("text/html")
         const detailHtml = await detailRes.text()
         expect(detailHtml).toContain(consultation.id)
+      })
+
+      it("uploads + lists + downloads a document and surfaces events in audit logs", async () => {
+        const container = getContainer()
+
+        const business = await createTestBusiness(container, { name: "Docs Business" })
+        const product = await createTestProduct(container, true, { title: "Docs Medication" })
+        const patient = await createTestPatient(container, {
+          business_id: business.id,
+          first_name: "Doc",
+          last_name: "Patient",
+          email: "doc.patient@test.com",
+        } as any)
+
+        const businessService = container.resolve(BUSINESS_MODULE) as any
+        const submission = await businessService.createConsultSubmissions({
+          id: `sub_${Date.now()}_docs`,
+          business_id: business.id,
+          location_id: null,
+          product_id: product.id,
+          customer_email: patient.email,
+          customer_first_name: patient.first_name,
+          customer_last_name: patient.last_name,
+          customer_phone: patient.phone ?? null,
+          customer_dob: patient.date_of_birth ?? null,
+          eligibility_answers: { state: "TX" },
+          status: "pending",
+          consult_fee: null,
+          notes: null,
+          reviewed_by: null,
+          reviewed_at: null,
+        })
+
+        const consultation = await createTestConsultation(container, "scheduled", {
+          business_id: business.id,
+          patient_id: patient.id,
+          clinician_id: null as any,
+          mode: "video",
+          scheduled_at: new Date(),
+          originating_submission_id: submission.id,
+          order_id: "order_docs_1",
+        } as any)
+
+        const userService = container.resolve(Modules.USER) as any
+        const adminUser = await userService.createUsers({
+          email: "admin_docs@test.com",
+          first_name: "Admin",
+          last_name: "Docs",
+          metadata: { is_active: true, business_id: business.id },
+        })
+        const adminToken = signAdminToken(adminUser.id)
+
+        const pdfHeader = Buffer.from("%PDF-1.4\n%âãÏÓ\n1 0 obj\n<<>>\nendobj\n", "utf8")
+        const form = new FormData()
+        form.append(
+          "document",
+          new Blob([pdfHeader], { type: "application/pdf" }),
+          "test.pdf"
+        )
+        form.append("type", "medical_record")
+        form.append("title", "Test Medical Record")
+        form.append("access_level", "clinician")
+
+        const uploadRes = await fetch(
+          `${api.defaults.baseURL}/admin/consultations/${encodeURIComponent(consultation.id)}/documents`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${adminToken}` },
+            body: form,
+          }
+        )
+
+        expect(uploadRes.status).toBe(201)
+        const uploaded = await uploadRes.json()
+        expect(uploaded.document?.id).toBeTruthy()
+        expect(uploaded.document?.consultation_id).toBe(consultation.id)
+        expect(uploaded.document?.mime_type).toBe("application/pdf")
+
+        const documentId = uploaded.document.id as string
+
+        const listRes = await api
+          .get(
+            `/admin/documents?consultation_id=${encodeURIComponent(consultation.id)}&limit=20&offset=0`,
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          .catch((e: any) => e.response)
+
+        expect(listRes.status).toBe(200)
+        expect(Array.isArray(listRes.data.documents)).toBe(true)
+        expect(listRes.data.documents.some((d: any) => d.id === documentId)).toBe(true)
+
+        const downloadRes = await fetch(
+          `${api.defaults.baseURL}/admin/documents/${encodeURIComponent(documentId)}/download`,
+          { headers: { Authorization: `Bearer ${adminToken}` } }
+        )
+
+        expect(downloadRes.status).toBe(200)
+        expect(downloadRes.headers.get("content-type") || "").toContain("application/pdf")
+        const downloadBuf = Buffer.from(await downloadRes.arrayBuffer())
+        expect(downloadBuf.slice(0, 4).toString("utf8")).toBe("%PDF")
+
+        const auditRes = await api
+          .get(`/admin/audit-logs?consultation_id=${encodeURIComponent(consultation.id)}&limit=50&offset=0`, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .catch((e: any) => e.response)
+
+        expect(auditRes.status).toBe(200)
+        expect(Array.isArray(auditRes.data.logs)).toBe(true)
+        expect(auditRes.data.logs.some((l: any) => l.entity_type === "document" && l.action === "create")).toBe(true)
+        expect(auditRes.data.logs.some((l: any) => l.entity_type === "document" && l.action === "download")).toBe(true)
       })
     })
   },

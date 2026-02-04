@@ -33576,3 +33576,2657 @@ OUTPUT:
 ?? src/types/
 
 
+[2026-02-04T18:09:43] CMD: git add -A -- progress.txt PRD_CHECKLIST.md
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'PRD_CHECKLIST.md', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add -A -- progress.txt PRD_CHECKLIST.md
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+
+
+[2026-02-04T18:09:52] CMD: git commit -m 'docs(checklist): mark storefront consult gating items complete (cd TheRxSpot_Marketplace-storefront && npm run build)'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 0ad00ce] docs(checklist): mark storefront consult gating items complete (cd TheRxSpot_Marketplace-storefront && npm run build)
+ 2 files changed, 60 insertions(+), 20 deletions(-)
+
+
+[2026-02-04T18:10:01] CMD: git status -sb
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+## main...origin/main [ahead 49]
+ M progress.txt
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
+[2026-02-04T18:10:24] CMD: rg -n 'verify-custom-domains' src -S
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src\jobs\domain-verification.ts:208:  name: "verify-custom-domains",
+
+
+[2026-02-04T18:10:45] CMD: rg -n 'export const POST' 'src/api/store/businesses/[slug]/consult/route.ts'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+5:export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+
+
+[2026-02-04T18:10:57] CMD: rg -n 'export async function POST' 'src/api/store/carts/[id]/consultation-fee/route.ts'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+28:export async function POST(req: MedusaRequest, res: MedusaResponse) {
+
+
+[2026-02-04T18:11:06] CMD: rg -n 'deterministic' src/api/middlewares/rate-limiter.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+139:    // deterministic and isolated.
+
+
+[2026-02-04T18:11:18] CMD: rg -n 'Consultation required' 'TheRxSpot_Marketplace-storefront/src/modules/products/components/product-actions/index.tsx'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+267:                <div className="font-medium">Consultation required</div>
+278:                <div className="font-medium">Consultation required</div>
+
+
+[2026-02-04T18:11:27] CMD: rg -n 'requestConsultation' 'TheRxSpot_Marketplace-storefront/src/components/consult-form.tsx'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+4:import { requestConsultation } from "@/lib/data/consultations"
+33:      const res = await requestConsultation({
+
+
+[2026-02-04T18:11:37] CMD: rg -n 'addConsultationFeeLineItem' 'TheRxSpot_Marketplace-storefront/src/lib/data/cart.ts'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+34:async function addConsultationFeeLineItem(cartId: string, consultationId: string) {
+190:      await addConsultationFeeLineItem(cart.id, consultationId)
+
+
+[2026-02-04T18:11:44] CMD: rg -n 'Consultation fees' 'TheRxSpot_Marketplace-storefront/src/modules/cart/templates/summary.tsx'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+54:            <span>Consultation fees</span>
+
+
+[2026-02-04T18:12:08] CMD: node --experimental-vm-modules node_modules/jest/bin/jest.js src/tests/integration/consultations-management.test.ts --silent=false --runInBand --forceExit
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+node : (node:23960) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules node_modules/jest/bin/jest.js src/test ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:23960) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+{"level":"info","message":"Disabling admin as we run integration tests","timestamp":"2026-02-04 18:12:20"}
+{"level":"info","message":"Creating database medusa-01kgnev62115v26majb6bpbdha-integration-1","timestamp":"2026-02-04 18:12:20"}
+{"level":"info","message":"Creating migrations table 'mikro_orm_migrations'...","timestamp":"2026-02-04 18:12:20"}
+{"level":"info","message":"Migrations table created successfully","timestamp":"2026-02-04 18:12:20"}
+{"level":"info","message":"Migrating database with core migrations and links medusa-01kgnev62115v26majb6bpbdha-integration-1","timestamp":"2026-02-04 18:12:20"}
+{"level":"info","message":"","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"MODULE: stock_location","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20240307161216","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20240307161216","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20241210073813","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20241210073813","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20250106142624","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20250106142624","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20250120110820","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20250120110820","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"MODULE: inventory","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20240307132720","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20240307132720","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20240719123015","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20240719123015","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20241213063611","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20241213063611","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20251010131115","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20251010131115","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"MODULE: product","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating InitialSetup20240401153642","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated InitialSetup20240401153642","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20240601111544","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20240601111544","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration202408271511","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration202408271511","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20241122120331","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20241122120331","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrating Migration20241125090957","timestamp":"2026-02-04 18:12:22"}
+{"level":"info","message":"  ? Migrated Migration20241125090957","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20250411073236","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20250411073236","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20250516081326","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20250516081326","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20250910154539","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20250910154539","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20250911092221","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20250911092221","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20250929204438","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20250929204438","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20251008132218","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20251008132218","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20251011090511","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20251011090511","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"Completed successfully","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"MODULE: pricing","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20230929122253","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20230929122253","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20240322094407","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20240322094407","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20240322113359","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20240322113359","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20240322120125","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20240322120125","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20240626133555","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20240626133555","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrating Migration20240704094505","timestamp":"2026-02-04 18:12:23"}
+{"level":"info","message":"  ? Migrated Migration20240704094505","timestamp":"2026-02-04 18:12:23"}
+...(truncated)
+
+[2026-02-04T18:14:34] CMD:  = Get-Content -LiteralPath .\PLAN.txt -Raw; 'PLAN_READ_OK'
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+System.Management.Automation.CommandNotFoundException: The term '=' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)
+   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.Interpreter.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.LightLambda.RunVoid1[T0](T0 arg0)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipeImpl(ScriptBlockClauseToInvoke clauseToInvoke, Boolean createLocalScope, Dictionary`2 functionsToDefine, List`1 variablesToDefine, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Object[] args)
+   at System.Management.Automation.ScriptBlock.<>c__DisplayClass57_0.<InvokeWithPipe>b__0()
+   at System.Management.Automation.Runspaces.RunspaceBase.RunActionIfNoRunningPipelinesWithThreadCheck(Action action)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipe(Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Boolean propagateAllExceptionsToTop, List`1 variablesToDefine, Dictionary`2 functionsToDefine, Object[] args)
+   at System.Management.Automation.ScriptBlock.InvokeUsingCmdlet(Cmdlet contextCmdlet, Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Object[] args)
+   at Microsoft.PowerShell.Commands.InvokeExpressionCommand.ProcessRecord()
+   at System.Management.Automation.CommandProcessor.ProcessRecord()
+
+[2026-02-04T18:14:44] CMD: $null = Get-Content -LiteralPath .\PLAN.txt -Raw; 'PLAN_READ_OK'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+PLAN_READ_OK
+
+
+[2026-02-04T18:14:51] CMD: Test-Path -LiteralPath .\src\admin\routes\consultations\page.tsx; Test-Path -LiteralPath .\src\admin\routes\consultations\[id]\page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+True
+True
+
+
+[2026-02-04T18:14:57] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\page.tsx -TotalCount 200
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import {
+  Avatar,
+  Badge,
+  Button,
+  Container,
+  Copy,
+  DatePicker,
+  Drawer,
+  Heading,
+  Input,
+  Select,
+  Table,
+  Toaster,
+  toast,
+} from "@medusajs/ui"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
+
+type PlanStatus = "pending" | "scheduled" | "completed" | "approved" | "rejected"
+type PlanMode = "video" | "audio" | "form"
+type PlanType = "initial" | "follow-up"
+
+type ConsultationRow = {
+  id: string
+  business_id: string
+  order_id: string | null
+  scheduled_at: string | null
+  updated_at: string | null
+  plan_status: PlanStatus
+  mode: PlanMode
+  type: PlanType
+  state: string | null
+  patient: {
+    id: string
+    first_name: string | null
+    last_name: string | null
+    email: string | null
+    phone: string | null
+  } | null
+  clinician: {
+    id: string
+    first_name: string | null
+    last_name: string | null
+    status?: string | null
+  } | null
+  business: {
+    id: string
+    name: string
+    logo_url?: string | null
+  } | null
+  product: {
+    id: string
+    title: string
+    handle?: string | null
+  } | null
+}
+
+type ConsultationsListResponse = {
+  consultations: ConsultationRow[]
+  count: number
+  limit: number
+  offset: number
+}
+
+const LIMIT = 25
+
+function stableDisplayNumber(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  }
+  const num = hash % 1000000
+  return String(num).padStart(6, "0")
+}
+
+function consultationDisplayId(id: string): string {
+  return `CO-${stableDisplayNumber(id)}`
+}
+
+...(truncated)
+
+[2026-02-04T18:15:02] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\page.tsx -TotalCount 400 | Select-Object -Skip 200
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  }, [q, status, mode, type, businessId, stateFilter, dateFrom, dateTo])
+
+  const allOnPageSelected = rows.length > 0 && rows.every((r) => selected.has(r.id))
+
+  const toggleAllOnPage = (checked: boolean) => {
+    const next = new Set(selected)
+    for (const r of rows) {
+      if (checked) next.add(r.id)
+      else next.delete(r.id)
+    }
+    setSelected(next)
+  }
+
+  const toggleOne = (id: string, checked: boolean) => {
+    const next = new Set(selected)
+    if (checked) next.add(id)
+    else next.delete(id)
+    setSelected(next)
+  }
+
+  const loadClinicians = async (effectiveBusinessId: string | null) => {
+    setCliniciansLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (effectiveBusinessId) params.set("business_id", effectiveBusinessId)
+      params.set("status", "active")
+      params.set("limit", "100")
+      params.set("offset", "0")
+
+      const res = await fetch(`/admin/clinicians?${params.toString()}`, {
+        credentials: "include",
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+      const json = await res.json()
+      setClinicians(json.clinicians || [])
+    } catch (e) {
+      toast.error("Failed to load clinicians", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+      setClinicians([])
+    } finally {
+      setCliniciansLoading(false)
+    }
+  }
+
+  const selectedRows = rows.filter((r) => selected.has(r.id))
+  const selectedBusinessIds = Array.from(new Set(selectedRows.map((r) => r.business_id)))
+  const canBulkAssign = selected.size > 0 && selectedBusinessIds.length <= 1
+  const bulkAssignBusinessId = selectedBusinessIds.length === 1 ? selectedBusinessIds[0] : null
+
+  const openAssign = async () => {
+    if (!canBulkAssign) {
+      toast.error("Bulk assign requires selections from one business", {
+        description: "Select consultations belonging to a single business.",
+      })
+      return
+    }
+    setAssignClinicianId("")
+    setAssignOpen(true)
+    await loadClinicians(bulkAssignBusinessId)
+  }
+
+  const assignSelected = async () => {
+    const ids = Array.from(selected)
+    if (!ids.length) return
+    const clinicianId = assignClinicianId.trim()
+    if (!clinicianId) {
+      toast.error("Choose a clinician to assign")
+      return
+    }
+
+    try {
+      let ok = 0
+      for (const id of ids) {
+        const res = await fetch(`/admin/consultations/${encodeURIComponent(id)}/assign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+...(truncated)
+
+[2026-02-04T18:15:07] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\page.tsx -TotalCount 800 | Select-Object -Skip 400
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+                  {b.name}
+                </Select.Item>
+              ))}
+            </Select.Content>
+          </Select>
+        </div>
+        <div className="w-[170px]">
+          <div className="text-xs font-medium mb-1">State</div>
+          <Input value={stateFilter} onChange={(e) => setStateFilter(e.target.value)} placeholder="e.g. FL" />
+        </div>
+        <div className="w-[200px]">
+          <div className="text-xs font-medium mb-1">Scheduled from</div>
+          <DatePicker value={dateFrom} onChange={setDateFrom} />
+        </div>
+        <div className="w-[200px]">
+          <div className="text-xs font-medium mb-1">Scheduled to</div>
+          <DatePicker value={dateTo} onChange={setDateTo} />
+        </div>
+        <Button variant="secondary" onClick={clearFilters}>
+          Clear
+        </Button>
+      </div>
+
+      <Table>
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell>
+              <input
+                type="checkbox"
+                checked={allOnPageSelected}
+                onChange={(e) => toggleAllOnPage(e.target.checked)}
+                aria-label="Select all on page"
+              />
+            </Table.HeaderCell>
+            <Table.HeaderCell>ID</Table.HeaderCell>
+            <Table.HeaderCell>Client</Table.HeaderCell>
+            <Table.HeaderCell>Provider</Table.HeaderCell>
+            <Table.HeaderCell>Business</Table.HeaderCell>
+            <Table.HeaderCell>Scheduled</Table.HeaderCell>
+            <Table.HeaderCell>State</Table.HeaderCell>
+            <Table.HeaderCell>Status</Table.HeaderCell>
+            <Table.HeaderCell>Mode</Table.HeaderCell>
+            <Table.HeaderCell>Product</Table.HeaderCell>
+            <Table.HeaderCell>Type</Table.HeaderCell>
+            <Table.HeaderCell>Actions</Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {loading ? (
+            <Table.Row>
+              <Table.Cell colSpan={12}>
+                <div className="text-sm text-ui-fg-subtle">Loading…</div>
+              </Table.Cell>
+            </Table.Row>
+          ) : rows.length === 0 ? (
+            <Table.Row>
+              <Table.Cell colSpan={12}>
+                <div className="text-sm text-ui-fg-subtle">No consultations found.</div>
+              </Table.Cell>
+            </Table.Row>
+          ) : (
+            rows.map((r) => {
+              const patientName =
+                [r.patient?.first_name, r.patient?.last_name].filter(Boolean).join(" ") || "-"
+              const clinicianName =
+                [r.clinician?.first_name, r.clinician?.last_name].filter(Boolean).join(" ") ||
+                "Unassigned"
+              const businessName = r.business?.name || r.business_id
+              const st = statusBadge(r.plan_status)
+              const md = modeBadge(r.mode)
+              const canApprove = r.plan_status === "completed"
+              const canReject = r.plan_status === "completed"
+
+              return (
+                <Table.Row key={r.id}>
+                  <Table.Cell>
+                    <input
+                      type="checkbox"
+                      checked={selected.has(r.id)}
+                      onChange={(e) => toggleOne(r.id, e.target.checked)}
+...(truncated)
+
+[2026-02-04T18:15:12] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\page.tsx -Tail 200
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+                      <Button size="small" variant="secondary" onClick={() => navigate(`/consultations/${r.id}`)}>
+                        View
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="secondary"
+                        onClick={async () => {
+                          setSelected(new Set([r.id]))
+                          setAssignOpen(true)
+                          setAssignClinicianId("")
+                          await loadClinicians(r.business_id)
+                        }}
+                      >
+                        Assign
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="secondary"
+                        disabled={!canApprove}
+                        onClick={() => updateStatus(r.id, "approved")}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="danger"
+                        disabled={!canReject}
+                        onClick={() => {
+                          const reason = window.prompt("Rejection reason (required):") || ""
+                          if (!reason.trim()) {
+                            toast.error("Rejection reason is required")
+                            return
+                          }
+                          updateStatus(r.id, "rejected", reason.trim())
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              )
+            })
+          )}
+        </Table.Body>
+      </Table>
+
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-xs text-ui-fg-subtle">
+          Page {page + 1} / {totalPages}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" disabled={page <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+            Previous
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={page + 1 >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+
+      <Drawer open={filterOpen} onOpenChange={setFilterOpen}>
+        <Drawer.Content className="max-w-[520px]">
+          <Drawer.Header>
+            <Drawer.Title>Filters</Drawer.Title>
+            <Drawer.Description>Multi-select filters from PLAN.</Drawer.Description>
+          </Drawer.Header>
+          <Drawer.Body>
+            <div className="space-y-6">
+              <div>
+                <div className="text-xs font-medium mb-2">Status</div>
+                <div className="flex flex-wrap gap-2">
+                  {(["pending", "scheduled", "completed", "approved", "rejected"] as PlanStatus[]).map((s) => {
+                    const active = status.includes(s)
+                    const b = statusBadge(s)
+                    return (
+...(truncated)
+
+[2026-02-04T18:15:19] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\[id]\page.tsx -TotalCount 260
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import {
+  Avatar,
+  Badge,
+  Button,
+  Container,
+  Copy,
+  Drawer,
+  Heading,
+  Input,
+  Select,
+  Table,
+  Textarea,
+  Toaster,
+  toast,
+} from "@medusajs/ui"
+import { format, formatDistanceToNowStrict } from "date-fns"
+import { DragEvent, useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+
+type PlanStatus = "pending" | "scheduled" | "completed" | "approved" | "rejected"
+
+type ConsultationDetail = {
+  id: string
+  business_id: string
+  plan_status: PlanStatus
+  scheduled_at: string | null
+  updated_at: string | null
+  chief_complaint: string | null
+  medical_history: any | null
+  rejection_reason: string | null
+  notes: string | null
+  admin_notes: string | null
+  clinician_id: string | null
+  state: string | null
+  patient: any | null
+  clinician: any | null
+  submission: any | null
+  product: any | null
+  mode: string
+  type: string
+}
+
+type DocumentRow = {
+  id: string
+  type: string
+  title: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  created_at: string
+  access_level: string
+  uploaded_by?: string | null
+}
+
+function stableDisplayNumber(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  }
+  const num = hash % 1000000
+  return String(num).padStart(6, "0")
+}
+
+function consultationDisplayId(id: string): string {
+  return `CO-${stableDisplayNumber(id)}`
+}
+
+function statusBadge(status: PlanStatus): { color: "grey" | "blue" | "green" | "orange" | "red"; label: string } {
+  if (status === "pending") return { color: "orange", label: "Pending" }
+  if (status === "scheduled") return { color: "blue", label: "Scheduled" }
+  if (status === "completed") return { color: "grey", label: "Completed" }
+  if (status === "approved") return { color: "green", label: "Approved" }
+  return { color: "red", label: "Rejected" }
+}
+
+function formatDateTime(value?: string | null): string {
+  if (!value) return "-"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+...(truncated)
+
+[2026-02-04T18:15:25] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\[id]\page.tsx -TotalCount 520 | Select-Object -Skip 260
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+    try {
+      const res = await fetch(`/admin/consultations/${encodeURIComponent(id)}/assign`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ clinician_id: clinicianId }),
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+
+      toast.success("Clinician assigned")
+      setAssignOpen(false)
+      await fetchConsultation()
+      await fetchAuditLogs()
+    } catch (e) {
+      toast.error("Failed to assign clinician", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+    }
+  }
+
+  const updateStatus = async (next: PlanStatus, reason?: string) => {
+    setStatusUpdating(true)
+    try {
+      const res = await fetch(`/admin/consultations/${encodeURIComponent(id)}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status: next, reason }),
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+      toast.success("Status updated")
+      setRejectOpen(false)
+      await fetchConsultation()
+      await fetchAuditLogs()
+    } catch (e) {
+      toast.error("Failed to update status", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+    } finally {
+      setStatusUpdating(false)
+    }
+  }
+
+  const openUploadDrawer = (file?: File | null) => {
+    const f = file ?? null
+    setUploadFile(f)
+    setUploadType("medical_record")
+    setUploadAccessLevel("clinician")
+    setUploadTitle(f?.name || "")
+    setUploadDescription("")
+    setUploadOpen(true)
+  }
+
+  const uploadDocument = async () => {
+    if (!uploadFile) {
+      toast.error("Choose a file to upload")
+      return
+    }
+
+    if (!uploadTitle.trim()) {
+      toast.error("Title is required")
+      return
+    }
+
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append("document", uploadFile)
+      form.append("type", uploadType)
+      form.append("title", uploadTitle.trim())
+      form.append("access_level", uploadAccessLevel)
+      if (uploadDescription.trim()) form.append("description", uploadDescription.trim())
+
+      const res = await fetch(`/admin/consultations/${encodeURIComponent(id)}/documents`, {
+...(truncated)
+
+[2026-02-04T18:15:30] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\[id]\page.tsx -TotalCount 780 | Select-Object -Skip 520
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  const modeLabel =
+    consultation.mode === "video" ? "Video" : consultation.mode === "audio" ? "Audio" : "Form"
+  const typeLabel = consultation.type === "follow-up" ? "Follow-up" : "Initial"
+
+  const canSchedule = planStatus === "pending"
+  const canComplete = planStatus === "scheduled"
+  const canApprove = planStatus === "completed"
+  const canReject = planStatus === "completed"
+
+  const previewUrl = activeDoc ? `/admin/documents/${encodeURIComponent(activeDoc.id)}/download` : null
+  const previewIsPdf = !!activeDoc && activeDoc.mime_type === "application/pdf"
+  const previewIsImage = !!activeDoc && (activeDoc.mime_type || "").startsWith("image/")
+
+  const medicalHistoryObj =
+    consultation.medical_history && typeof consultation.medical_history === "object"
+      ? consultation.medical_history
+      : null
+
+  const allergies = Array.isArray((medicalHistoryObj as any)?.allergies)
+    ? ((medicalHistoryObj as any).allergies as any[]).map((a) => String(a)).filter(Boolean)
+    : []
+
+  const currentMeds = Array.isArray((medicalHistoryObj as any)?.current_medications)
+    ? ((medicalHistoryObj as any).current_medications as any[]).map((m) => String(m)).filter(Boolean)
+    : Array.isArray((medicalHistoryObj as any)?.medications)
+      ? ((medicalHistoryObj as any).medications as any[]).map((m) => String(m)).filter(Boolean)
+      : []
+
+  const medicalJson = medicalHistoryObj ? JSON.stringify(medicalHistoryObj, null, 2) : ""
+
+  const product = consultation.product || null
+  const productTitle = product?.title || "—"
+  const productImage = product?.thumbnail || product?.images?.[0]?.url || null
+
+  return (
+    <Container>
+      <Toaster />
+      <div className="flex items-start justify-between gap-3 mb-6">
+        <div>
+          <Heading level="h1" className="flex items-center gap-2">
+            <span>{consultationDisplayId(consultation.id)}</span>
+            <Copy content={consultation.id} />
+          </Heading>
+          <div className="text-xs text-ui-fg-subtle mt-1">ID: {consultation.id}</div>
+          <div className="mt-2 flex items-center gap-2">
+            <Badge color={status.color}>{status.label}</Badge>
+            <div className="text-xs text-ui-fg-subtle">
+              Updated{" "}
+              {consultation.updated_at ? formatDistanceToNowStrict(new Date(consultation.updated_at)) : "—"} ago
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" onClick={() => window.print()}>
+            Print
+          </Button>
+          <Button variant="secondary" onClick={() => window.open(exportUrl, "_blank", "noopener,noreferrer")}>
+            Export PDF
+          </Button>
+          <Button variant="secondary" onClick={() => navigate("/consultations")}>
+            Back
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-white p-4">
+        <div className="text-sm font-medium">Patient information</div>
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <div className="text-xs font-medium mb-1">Full name</div>
+            <div className="text-sm">{patientName}</div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">DOB / Age</div>
+            <div className="text-sm">
+              {patient?.date_of_birth || "—"}
+              {age ? ` (${age})` : ""}
+            </div>
+          </div>
+          <div>
+...(truncated)
+
+[2026-02-04T18:15:35] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\[id]\page.tsx -Tail 260
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+                    <div key={label} className="flex items-center gap-2">
+                      <div
+                        className={[
+                          "h-6 w-6 rounded-full border flex items-center justify-center text-xs",
+                          isDone ? "bg-ui-bg-interactive text-white border-ui-bg-interactive" : isActive ? "border-ui-fg-interactive" : "border-ui-border-base",
+                        ].join(" ")}
+                      >
+                        {isDone ? "✓" : idx + 1}
+                      </div>
+                      <div className={["text-sm", isActive ? "font-medium" : "text-ui-fg-subtle"].join(" ")}>
+                        {label}
+                      </div>
+                    </div>
+                  )
+                })
+              })()}
+            </div>
+
+            {planStatus === "rejected" && consultation.rejection_reason ? (
+              <div className="mt-3 text-sm">
+                <div className="text-xs font-medium mb-1">Rejection reason</div>
+                <div className="text-sm text-ui-fg-subtle whitespace-pre-wrap">{consultation.rejection_reason}</div>
+              </div>
+            ) : null}
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button
+                variant="secondary"
+                size="small"
+                disabled={!canSchedule || statusUpdating}
+                onClick={() => updateStatus("scheduled")}
+              >
+                Schedule
+              </Button>
+              <Button
+                variant="secondary"
+                size="small"
+                disabled={!canComplete || statusUpdating}
+                onClick={() => updateStatus("completed")}
+              >
+                Mark complete
+              </Button>
+              <Button
+                variant="secondary"
+                size="small"
+                disabled={!canApprove || statusUpdating}
+                onClick={() => updateStatus("approved")}
+              >
+                Approve
+              </Button>
+              <Button
+                variant="secondary"
+                size="small"
+                disabled={!canReject || statusUpdating}
+                onClick={() => {
+                  setRejectReason("")
+                  setRejectOpen(true)
+                }}
+              >
+                Reject
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-xl border bg-white p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-medium">Notes</div>
+              <div className="text-xs text-ui-fg-subtle">
+                {saveState === "saving"
+                  ? "Saving…"
+                  : saveState === "dirty"
+                    ? "Unsaved"
+                    : saveState === "saved"
+                      ? "Saved"
+                      : saveState === "error"
+                        ? "Save failed"
+                        : "Saved"}
+              </div>
+            </div>
+            <div className="mt-3 space-y-4">
+...(truncated)
+
+[2026-02-04T18:15:44] CMD: Test-Path -LiteralPath .\src\tests\integration\consultations-management.test.ts; if (Test-Path -LiteralPath .\src\tests\integration\consultations-management.test.ts) { Get-Content -LiteralPath .\src\tests\integration\consultations-management.test.ts -TotalCount 220 }
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+True
+/**
+ * Consultations Management APIs (PLAN)
+ *
+ * Covers the backend endpoints used by the Admin Consultations list/detail pages:
+ * - GET /admin/custom/consultations (paged, filtered, search)
+ * - GET /admin/custom/consultations/:id (detail payload)
+ * - POST /admin/custom/consultations/:id/notes (notes autosave)
+ * - GET /admin/custom/consultations/export (HTML export for "Export PDF" flow)
+ * - GET /admin/custom/consultations/:id/export (HTML export for "Export PDF" flow)
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import jwt from "jsonwebtoken"
+import { Modules } from "@medusajs/framework/utils"
+import {
+  createTestBusiness,
+  createTestClinician,
+  createTestPatient,
+  createTestConsultation,
+  createTestProduct,
+} from "../utils/factories"
+import { BUSINESS_MODULE } from "../../modules/business"
+import { COMPLIANCE_MODULE } from "../../modules/compliance"
+
+jest.setTimeout(60000)
+
+function signAdminToken(userId: string): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error("JWT_SECRET must be set for integration tests")
+  }
+
+  return jwt.sign(
+    {
+      actor_id: userId,
+      actor_type: "user",
+      auth_identity_id: "",
+      app_metadata: {},
+      user_metadata: {},
+    },
+    secret
+  )
+}
+
+medusaIntegrationTestRunner({
+  testSuite: ({ api, getContainer }) => {
+    describe("Consultations management (PLAN)", () => {
+      it("lists consultations with pagination + filters + search", async () => {
+        const container = getContainer()
+
+        const business = await createTestBusiness(container, { name: "Acme Health" })
+        const product = await createTestProduct(container, true, { title: "Test Medication" })
+
+        const patient = await createTestPatient(container, {
+          business_id: business.id,
+          first_name: "Alice",
+          last_name: "Patient",
+          email: "alice@test.com",
+        } as any)
+
+        const clinician = await createTestClinician(container, {
+          business_id: business.id,
+          first_name: "Bob",
+          last_name: "Clinician",
+          email: "bob.clinician@test.com",
+          status: "active",
+        } as any)
+
+        // Create a consult submission so we can derive "type=initial" and "state=FL"
+        const businessService = container.resolve(BUSINESS_MODULE) as any
+        const submission = await businessService.createConsultSubmissions({
+          id: `sub_${Date.now()}`,
+          business_id: business.id,
+          location_id: null,
+          product_id: product.id,
+          customer_email: patient.email,
+          customer_first_name: patient.first_name,
+          customer_last_name: patient.last_name,
+          customer_phone: patient.phone ?? null,
+...(truncated)
+
+[2026-02-04T18:15:49] CMD: Get-Content -LiteralPath .\src\tests\integration\consultations-management.test.ts -TotalCount 520 | Select-Object -Skip 220
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+        const adminUser = await userService.createUsers({
+          email: "admin_consults_detail@test.com",
+          first_name: "Admin",
+          last_name: "Detail",
+          metadata: { is_active: true },
+        })
+        const adminToken = signAdminToken(adminUser.id)
+
+        const res = await api
+          .get(`/admin/custom/consultations/${encodeURIComponent(consultation.id)}`, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .catch((e: any) => e.response)
+
+        expect(res.status).toBe(200)
+        expect(res.data.consultation?.id).toBe(consultation.id)
+        expect(res.data.consultation?.business?.id).toBe(business.id)
+        expect(res.data.consultation?.patient?.email).toBe(patient.email)
+        expect(res.data.consultation?.clinician?.id).toBe(clinician.id)
+        expect(res.data.consultation?.product?.id).toBe(product.id)
+        expect(res.data.consultation?.state).toBe("CA")
+        expect(res.data.consultation?.plan_status).toBe("scheduled")
+      })
+
+      it("updates notes (autosave) and writes an audit log", async () => {
+        const container = getContainer()
+
+        const business = await createTestBusiness(container)
+        const patient = await createTestPatient(container, { business_id: business.id } as any)
+        const consultation = await createTestConsultation(container, "draft", {
+          business_id: business.id,
+          patient_id: patient.id,
+          notes: null as any,
+        } as any)
+
+        const userService = container.resolve(Modules.USER) as any
+        const adminUser = await userService.createUsers({
+          email: "admin_notes@test.com",
+          first_name: "Admin",
+          last_name: "Notes",
+          metadata: { is_active: true },
+        })
+        const adminToken = signAdminToken(adminUser.id)
+
+        const update = await api
+          .post(
+            `/admin/custom/consultations/${encodeURIComponent(consultation.id)}/notes`,
+            { notes: "New clinician notes", admin_notes: "Internal admin note" },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          .catch((e: any) => e.response)
+
+        expect(update.status).toBe(200)
+        expect(update.data.consultation?.id).toBe(consultation.id)
+        expect(update.data.consultation?.notes).toBe("New clinician notes")
+        expect(update.data.consultation?.admin_notes).toBe("Internal admin note")
+
+        const compliance = container.resolve(COMPLIANCE_MODULE) as any
+        const listed = await compliance.listAuditLogs(
+          { entity_type: "consultation", entity_id: consultation.id },
+          { take: 50, order: { created_at: "DESC" } }
+        )
+        const logs = Array.isArray(listed?.[0]) ? listed[0] : listed
+
+        expect(Array.isArray(logs)).toBe(true)
+        expect(logs.length).toBeGreaterThan(0)
+      })
+
+      it("exports HTML for list + detail (PDF flow)", async () => {
+        const container = getContainer()
+
+        const business = await createTestBusiness(container)
+        const patient = await createTestPatient(container, { business_id: business.id } as any)
+        const consultation = await createTestConsultation(container, "draft", {
+          business_id: business.id,
+          patient_id: patient.id,
+          scheduled_at: new Date(),
+        } as any)
+
+        const userService = container.resolve(Modules.USER) as any
+...(truncated)
+
+[2026-02-04T18:16:01] CMD: Get-Content -LiteralPath .\src\tests\integration\consultation-apis.test.ts -TotalCount 260
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Consultation API Endpoint Tests
+ *
+ * Covers:
+ * - GET /store/consultations/approvals?product_id={id}
+ * - POST /admin/consultations/{id}/assign
+ * - POST /admin/consultations/{id}/status
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import jwt from "jsonwebtoken"
+import {
+  createTestBusiness,
+  createTestCustomer,
+  createTestPatient,
+  createTestProduct,
+  createTestClinician,
+  createTestConsultation,
+  createTestConsultApproval,
+} from "../utils/factories"
+import { dateOffset } from "../utils/test-server"
+
+jest.setTimeout(60000)
+
+function signCustomerToken(customerId: string): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error("JWT_SECRET must be set for integration tests")
+  }
+
+  return jwt.sign(
+    {
+      actor_id: customerId,
+      actor_type: "customer",
+      auth_identity_id: "",
+      app_metadata: {},
+      user_metadata: {},
+    },
+    secret
+  )
+}
+
+function signAdminToken(userId: string, businessId?: string): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error("JWT_SECRET must be set for integration tests")
+  }
+
+  return jwt.sign(
+    {
+      actor_id: userId,
+      actor_type: "user",
+      auth_identity_id: "",
+      business_id: businessId,
+      app_metadata: businessId ? { business_id: businessId } : {},
+      user_metadata: {},
+    },
+    secret
+  )
+}
+
+medusaIntegrationTestRunner({
+  testSuite: ({ api, getContainer }) => {
+    describe("Consultation APIs", () => {
+      let publishableApiKey: string
+
+      beforeEach(async () => {
+        const container = getContainer()
+        const apiKeyService = container.resolve("api_key") as any
+
+        const key = await apiKeyService.createApiKeys({
+          title: "test publishable key",
+          type: "publishable",
+          created_by: "integration_test",
+        })
+
+        publishableApiKey = key.token
+      })
+
+      describe("GET /store/consultations/approvals", () => {
+...(truncated)
+
+[2026-02-04T18:16:10] CMD: Get-Content -LiteralPath .\package.json -TotalCount 120
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+{
+  "name": "TheRxSpot_Marketplace",
+  "version": "0.0.1",
+  "description": "A starter for Medusa projects.",
+  "author": "Medusa (https://medusajs.com)",
+  "license": "MIT",
+  "keywords": [
+    "sqlite",
+    "postgres",
+    "typescript",
+    "ecommerce",
+    "headless",
+    "medusa"
+  ],
+  "scripts": {
+    "postinstall": "node ./scripts/ensure-date-fns-locale.mjs",
+    "build": "medusa build",
+    "db:clean-migrate": "node ./scripts/db/clean-migrate.mjs",
+    "seed": "medusa exec ./src/scripts/seed.ts",
+    "start": "medusa start",
+    "dev": "medusa develop",
+    "test:integration:http": "TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
+    "test:integration:modules": "TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
+    "test:integration:custom": "NODE_OPTIONS=--experimental-vm-modules jest --config=jest.integration.config.js --silent=false --runInBand --forceExit",
+    "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit",
+    "test:consult-gating": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/consult-gating.test.ts --silent=false --runInBand --forceExit",
+    "test:consultation": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/consultation-lifecycle.test.ts --silent=false --runInBand --forceExit",
+    "test:earnings": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/earnings.test.ts --silent=false --runInBand --forceExit",
+    "test:documents": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/documents.test.ts --silent=false --runInBand --forceExit",
+    "test:audit": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/audit-logging.test.ts --silent=false --runInBand --forceExit"
+  },
+  "dependencies": {
+    "@medusajs/admin-sdk": "2.13.1",
+    "@medusajs/cli": "2.13.1",
+    "@medusajs/framework": "2.13.1",
+    "@medusajs/medusa": "2.13.1",
+    "@types/qrcode": "^1.5.6",
+    "clamscan": "^1.4.2",
+    "date-fns": "^3.6.0",
+    "file-type": "^19.6.0",
+    "ioredis": "^5.3.2",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@medusajs/test-utils": "2.13.1",
+    "@swc/core": "^1.7.28",
+    "@swc/jest": "^0.2.36",
+    "@types/jest": "^29.5.13",
+    "@types/node": "^20.12.11",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.2.25",
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "prop-types": "^15.8.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.14",
+    "yalc": "^1.0.0-pre.53"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "npm@11.5.2"
+}
+
+
+[2026-02-04T18:16:28] CMD: rg -n "Consultations Management" .\PLAN.txt
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+160:Consultations Management Page (16h)
+
+
+[2026-02-04T18:16:35] CMD: Get-Content -LiteralPath .\PLAN.txt | Select-Object -Skip 140 -First 120
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ Role (Customer/Admin/Clinician)
+ Joined Date (relative time, e.g. "3 days ago")
+ Actions (View, Edit, Deactivate)
+ Search & Filters:
+ Global search (name, email, phone)
+ Filter by status (Active/Inactive)
+ Filter by role (Customer/Admin/Clinician)
+ Date range filter (joined between X and Y)
+ Pagination: Server-side, 25 per page
+ Bulk Actions:
+ Select all checkbox
+ Bulk deactivate
+ Bulk export to CSV
+ User Detail Modal:
+ Personal info (editable)
+ Order history (linked to orders page)
+ Consultation history (linked to consultations page)
+ Activity log (last 50 actions)
+ Deactivation reason (if inactive)
+Consultations Management Page (16h)
+ Create src/admin/routes/consultations/page.tsx (list view)
+ Table Columns:
+ ID (CO-{number}, clickable)
+ Client Name (linked to user profile)
+ Provider (clinician name or "Unassigned")
+ Business (business name with logo)
+ Scheduled Date/Time (with timezone)
+ State (patient state, e.g. "FL")
+ Status (badge: Pending/Scheduled/Completed/Approved/Rejected)
+ Mode (icon: video/audio/form)
+ Product (linked medication)
+ Type (Initial/Follow-up)
+ Actions (View, Assign, Approve, Reject)
+ Search & Filters:
+ Search by client name, clinician name, order ID
+ Filter by status (multi-select)
+ Filter by mode (video/audio/form)
+ Filter by type (initial/follow-up)
+ Filter by business (dropdown)
+ Date range filter (scheduled between X and Y)
+ Filter by state (for compliance review)
+ Bulk Actions:
+ Bulk assign to clinician
+ Bulk export to PDF report
+ Create src/admin/routes/consultations/[id]/page.tsx (detail view)
+ Detail Layout:
+Header Section:
+ Consultation ID (large, copyable)
+ Status badge (with last updated timestamp)
+ [Print] and [Export PDF] buttons
+Patient Information Card:
+ Full name, DOB, age
+ Phone (formatted, click-to-call if web calling enabled)
+ Email (click-to-email)
+ Address (full, with map link)
+ State (highlighted for compliance)
+Consultation Details Card:
+ Linked product (name, dosage, image)
+ Mode (video/audio/form with icon)
+ Type (initial/follow-up)
+ Scheduled date/time (with timezone, countdown if upcoming)
+ Chief complaint (patient's primary concern)
+ Medical history (formatted, expandable)
+ Current medications (list)
+ Allergies (highlighted in red if any)
+Clinician Assignment Section:
+ Current clinician (avatar + name)
+ [Reassign] button → modal with clinician dropdown
+ Clinician availability indicator (available/busy)
+Status Management Section:
+ Status timeline (visual stepper: Pending → Scheduled → Completed → Approved)
+ Status action buttons:
+ [Schedule] (if pending)
+ [Mark Complete] (if scheduled)
+ [Approve] (if completed)
+ [Reject] (if completed) → requires rejection reason
+ Rejection reason field (if rejected)
+Documents Section:
+ Uploaded documents list (filename, type, size, uploaded by, timestamp)
+ [Download] button per document
+...(truncated)
+
+[2026-02-04T18:16:50] CMD: node --experimental-vm-modules node_modules/jest/bin/jest.js src/tests/integration/consultations-management.test.ts --config jest.integration.config.js --silent=false --runInBand --forceExit
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:8268) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules node_modules/jest/bin/jest.js src/test ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:8268) Exp...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+PASS src/tests/integration/consultations-management.test.ts (46.162 s)
+    Consultations management (PLAN)
+      v lists consultations with pagination + filters + search (3213 ms)
+      v returns consultation detail payload (6417 ms)
+      v updates notes (autosave) and writes an audit log (6470 ms)
+      v exports HTML for list + detail (PDF flow) (6736 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        46.312 s, estimated 50 s
+Ran all test suites matching /src\\tests\\integration\\consultations-management.test.ts/i.
+
+
+[2026-02-04T18:17:52] CMD: rg -n "POST /admin/consultations/:id/status" -n .\src\tests\integration\consultation-apis.test.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+398:      describe("POST /admin/consultations/:id/status", () => {
+
+
+[2026-02-04T18:17:58] CMD: Get-Content -LiteralPath .\src\tests\integration\consultation-apis.test.ts -TotalCount 560 | Select-Object -Skip 380
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+          const second = await api.post(
+            `/store/carts/${cartId}/consultation-fee`,
+            { consultation_id: consultationId },
+            {
+              headers: {
+                "x-publishable-api-key": publishableApiKey,
+                Authorization: `Bearer ${customerToken}`,
+                "x-business-slug": business.slug,
+              },
+            }
+          )
+
+          expect(second.status).toBe(200)
+          expect(second.data.added).toBe(false)
+        })
+      })
+
+      describe("POST /admin/consultations/:id/status", () => {
+        it("enforces pending → scheduled → completed → approved and updates consult approval", async () => {
+          const container = getContainer()
+          const business = await createTestBusiness(container)
+          const customer = await createTestCustomer(container)
+          const patient = await createTestPatient(container, {
+            business_id: business.id,
+            customer_id: customer.id,
+          })
+          const consultation = await createTestConsultation(container, "draft", {
+            id: "consult_status_001",
+            business_id: business.id,
+            patient_id: patient.id,
+            outcome: "pending",
+          })
+          expect(consultation).toHaveProperty("id")
+          const consultationService = container.resolve("consultationModuleService") as any
+          const [createdConsults] = await consultationService.listAndCountConsultations(
+            { id: consultation.id },
+            { take: 1 }
+          )
+          expect(createdConsults).toHaveLength(1)
+          const product = await createTestProduct(container, true, {
+            metadata: { requires_consult: true },
+          })
+
+          await createTestConsultApproval(container, "pending", {
+            customer_id: customer.id,
+            product_id: product.id,
+            business_id: business.id,
+            consultation_id: consultation.id,
+          })
+
+          const adminToken = signAdminToken("user_test_admin", business.id)
+
+          const scheduled = await api
+            .post(
+              `/admin/consultations/${consultation.id}/status`,
+              { status: "scheduled" },
+              { headers: { Authorization: `Bearer ${adminToken}` } }
+            )
+            .catch((e: any) => e.response)
+
+          expect(scheduled.status).toBe(200)
+          expect(scheduled.data.consultation).toMatchObject({
+            id: consultation.id,
+            status: "scheduled",
+          })
+
+          const completed = await api
+            .post(
+              `/admin/consultations/${consultation.id}/status`,
+              { status: "completed" },
+              { headers: { Authorization: `Bearer ${adminToken}` } }
+            )
+            .catch((e: any) => e.response)
+
+          expect(completed.status).toBe(200)
+          expect(completed.data.consultation).toMatchObject({
+            id: consultation.id,
+            status: "completed",
+          })
+
+...(truncated)
+
+[2026-02-04T18:18:03] CMD: Get-Content -LiteralPath .\src\tests\integration\consultation-apis.test.ts -Tail 120
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+          const approved = await api
+            .post(
+              `/admin/consultations/${consultation.id}/status`,
+              { status: "approved" },
+              { headers: { Authorization: `Bearer ${adminToken}` } }
+            )
+            .catch((e: any) => e.response)
+
+          expect(approved.status).toBe(200)
+          expect(approved.data.consultation).toMatchObject({
+            id: consultation.id,
+            status: "completed",
+            outcome: "approved",
+          })
+
+          const businessService = container.resolve("businessModuleService") as any
+          const approvals = await businessService.listConsultApprovals(
+            { consultation_id: consultation.id },
+            { take: 10, order: { approved_at: "DESC" } }
+          )
+
+          expect(approvals[0]).toMatchObject({
+            consultation_id: consultation.id,
+            status: "approved",
+            customer_id: customer.id,
+            product_id: product.id,
+          })
+
+          // Store approval endpoint reflects approval status
+          const customerToken = signCustomerToken(customer.id)
+          const storeRes = await api
+            .get(`/store/consultations/approvals?product_id=${product.id}`, {
+              headers: {
+                "x-publishable-api-key": publishableApiKey,
+                Authorization: `Bearer ${customerToken}`,
+                "x-business-slug": business.slug,
+              },
+            })
+            .catch((e: any) => e.response)
+
+          expect(storeRes.status).toBe(200)
+          expect(storeRes.data).toMatchObject({
+            has_valid_approval: true,
+            consultation_id: consultation.id,
+          })
+        })
+
+        it("reject requires reason and invalid transitions are blocked", async () => {
+          const container = getContainer()
+          const business = await createTestBusiness(container)
+          const customer = await createTestCustomer(container)
+          const patient = await createTestPatient(container, {
+            business_id: business.id,
+            customer_id: customer.id,
+          })
+          const consultation = await createTestConsultation(container, "draft", {
+            id: "consult_status_002",
+            business_id: business.id,
+            patient_id: patient.id,
+            outcome: "pending",
+          })
+          expect(consultation).toHaveProperty("id")
+          const consultationService = container.resolve("consultationModuleService") as any
+          const [createdConsults] = await consultationService.listAndCountConsultations(
+            { id: consultation.id },
+            { take: 1 }
+          )
+          expect(createdConsults).toHaveLength(1)
+          const product = await createTestProduct(container, true, {
+            metadata: { requires_consult: true },
+          })
+
+          await createTestConsultApproval(container, "pending", {
+            customer_id: customer.id,
+            product_id: product.id,
+            business_id: business.id,
+            consultation_id: consultation.id,
+          })
+
+          const adminToken = signAdminToken("user_test_admin", business.id)
+...(truncated)
+
+[2026-02-04T18:18:18] CMD: npm run build
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 build
+> medusa build
+
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from D:\GitHub\TheRxSpot_Marketplace\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa\server" folder
+[32minfo[39m:    Compiling frontend source...
+[32minfo[39m:    Backend build completed successfully (11.40s)
+[32minfo[39m:    Frontend build completed successfully (42.54s)
+
+
+[2026-02-04T18:19:19] CMD: Get-Content -LiteralPath .\src\tests\integration\documents.test.ts -TotalCount 80
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Document Storage Tests
+ * 
+ * Tests document upload, integrity verification, access control,
+ * and audit logging for document operations.
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import {
+  createTestBusiness,
+  createTestPatient,
+  createTestDocument,
+  createTestConsultation,
+  createTestClinician,
+} from "../utils/factories"
+import { getServices } from "../utils/test-server"
+
+jest.setTimeout(60000)
+
+describe("Document Storage", () => {
+  describe("Document Upload and Integrity", () => {
+    it("should upload document with checksum", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+          const business = await createTestBusiness(container)
+          const patient = await createTestPatient(container, { business_id: business.id })
+          
+          // Act: Create document with checksum
+          const document = await createTestDocument(container, {
+            business_id: business.id,
+            patient_id: patient.id,
+            uploaded_by: patient.id,
+            checksum: "sha256:a1b2c3d4e5f6...",
+            file_size: 1024,
+            mime_type: "application/pdf",
+          })
+          
+          // Assert
+          expect(document).toBeDefined()
+          expect(document.checksum).toBe("sha256:a1b2c3d4e5f6...")
+          expect(document.file_size).toBe(1024)
+        },
+      })
+    })
+
+    it("should verify document integrity", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+          const business = await createTestBusiness(container)
+          const patient = await createTestPatient(container, { business_id: business.id })
+          const expectedChecksum = "sha256:expected_hash_value"
+          
+          const document = await createTestDocument(container, {
+            business_id: business.id,
+            patient_id: patient.id,
+            uploaded_by: patient.id,
+            checksum: expectedChecksum,
+          })
+          
+          const { compliance } = getServices(container)
+          
+          // Act: Retrieve document and verify checksum
+          const retrievedDoc = await compliance.retrieveDocument(document.id)
+          
+          // Assert: Verify checksum matches
+          expect(retrievedDoc.checksum).toBe(expectedChecksum)
+          
+          // Simulate integrity check
+          const isValid = retrievedDoc.checksum === expectedChecksum
+          expect(isValid).toBe(true)
+        },
+      })
+    })
+
+    it("should reject upload of disallowed file type", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+...(truncated)
+
+[2026-02-04T18:19:27] CMD: npm run test:documents
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 test:documents
+> NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/documents.test.ts --silent=false --runInBand --forceExit
+
+'NODE_OPTIONS' is not recognized as an internal or external command,
+operable program or batch file.
+
+
+[2026-02-04T18:19:58] CMD: rg -n "consultations/\[id\]/documents" -S .\src\api
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T18:20:05] CMD: rg -n "admin/consultations" .\src\api -S
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+.\src\api\middlewares.ts:105:      matcher: "/admin/consultations*",
+.\src\api\middlewares\audit-logging.ts:101:  // Match patterns like /admin/consultations/:id, /admin/patients/:id, etc.
+.\src\api\middlewares\audit-logging.ts:294:    "/admin/consultations",
+.\src\api\admin\consultations\[id]\status\route.ts:53: * POST /admin/consultations/:id/status
+.\src\api\admin\consultations\[id]\route.ts:12: * GET /admin/consultations/:id
+.\src\api\admin\consultations\[id]\route.ts:69: * PUT /admin/consultations/:id
+.\src\api\admin\consultations\[id]\route.ts:120: * DELETE /admin/consultations/:id
+.\src\api\admin\consultations\[id]\documents\route.ts:4: * POST /admin/consultations/:id/documents
+.\src\api\admin\consultations\[id]\assign\route.ts:30: * POST /admin/consultations/:id/assign
+
+
+[2026-02-04T18:20:13] CMD: Get-Content -LiteralPath .\src\api\admin\consultations\[id]\documents\route.ts -TotalCount 220
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Consultation Document Upload (PLAN)
+ *
+ * POST /admin/consultations/:id/documents
+ *
+ * Accepts multipart/form-data with:
+ * - document: file (PDF/JPG/PNG, max 10MB)
+ * - type: document type
+ * - title: document title
+ * - description?: optional
+ * - access_level: patient_only | clinician | business_staff | platform_admin
+ * - expires_at?: ISO date string
+ *
+ * Access control:
+ * - Admin/business staff can upload for any consultation in their business.
+ * - Clinicians can upload only for consultations they are assigned to.
+ *
+ * Storage:
+ * - Uses the compliance module storage provider (local in dev, S3 in prod).
+ */
+
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import ComplianceModuleService from "../../../../../modules/compliance/service"
+import {
+  uploadSingleDocument,
+  handleMulterError,
+  virusScanMiddleware,
+} from "../../../../middlewares/document-upload"
+import { isValidAccessLevel } from "../../../../../modules/compliance/utils/access-control"
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+type UserType = "clinician" | "business_staff"
+
+function getOptionalTenantBusinessId(req: MedusaRequest): string | undefined {
+  const authContext = (req as any).auth_context as
+    | {
+        business_id?: string
+        metadata?: Record<string, any>
+        app_metadata?: Record<string, any>
+      }
+    | undefined
+
+  return (
+    authContext?.business_id ||
+    authContext?.metadata?.business_id ||
+    authContext?.app_metadata?.business_id ||
+    (req as any)?.tenant_context?.business_id
+  )
+}
+
+async function resolveUserType(
+  req: MedusaRequest,
+  consultationService: any
+): Promise<{ actorId: string | null; userType: UserType; clinicianId: string | null }> {
+  const authContext = (req as any).auth_context as
+    | { actor_id?: string; actor_type?: string }
+    | undefined
+
+  const actorId = authContext?.actor_id || null
+  const rawActorType = authContext?.actor_type || "user"
+
+  if (!actorId) {
+    return { actorId: null, userType: "business_staff", clinicianId: null }
+  }
+
+  // If the auth system explicitly marks clinicians, prefer it.
+  if (rawActorType === "clinician") {
+    return { actorId, userType: "clinician", clinicianId: actorId }
+  }
+
+  // In this repo, clinicians can be represented as admin `user` actors with a clinician record linked by `user_id`.
+  try {
+    const [clinicians] = await consultationService.listAndCountClinicians(
+      { user_id: actorId },
+...(truncated)
+
+[2026-02-04T18:20:19] CMD: Get-Content -LiteralPath .\src\api\admin\consultations\[id]\documents\route.ts -Tail 160
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+      )
+
+      const actor = await resolveUserType(req, consultationService)
+      if (!actor.actorId) {
+        return res.status(401).json({
+          code: "UNAUTHORIZED",
+          message: "Unauthorized",
+        })
+      }
+
+      const { id: consultationId } = req.params
+
+      let consultation: any
+      try {
+        const [consultations] = await consultationService.listAndCountConsultations(
+          { id: consultationId },
+          { take: 1 }
+        )
+        consultation = consultations?.[0]
+      } catch {
+        consultation = null
+      }
+
+      if (!consultation) {
+        return res.status(404).json({
+          code: "NOT_FOUND",
+          message: "Consultation not found",
+        })
+      }
+
+      const tenantBusinessId = getOptionalTenantBusinessId(req)
+      if (tenantBusinessId && consultation.business_id !== tenantBusinessId) {
+        return res.status(404).json({
+          code: "NOT_FOUND",
+          message: "Consultation not found",
+        })
+      }
+
+      if (actor.userType === "clinician") {
+        if (!consultation.clinician_id || consultation.clinician_id !== actor.clinicianId) {
+          return res.status(403).json({
+            code: "FORBIDDEN",
+            message: "Only the assigned clinician can upload documents for this consultation",
+          })
+        }
+      }
+
+      const file = (req as any).file as
+        | { buffer: Buffer; originalname: string; mimetype: string; size: number }
+        | undefined
+
+      if (!file) {
+        return res.status(400).json({
+          code: "INVALID_INPUT",
+          message: "Please provide a file in the 'document' field",
+        })
+      }
+
+      const body = (req.body ?? {}) as Record<string, any>
+      const type = typeof body.type === "string" ? body.type.trim() : ""
+      const title = typeof body.title === "string" ? body.title.trim() : ""
+      const description = typeof body.description === "string" ? body.description.trim() : null
+      const accessLevel = typeof body.access_level === "string" ? body.access_level.trim() : ""
+      const expiresAtRaw = typeof body.expires_at === "string" ? body.expires_at.trim() : ""
+
+      if (!type || !validateDocumentType(type)) {
+        return res.status(400).json({
+          code: "INVALID_INPUT",
+          message:
+            "type must be one of: prescription, lab_result, medical_record, consent_form, id_verification, insurance_card, other",
+        })
+      }
+
+      if (!title) {
+        return res.status(400).json({
+          code: "INVALID_INPUT",
+          message: "title is required",
+        })
+      }
+
+...(truncated)
+
+[2026-02-04T18:20:27] CMD: rg -n "GET /admin/documents" -S .\src\api\admin
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+.\src\api\admin\documents\route.ts:4: * GET /admin/documents - List documents with filters
+.\src\api\admin\documents\route.ts:29: * GET /admin/documents
+.\src\api\admin\documents\search\route.ts:9: * This endpoint replaces the GET /admin/documents endpoint for searches
+.\src\api\admin\documents\[id]\download\route.ts:4: * GET /admin/documents/:id/download
+.\src\api\admin\documents\[id]\download\route.ts:19: * GET /admin/documents/:id/download
+.\src\api\admin\documents\[id]\route.ts:4: * GET /admin/documents/:id - Get document metadata
+.\src\api\admin\documents\[id]\route.ts:23: * GET /admin/documents/:id
+.\src\api\admin\documents\[id]\verify\route.ts:4: * GET /admin/documents/:id/verify - Verify document integrity
+.\src\api\admin\documents\[id]\verify\route.ts:14: * GET /admin/documents/:id/verify
+
+
+[2026-02-04T18:20:49] CMD: Get-ChildItem -LiteralPath .\src\api\admin\custom\consultations -Recurse | Select-Object FullName
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+FullName                                                                               
+--------                                                                               
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\consultations\export              
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\consultations\[id]                
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\consultations\route.ts            
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\consultations\_helpers.ts         
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\consultations\export\route.ts     
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\consultations\[id]\export         
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\consultations\[id]\notes          
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\consultations\[id]\route.ts       
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\consultations\[id]\export\route.ts
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\consultations\[id]\notes\route.ts 
+
+
+
+
+[2026-02-04T18:20:57] CMD: rg -n "Consultations Management" .\PRD_CHECKLIST.md
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+127:- [x] Consultations Management Page (16h)
+
+
+[2026-02-04T18:21:54] CMD: rg -n "�" .\src\admin\routes\consultations -S
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T18:22:21] CMD: Get-Content -LiteralPath .\src\api\middlewares\document-upload.ts -TotalCount 260
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Document Upload Middleware
+ * 
+ * Multer-based middleware for handling document uploads with:
+ * - File size limits (max 10MB)
+ * - MIME type validation (pdf, jpg, png, tiff)
+ * - Secure file naming
+ * - Virus scanning with ClamAV or file-type validation fallback
+ */
+
+import multer from "multer"
+import path from "path"
+import { v4 as uuidv4 } from "uuid"
+import NodeClam from "clamscan"
+
+// Allowed MIME types for medical documents
+const ALLOWED_MIME_TYPES = [
+  "application/pdf",
+  "image/jpeg",
+  "image/png",
+]
+
+// Map MIME types to expected file extensions
+const MIME_TO_EXTENSIONS: Record<string, string[]> = {
+  "application/pdf": [".pdf"],
+  "image/jpeg": [".jpg", ".jpeg"],
+  "image/png": [".png"],
+}
+
+// ClamAV instance (lazy loaded)
+let clamscan: NodeClam | null = null
+let clamscanInitialized = false
+let clamscanAvailable = false
+
+// Maximum file size (10MB default)
+const MAX_FILE_SIZE = parseInt(process.env.DOCUMENT_MAX_SIZE || "10485760")
+
+// Configure storage
+const storage = multer.memoryStorage()
+
+/**
+ * File filter to validate MIME types
+ */
+const fileFilter = (
+  req: any,
+  file: any,
+  cb: multer.FileFilterCallback
+) => {
+  if (ALLOWED_MIME_TYPES.includes(file.mimetype.toLowerCase())) {
+    cb(null, true)
+  } else {
+    cb(
+      new Error(
+        `Invalid file type: ${file.mimetype}. Allowed types: ${ALLOWED_MIME_TYPES.join(", ")}`
+      )
+    )
+  }
+}
+
+/**
+ * Multer upload configuration
+ */
+export const documentUpload = multer({
+  storage,
+  limits: {
+    fileSize: MAX_FILE_SIZE,
+    files: 1, // Only single file uploads
+  },
+  fileFilter,
+})
+
+/**
+ * Middleware for single document upload
+ * Usage: upload.single('document')
+ */
+export const uploadSingleDocument = documentUpload.single("document")
+
+/**
+ * Middleware for multiple document uploads
+ * Usage: upload.array('documents', 5)
+...(truncated)
+
+[2026-02-04T18:22:35] CMD: rg -n "function virusScanMiddleware|export async function virusScanMiddleware|export function virusScanMiddleware" .\src\api\middlewares\document-upload.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+300:export async function virusScanMiddleware(
+
+
+[2026-02-04T18:22:41] CMD: Get-Content -LiteralPath .\src\api\middlewares\document-upload.ts -TotalCount 420 | Select-Object -Skip 280
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  // Check file extension matches MIME type
+  if (mimeType) {
+    const ext = path.extname(filename).toLowerCase()
+    const allowedExts = MIME_TO_EXTENSIONS[mimeType.toLowerCase()]
+    
+    if (allowedExts && !allowedExts.includes(ext)) {
+      const msg = `File extension '${ext}' does not match MIME type '${mimeType}'`
+      console.warn(`[Virus Scanner] ${msg} for ${filename}`)
+      threats.push(msg)
+      return { clean: false, threats }
+    }
+  }
+
+  return { clean: true }
+}
+
+/**
+ * Middleware to scan uploaded files for viruses
+ */
+export async function virusScanMiddleware(
+  req: any,
+  res: any,
+  next: any
+) {
+  if (!req.file && (!req.files || req.files.length === 0)) {
+    return next()
+  }
+
+  const files = req.file ? [req.file] : req.files
+
+  try {
+    for (const file of files) {
+      const scanResult = await scanFileForViruses(
+        file.buffer, 
+        file.originalname,
+        file.mimetype
+      )
+      
+      if (!scanResult.clean) {
+        console.error(
+          `[Security] File upload rejected for ${file.originalname}:`,
+          scanResult.threats
+        )
+        return res.status(400).json({
+          error: "Security threat detected",
+          message: `File '${file.originalname}' failed security validation`,
+          threats: scanResult.threats,
+          code: "VIRUS_DETECTED",
+        })
+      }
+    }
+    next()
+  } catch (error) {
+    console.error("[Security] Virus scan middleware error:", error)
+    return res.status(500).json({
+      error: "Scan failed",
+      message: "Failed to scan file for viruses",
+      code: "SCAN_FAILED",
+    })
+  }
+}
+
+/**
+ * Validate file extension matches MIME type
+ */
+export function validateFileExtension(
+  filename: string,
+  mimetype: string
+): boolean {
+  const ext = path.extname(filename).toLowerCase()
+  
+  const mimeToExt: Record<string, string[]> = {
+    "application/pdf": [".pdf"],
+    "image/jpeg": [".jpg", ".jpeg"],
+    "image/png": [".png"],
+  }
+
+  const allowedExts = mimeToExt[mimetype.toLowerCase()]
+  if (!allowedExts) return false
+
+...(truncated)
+
+[2026-02-04T18:22:52] CMD: Get-Content -LiteralPath .\src\api\admin\documents\[id]\download\route.ts -TotalCount 220
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Document Download API Route
+ * 
+ * GET /admin/documents/:id/download
+ *
+ * In production (S3), this can return a signed URL.
+ * In local development, this streams the file content directly so downloads work
+ * without requiring static file hosting for the local upload directory.
+ */
+
+import {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+import ComplianceModuleService from "../../../../../modules/compliance/service"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+
+/**
+ * GET /admin/documents/:id/download
+ * Download a document (stream) or generate a signed URL.
+ * 
+ * Query params:
+ * - signed_url: "1" to return JSON with signed URL (default: stream)
+ * - expires_in: URL expiration time in seconds (default: 300, max: 86400) (signed URL mode)
+ * - disposition: "inline" | "attachment" (stream mode)
+ */
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const complianceService: ComplianceModuleService = req.scope.resolve(
+      "complianceModuleService"
+    )
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE) as any
+
+    const { id } = req.params
+    const authContext = (req as any).auth_context as
+      | { actor_id?: string; actor_type?: string; business_id?: string; metadata?: any; app_metadata?: any }
+      | undefined
+
+    const actorId = authContext?.actor_id || null
+    if (!actorId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Unauthorized",
+        code: "UNAUTHORIZED",
+      })
+    }
+
+    const tenantBusinessId =
+      authContext?.business_id ||
+      authContext?.metadata?.business_id ||
+      authContext?.app_metadata?.business_id ||
+      (req as any)?.tenant_context?.business_id
+
+    // Resolve clinician vs business staff
+    let userType: "business_staff" | "clinician" = "business_staff"
+    let clinicianId: string | null = null
+
+    if (authContext?.actor_type === "clinician") {
+      userType = "clinician"
+      clinicianId = actorId
+    } else {
+      try {
+        const [clinicians] = await consultationService.listAndCountClinicians(
+          { user_id: actorId },
+          { take: 1 }
+        )
+        const clinician = clinicians?.[0]
+        if (clinician?.id) {
+          userType = "clinician"
+          clinicianId = clinician.id as string
+        }
+      } catch {
+        // Ignore lookup errors and treat as business staff.
+      }
+    }
+
+    const query = req.query as Record<string, any>
+    const wantsSignedUrl = `${query.signed_url || ""}`.trim() === "1"
+
+    // Fetch document metadata first for tenant + clinician checks.
+...(truncated)
+
+[2026-02-04T18:23:01] CMD: rg -n "document_uploaded|DOCUMENT" .\src\modules\compliance -S
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+.\src\modules\compliance\service.ts:129:  // DOCUMENT METHODS - Core CRUD
+.\src\modules\compliance\service.ts:163:      provider: process.env.DOCUMENT_STORAGE_PROVIDER || "local",
+.\src\modules\compliance\service.ts:164:      bucket: process.env.DOCUMENT_STORAGE_BUCKET || "therxspot-documents",
+.\src\modules\compliance\service.ts:194:      encryption_key_id: process.env.DOCUMENT_ENCRYPTION_KEY_ID ?? null,
+.\src\modules\compliance\service.ts:195:      is_encrypted: !!process.env.DOCUMENT_ENCRYPTION_KEY_ID,
+.\src\modules\compliance\service.ts:430:  // DOCUMENT METHODS - Queries
+.\src\modules\compliance\services\storage\index.ts:81:    provider: (process.env.DOCUMENT_STORAGE_PROVIDER as StorageProviderType) || "local",
+.\src\modules\compliance\services\storage\index.ts:82:    bucket: process.env.DOCUMENT_STORAGE_BUCKET || "therxspot-documents",
+.\src\modules\compliance\services\storage\index.ts:83:    region: process.env.DOCUMENT_STORAGE_REGION || "us-east-1",
+.\src\modules\compliance\services\storage\index.ts:84:    endpoint: process.env.DOCUMENT_STORAGE_ENDPOINT,
+.\src\modules\compliance\services\storage\index.ts:85:    accessKey: process.env.DOCUMENT_STORAGE_ACCESS_KEY,
+.\src\modules\compliance\services\storage\index.ts:86:    secretKey: process.env.DOCUMENT_STORAGE_SECRET_KEY,
+.\src\modules\compliance\services\storage\index.ts:87:    encryptionKeyId: process.env.DOCUMENT_ENCRYPTION_KEY_ID,
+.\src\modules\compliance\services\storage\index.ts:152:  const max = maxSize || parseInt(process.env.DOCUMENT_MAX_SIZE || "10485760")
+
+
+[2026-02-04T18:23:08] CMD: rg -n "createAuditLog|audit" .\src\modules\compliance\service.ts -n
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+3:import { AuditLog as AuditLogModel } from "./models/audit-log"
+205:    // Log audit event
+271:    // Log audit event
+293:   * Download the document content (buffer) with access control, audit logging, and counters.
+353:    // Log audit event
+400:    // Log audit event
+548:   * Create an audit log entry
+551:    return await this.createAuditLogs({
+561:   * Query audit logs with filters
+597:   * Get audit log statistics
+651:   * Flag or unflag an audit log entry
+666:   * Auto-create audit log from request context
+
+
+[2026-02-04T18:23:14] CMD: Get-Content -LiteralPath .\src\modules\compliance\service.ts -TotalCount 320 | Select-Object -Skip 170
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+      uploadedBy,
+      businessId: metadata.business_id,
+      patientId: metadata.patient_id,
+      checksum,
+    })
+
+    // Create document record
+    const documentData: Record<string, any> = {
+      business_id: metadata.business_id,
+      patient_id: metadata.patient_id,
+      consultation_id: metadata.consultation_id ?? null,
+      order_id: metadata.order_id ?? null,
+      uploaded_by: uploadedBy,
+      type: metadata.type,
+      title: metadata.title,
+      description: metadata.description ?? null,
+      storage_provider: storageConfig.provider as any,
+      storage_bucket: storageConfig.bucket,
+      storage_key: storageKey,
+      file_name: file.originalname,
+      file_size: file.size,
+      mime_type: file.mimetype,
+      checksum,
+      encryption_key_id: process.env.DOCUMENT_ENCRYPTION_KEY_ID ?? null,
+      is_encrypted: !!process.env.DOCUMENT_ENCRYPTION_KEY_ID,
+      access_level: metadata.access_level,
+      expires_at: metadata.expires_at ?? null,
+      download_count: 0,
+      last_downloaded_at: null,
+      last_downloaded_by: null,
+    }
+
+    const document = await this.createDocuments(documentData)
+
+    // Log audit event
+    await this.logAuditEvent({
+      actor_type: uploadedByActorType,
+      actor_id: uploadedBy,
+      action: "create",
+      entity_type: "document",
+      entity_id: document.id,
+      business_id: metadata.business_id,
+      consultation_id: metadata.consultation_id ?? null,
+      order_id: metadata.order_id ?? null,
+      changes: { before: null, after: { id: document.id, title: document.title } },
+      metadata: { fileName: file.originalname, fileSize: file.size },
+      risk_level: "low",
+    })
+
+    return document
+  }
+
+  /**
+   * Get a document with access control check
+   */
+  async getDocument(id: string, requestedBy: string, userType: Parameters<typeof canAccessDocument>[2]): Promise<any> {
+    const document = await this.getDocumentById(id)
+    
+    if (!document) {
+      throw new Error(`Document not found: ${id}`)
+    }
+
+    // Check access permissions
+    const accessCheck = checkDocumentAccess(document, requestedBy, userType, "read")
+    if (!accessCheck.allowed) {
+      throw new Error(`Access denied: ${accessCheck.reason}`)
+    }
+
+    return document
+  }
+
+  /**
+   * Get a signed download URL for a document
+   */
+  async getSignedDownloadUrl(
+    documentId: string,
+    requestedBy: string,
+    userType: Parameters<typeof canDownloadDocument>[2],
+    expiresInSeconds: number = 3600
+  ): Promise<{ url: string; expires_at: Date }> {
+...(truncated)
+
+[2026-02-04T18:23:33] CMD: Test-Path -LiteralPath .\src\api\admin\audit-logs\route.ts; if (Test-Path -LiteralPath .\src\api\admin\audit-logs\route.ts) { Get-Content -LiteralPath .\src\api\admin\audit-logs\route.ts -TotalCount 220 }
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+True
+/**
+ * Admin Audit Logs API Routes
+ * 
+ * GET /admin/audit-logs - Query audit logs with filters
+ */
+
+import {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+import ComplianceModuleService from "../../../modules/compliance/service"
+
+/**
+ * GET /admin/audit-logs
+ * Query audit logs with various filters
+ * 
+ * Query params:
+ * - actor_id: Filter by actor ID
+ * - actor_type: Filter by actor type (customer, business_user, clinician, system, api_key)
+ * - entity_type: Filter by entity type (consultation, order, document, patient, business, earning, payout)
+ * - entity_id: Filter by entity ID
+ * - business_id: Filter by business ID
+ * - consultation_id: Filter by consultation ID
+ * - order_id: Filter by order ID
+ * - action: Filter by action (create, read, update, delete, download, login, logout, export)
+ * - risk_level: Filter by risk level (low, medium, high, critical)
+ * - flagged: Filter by flagged status (true/false)
+ * - date_from: Filter by date range start (ISO date)
+ * - date_to: Filter by date range end (ISO date)
+ * - limit: Number of results (default: 50, max: 200)
+ * - offset: Pagination offset (default: 0)
+ */
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const complianceService: ComplianceModuleService = req.scope.resolve(
+      "complianceModuleService"
+    )
+
+    // Parse query parameters
+    const query = req.query as Record<string, any>
+    const filters = {
+      actor_id: query.actor_id,
+      actor_type: query.actor_type,
+      entity_type: query.entity_type,
+      entity_id: query.entity_id,
+      business_id: query.business_id,
+      consultation_id: query.consultation_id,
+      order_id: query.order_id,
+      action: query.action,
+      risk_level: query.risk_level,
+      flagged: query.flagged !== undefined ? query.flagged === "true" : undefined,
+      date_from: query.date_from ? new Date(query.date_from) : undefined,
+      date_to: query.date_to ? new Date(query.date_to) : undefined,
+      skip: parseInt(query.offset) || 0,
+      take: Math.min(parseInt(query.limit) || 50, 200),
+    }
+
+    // Remove undefined filters
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] === undefined) delete filters[key]
+    })
+
+    const result = await complianceService.queryAuditLogs(filters)
+
+    res.json({
+      logs: result.logs,
+      count: result.count,
+      total: result.total,
+      limit: filters.take,
+      offset: filters.skip,
+    })
+  } catch (error) {
+    console.error("Error querying audit logs:", error)
+    res.status(500).json({
+      error: "Failed to query audit logs",
+      message: error.message,
+    })
+  }
+}
+...(truncated)
+
+[2026-02-04T18:23:50] CMD: Get-ChildItem -LiteralPath . -Filter AGENTS.md -Force -ErrorAction SilentlyContinue
+CWD: .
+RESULT: PASS (exit 0)
+
+[2026-02-04T18:24:01] CMD: Get-Content -LiteralPath .\src\api\admin\documents\route.ts -TotalCount 220
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Documents API Routes
+ * 
+ * GET /admin/documents - List documents with filters
+ * POST /admin/documents - Upload new document
+ * 
+ * HIPAA-008 SECURITY NOTICE:
+ * The GET endpoint may expose PHI (patient_id, consultation_id) in URL query parameters.
+ * For searches involving PHI, use POST /admin/documents/search instead.
+ */
+
+import {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+import ComplianceModuleService from "../../../modules/compliance/service"
+import { CONSULTATION_MODULE } from "../../../modules/consultation"
+import { uploadSingleDocument, handleMulterError, virusScanMiddleware } from "../../middlewares/document-upload"
+import { logAuditEvent } from "../../middlewares/audit-logging"
+
+// Export config to disable body parsing for multipart uploads
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+/**
+ * GET /admin/documents
+ * List documents with filters and pagination
+ * 
+ * ⚠️ DEPRECATION WARNING:
+ * For searches involving PHI identifiers (patient_id, consultation_id), 
+ * use POST /admin/documents/search instead to prevent PHI exposure in URLs.
+ * 
+ * Query params (for non-PHI filters only):
+ * - business_id: Filter by business
+ * - order_id: Filter by order
+ * - type: Filter by document type
+ * - access_level: Filter by access level
+ * - date_from: Filter by date range start
+ * - date_to: Filter by date range end
+ * - limit: Number of results (default: 20, max: 100)
+ * - offset: Pagination offset (default: 0)
+ * 
+ * PHI filters (patient_id, consultation_id) should use POST /admin/documents/search
+ */
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const complianceService: ComplianceModuleService = req.scope.resolve(
+      "complianceModuleService"
+    )
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE) as any
+
+    const authContext = (req as any).auth_context as
+      | {
+          actor_id?: string
+          actor_type?: string
+          business_id?: string
+          metadata?: Record<string, any>
+          app_metadata?: Record<string, any>
+        }
+      | undefined
+
+    const actorId = authContext?.actor_id || null
+    if (!actorId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Unauthorized",
+        code: "UNAUTHORIZED",
+      })
+    }
+
+    const tenantBusinessId =
+      authContext?.business_id ||
+      authContext?.metadata?.business_id ||
+      authContext?.app_metadata?.business_id ||
+      (req as any)?.tenant_context?.business_id
+
+    // Resolve "business_staff" vs "clinician" for access control.
+...(truncated)
+
+[2026-02-04T18:24:06] CMD: Get-Content -LiteralPath .\src\api\admin\documents\route.ts -Tail 80
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+      // Get uploaded file
+      const file = (req as any).file
+      if (!file) {
+        return res.status(400).json({
+          error: "No file uploaded",
+          message: "Please provide a file in the 'document' field",
+        })
+      }
+
+      // Parse metadata from request body
+      const body = (req.body ?? {}) as Record<string, any>
+      
+      // Validate required fields
+      const requiredFields = ["business_id", "patient_id", "type", "title", "access_level"]
+      const missingFields = requiredFields.filter((field) => !body[field])
+      
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          error: "Missing required fields",
+          message: `Missing: ${missingFields.join(", ")}`,
+        })
+      }
+
+      // Get current user ID from auth context
+      const uploadedBy = (req as any).auth_context?.actor_id || "unknown"
+
+      // Upload document
+      const document = (await complianceService.uploadDocument(
+        {
+          buffer: file.buffer,
+          originalname: file.originalname,
+          mimetype: file.mimetype,
+          size: file.size,
+        },
+        {
+          business_id: body.business_id,
+          patient_id: body.patient_id,         // PHI - in body (secure)
+          consultation_id: body.consultation_id || null, // PHI - in body (secure)
+          order_id: body.order_id || null,
+          type: body.type,
+          title: body.title,
+          description: body.description || null,
+          access_level: body.access_level,
+          expires_at: body.expires_at ? new Date(body.expires_at) : null,
+        },
+        uploadedBy
+      )) as any
+
+      // Return sanitized document (without storage keys)
+      res.status(201).json({
+        document: {
+          id: document.id,
+          business_id: document.business_id,
+          patient_id: document.patient_id,
+          consultation_id: document.consultation_id,
+          order_id: document.order_id,
+          type: document.type,
+          title: document.title,
+          description: document.description,
+          file_name: document.file_name,
+          file_size: document.file_size,
+          mime_type: document.mime_type,
+          access_level: document.access_level,
+          is_encrypted: document.is_encrypted,
+          download_count: document.download_count,
+          expires_at: document.expires_at,
+          created_at: document.created_at,
+          updated_at: document.updated_at,
+        },
+      })
+    } catch (error) {
+      console.error("Error uploading document:", error)
+      res.status(500).json({
+        error: "Failed to upload document",
+        message: error.message,
+      })
+    }
+  })
+}
+...(truncated)
+
+[2026-02-04T18:24:52] CMD: node --experimental-vm-modules node_modules/jest/bin/jest.js src/tests/integration/consultations-management.test.ts --config jest.integration.config.js --silent=false --runInBand --forceExit
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:20964) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules node_modules/jest/bin/jest.js src/test ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:20964) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.warn
+    [Virus Scanner] ClamAV not available, falling back to file-type validation. For production, install ClamAV and set CLAMAV_HOST/CLAMAV_PORT environment variables.
+
+      162 |   } catch (error) {
+      163 |     clamscanAvailable = false
+    > 164 |     console.warn(
+          |             ^
+      165 |       "[Virus Scanner] ClamAV not available, falling back to file-type validation. " +
+      166 |       "For production, install ClamAV and set CLAMAV_HOST/CLAMAV_PORT environment variables."
+      167 |     )
+
+      at warn (src/api/middlewares/document-upload.ts:164:13)
+      at scanFileForViruses (src/api/middlewares/document-upload.ts:242:5)
+      at virusScanMiddleware (src/api/middlewares/document-upload.ts:313:26)
+      at src/api/admin/consultations/[id]/documents/route.ts:113:5
+
+  console.warn
+    [HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.
+
+      108 |     if (query.patient_id || query.consultation_id) {
+      109 |       // Log security warning
+    > 110 |       console.warn("[HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.")
+          |               ^
+      111 |       
+      112 |       // Log audit event for potential security issue
+      113 |       try {
+
+      at warn (src/api/admin/documents/route.ts:110:15)
+      at GET (node_modules/@medusajs/framework/src/http/utils/wrap-handler.ts:27:14)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+PASS src/tests/integration/consultations-management.test.ts (51.441 s)
+    Consultations management (PLAN)
+      v lists consultations with pagination + filters + search (3152 ms)
+      v returns consultation detail payload (6480 ms)
+      v updates notes (autosave) and writes an audit log (6662 ms)
+      v exports HTML for list + detail (PDF flow) (6324 ms)
+      v uploads + lists + downloads a document and surfaces events in audit logs (6572 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        51.6 s
+Ran all test suites matching /src\\tests\\integration\\consultations-management.test.ts/i.
+
+
+[2026-02-04T18:25:57] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M progress.txt
+ M src/tests/integration/consultations-management.test.ts
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
