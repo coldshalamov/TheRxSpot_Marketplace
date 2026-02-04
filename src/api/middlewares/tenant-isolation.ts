@@ -38,7 +38,8 @@ export async function logSecurityEvent(
     )
     
     const userId = (req as any).auth_context?.actor_id || "unknown"
-    const userType = (req as any).auth_context?.actor_type || "business_user"
+    const rawActorType = (req as any).auth_context?.actor_type || "business_user"
+    const userType = rawActorType === "user" ? "business_user" : rawActorType
     const ipAddress = (req as any).ip || 
                       (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ||
                       "unknown"

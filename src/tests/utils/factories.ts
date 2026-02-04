@@ -106,11 +106,12 @@ export async function createTestProduct(
   
   const id = overrides.id || generateTestId("prod")
   const title = overrides.title || `Test Product ${id}`
+  const safeHandleId = id.replace(/[^a-zA-Z0-9-]/g, "-")
   
   return await product.createProducts({
     id,
     title,
-    handle: overrides.handle || `test-product-${id}`,
+    handle: overrides.handle || `test-product-${safeHandleId}`,
     status: overrides.status || "published",
     metadata: {
       ...overrides.metadata,

@@ -177,9 +177,12 @@ function getUserInfo(req: AuditRequest): { id: string; type: any; email?: string
   // Check for authenticated user (Medusa auth)
   const authContext = (req as any).auth_context
   if (authContext) {
+    const normalizedActorType =
+      authContext.actor_type === "user" ? "business_user" : authContext.actor_type
+
     return {
       id: authContext.actor_id || authContext.user_id || "unknown",
-      type: authContext.actor_type || "business_user",
+      type: normalizedActorType || "business_user",
       email: authContext.email,
     }
   }

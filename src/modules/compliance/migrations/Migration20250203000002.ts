@@ -30,7 +30,8 @@ export class Migration20250203000002 extends Migration {
         "last_downloaded_at" TIMESTAMPTZ NULL,
         "last_downloaded_by" TEXT NULL,
         "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "deleted_at" TIMESTAMPTZ NULL
       )
     `);
 
@@ -61,7 +62,9 @@ export class Migration20250203000002 extends Migration {
         "metadata" JSONB NULL,
         "risk_level" TEXT NOT NULL DEFAULT 'low' CHECK ("risk_level" IN ('low', 'medium', 'high', 'critical')),
         "flagged" BOOLEAN NOT NULL DEFAULT FALSE,
-        "created_at" TIMESTAMPTZ NOT NULL
+        "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "deleted_at" TIMESTAMPTZ NULL
       )
     `);
 

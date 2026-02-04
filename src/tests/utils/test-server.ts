@@ -8,11 +8,13 @@
 import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
 import { MedusaContainer } from "@medusajs/framework/types"
 
-// Module constants for service resolution
-export const BUSINESS_MODULE = "business"
-export const COMPLIANCE_MODULE = "compliance"
-export const CONSULTATION_MODULE = "consultation"
-export const FINANCIALS_MODULE = "financials"
+// Module constants for service resolution (match `src/modules/*/index.ts`)
+import { BUSINESS_MODULE } from "../../modules/business"
+import { COMPLIANCE_MODULE } from "../../modules/compliance"
+import { CONSULTATION_MODULE } from "../../modules/consultation"
+import { FINANCIALS_MODULE } from "../../modules/financials"
+
+export { BUSINESS_MODULE, COMPLIANCE_MODULE, CONSULTATION_MODULE, FINANCIALS_MODULE }
 
 // Test context interface
 export interface TestContext {

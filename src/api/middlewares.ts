@@ -1,4 +1,4 @@
-import { MiddlewaresConfig } from "@medusajs/framework/http"
+import { defineMiddlewares } from "@medusajs/framework/http"
 import { tenantResolutionMiddleware } from "./middlewares/tenant-resolution"
 import { tenantAdminAuthMiddleware } from "./middlewares/tenant-admin-auth"
 import { consultGatingMiddleware } from "./middlewares/consult-gating"
@@ -20,7 +20,7 @@ import { auditLoggingMiddleware, documentAuditMiddleware } from "./middlewares/a
  * - Rate limiting: Prevents abuse on sensitive endpoints
  * - Audit logging: Tracks PHI access for HIPAA compliance
  */
-export const config: MiddlewaresConfig = {
+export default defineMiddlewares({
   routes: [
     // Tenant resolution for multi-tenant support
     {
@@ -139,4 +139,4 @@ export const config: MiddlewaresConfig = {
       middlewares: [auditLoggingMiddleware],
     },
   ],
-}
+})
