@@ -1,0 +1,270 @@
+RESULT: PASS
+
+[2026-02-04 05:40:26] COMMAND: npx tsc -p tsconfig.json --noEmit
+RESULT: PASS
+
+[2026-02-04 05:41:10] COMMAND: git stash pop
+RESULT: PASS
+
+[2026-02-04 05:41:31] COMMAND: git stash list
+RESULT: PASS
+
+[2026-02-04 05:41:45] COMMAND: git stash drop stash@{0}
+RESULT: PASS
+
+[2026-02-04 05:42:01] COMMAND: git stash drop 'stash@{0}'
+RESULT: PASS
+
+[2026-02-04 05:42:20] COMMAND: git add package.json package-lock.json scripts src/admin/routes/businesses/[id]/page.tsx
+RESULT: PASS
+
+[2026-02-04 05:42:37] COMMAND: npm run build
+RESULT: PASS
+
+[2026-02-04 05:43:42] COMMAND: git commit -m 'fix: backend build unblock (npm run build)'
+RESULT: PASS
+
+[2026-02-04 05:44:03] COMMAND: git add PLAN.txt PRD_CHECKLIST.md
+RESULT: PASS
+
+[2026-02-04 05:44:22] COMMAND: git add PLAN.txt PRD_CHECKLIST.md
+RESULT: PASS
+RESULT: PASS
+
+[2026-02-04 05:45:41] COMMAND: git commit -m docs: add plan + checklist (npm run build)
+RESULT: PASS
+
+[2026-02-04 05:45:55] COMMAND: git status -sb
+RESULT: PASS
+
+[2026-02-04 05:49:26] COMMAND: dir docs
+RESULT: PASS
+
+[2026-02-04 05:49:26] COMMAND: Test-Path docs/DEPLOYMENT.md
+RESULT: PASS
+
+[2026-02-04 05:49:27] COMMAND: Test-Path docs/MIGRATIONS.md
+RESULT: PASS
+
+[2026-02-04 05:49:27] COMMAND: rg -n 'migrat' docs
+RESULT: PASS
+
+[2026-02-04 05:49:27] COMMAND: dir src/modules/*/migrations
+RESULT: PASS
+
+[2026-02-04 05:49:27] COMMAND: rg -n 'extends Migration' src/modules
+RESULT: PASS
+
+[2026-02-04 05:49:27] COMMAND: npx medusa db:migrate --help
+RESULT: PASS
+
+[2026-02-04 05:49:32] COMMAND: npx medusa db:rollback --help
+RESULT: PASS
+
+[2026-02-04 05:49:38] COMMAND: npx medusa db:migrate:scripts --help
+RESULT: PASS
+
+[2026-02-04 05:49:43] COMMAND: Get-Content docker-compose.yml
+RESULT: PASS
+
+[2026-02-04 05:50:38] COMMAND: Get-Content src/modules/financials/migrations/Migration20250203000001.ts
+RESULT: PASS
+
+[2026-02-04 05:50:38] COMMAND: Get-Content src/modules/compliance/migrations/Migration20250203000002.ts
+RESULT: PASS
+
+[2026-02-04 05:50:39] COMMAND: Get-Content src/modules/business/migrations/Migration20250203000003.ts
+RESULT: PASS
+
+[2026-02-04 05:50:39] COMMAND: Get-Content src/modules/consultation/migrations/Migration20250203000004.ts
+RESULT: PASS
+
+[2026-02-04 05:50:39] COMMAND: rg -n 'export const .*_MODULE' src/modules
+RESULT: PASS
+
+[2026-02-04 05:50:39] COMMAND: rg -n 'Module\(' src/modules
+RESULT: PASS
+
+[2026-02-04 05:50:39] COMMAND: dir src/modules/*/index.ts
+RESULT: PASS
+
+[2026-02-04 05:50:39] COMMAND: Get-Content src/modules/business/index.ts
+RESULT: PASS
+
+[2026-02-04 05:50:39] COMMAND: Get-Content src/modules/compliance/index.ts
+RESULT: PASS
+
+[2026-02-04 05:50:39] COMMAND: Get-Content src/modules/financials/index.ts
+RESULT: PASS
+
+[2026-02-04 05:50:39] COMMAND: Get-Content src/modules/consultation/index.ts
+RESULT: PASS
+
+[2026-02-04 05:53:38] COMMAND: npm run db:clean-migrate -- --db medusa_clean_migrations
+RESULT: PASS
+
+[2026-02-04 05:54:14] COMMAND: npm run db:clean-migrate -- --db medusa_clean_migrations
+RESULT: PASS
+
+[2026-02-04 05:54:46] COMMAND: npm run db:clean-migrate -- --db medusa_clean_migrations
+RESULT: PASS
+
+[2026-02-04 05:55:24] COMMAND: npm run db:clean-migrate -- --db medusa_clean_migrations
+RESULT: PASS
+
+[2026-02-04 05:57:12] COMMAND: npm run db:clean-migrate -- --db medusa_clean_migrations
+RESULT: PASS
+
+[2026-02-04 05:58:55] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations -c SELECT to_regclass('public.earning_entry')
+RESULT: PASS
+
+[2026-02-04 05:58:55] COMMAND: npx medusa db:rollback --modules financialsModuleService (DATABASE_URL=medusa_clean_migrations)
+RESULT: PASS
+
+[2026-02-04 05:59:06] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations -c SELECT to_regclass('public.earning_entry')
+RESULT: PASS
+
+[2026-02-04 05:59:06] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations -c SELECT to_regclass('public.document')
+RESULT: PASS
+
+[2026-02-04 05:59:06] COMMAND: npx medusa db:rollback --modules complianceModuleService (DATABASE_URL=medusa_clean_migrations)
+RESULT: PASS
+
+[2026-02-04 05:59:16] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations -c SELECT to_regclass('public.document')
+RESULT: PASS
+
+[2026-02-04 05:59:16] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations -c SELECT to_regclass('public.order_status_event')
+RESULT: PASS
+
+[2026-02-04 05:59:17] COMMAND: npx medusa db:rollback --modules businessModuleService (DATABASE_URL=medusa_clean_migrations)
+RESULT: PASS
+
+[2026-02-04 05:59:27] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations -c SELECT to_regclass('public.order_status_event')
+RESULT: PASS
+
+[2026-02-04 05:59:28] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations -c SELECT to_regclass('public.clinician_schedule')
+RESULT: PASS
+
+[2026-02-04 05:59:28] COMMAND: npx medusa db:rollback --modules consultationModuleService (DATABASE_URL=medusa_clean_migrations)
+RESULT: PASS
+
+[2026-02-04 05:59:39] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations -c SELECT to_regclass('public.clinician_schedule')
+RESULT: PASS
+
+[2026-02-04 05:59:39] COMMAND: npx medusa db:migrate --execute-safe-links --all-or-nothing (DATABASE_URL=medusa_clean_migrations)
+RESULT: PASS
+
+[2026-02-04 06:00:02] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations < scripts/db/verify-schema.sql
+RESULT: PASS
+
+[2026-02-04 06:00:42] COMMAND: npm run db:clean-migrate -- --db medusa_sql_rollback_test
+RESULT: PASS
+
+[2026-02-04 06:01:15] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_sql_rollback_test -c SELECT to_regclass('public.earning_entry')
+RESULT: PASS
+
+[2026-02-04 06:01:15] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_sql_rollback_test < scripts/rollback/20250203000001_financials.sql
+RESULT: PASS
+
+[2026-02-04 06:01:15] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_sql_rollback_test -c SELECT to_regclass('public.earning_entry')
+RESULT: PASS
+
+[2026-02-04 06:01:16] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_sql_rollback_test -c SELECT count(*) FROM mikro_orm_migrations WHERE name='Migration20250203000001'
+RESULT: PASS
+
+[2026-02-04 06:11:19] NOTE: Correction to earlier log entry at 06:01:15
+DETAILS: The command `docker compose exec -T postgres psql -U medusa -d medusa_sql_rollback_test < scripts/rollback/20250203000001_financials.sql` produced `ERROR:  syntax error at or near "DELETE"` due to nested `DO $$` + `EXECUTE $$...$$` dollar-quoting.
+ACTION: Fixed all rollback scripts under `scripts/rollback/` to use `EXECUTE format(...)` and PowerShell-friendly invocation.
+
+[2026-02-04 06:02:42] COMMAND: cd d:\GitHub\TheRxSpot_Marketplace && git status -sb
+RESULT: FAIL
+ERROR: The token '&&' is not a valid statement separator in this version.
+
+[2026-02-04 06:02:42] COMMAND: cd d:\GitHub\TheRxSpot_Marketplace && dir scripts\rollback
+RESULT: FAIL
+ERROR: The token '&&' is not a valid statement separator in this version.
+
+[2026-02-04 06:02:42] COMMAND: cd d:\GitHub\TheRxSpot_Marketplace && type scripts\rollback\20250203000001_financials.sql
+RESULT: FAIL
+ERROR: The token '&&' is not a valid statement separator in this version.
+
+[2026-02-04 06:02:42] COMMAND: cd d:\GitHub\TheRxSpot_Marketplace && type scripts\rollback\20250203000002_compliance.sql
+RESULT: FAIL
+ERROR: The token '&&' is not a valid statement separator in this version.
+
+[2026-02-04 06:02:58] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; git status -sb
+RESULT: PASS
+
+[2026-02-04 06:02:58] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-ChildItem scripts\rollback
+RESULT: PASS
+
+[2026-02-04 06:02:58] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Content scripts/rollback/20250203000001_financials.sql
+RESULT: PASS
+
+[2026-02-04 06:02:58] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Content scripts/rollback/20250203000002_compliance.sql
+RESULT: PASS
+
+[2026-02-04 06:03:11] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Content scripts/rollback/20250203000003_business.sql
+RESULT: PASS
+
+[2026-02-04 06:03:11] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Content scripts/rollback/20250203000004_consultation.sql
+RESULT: PASS
+
+[2026-02-04 06:04:12] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; $db='medusa_sql_rollback_test'; Get-Content -Raw scripts/rollback/20250203000001_financials.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT to_regclass('public.earning_entry') as earning_entry;"; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT count(*) FROM \"mikro_orm_migrations\" WHERE \"name\"='Migration20250203000001';";
+RESULT: FAIL
+ERROR: ERROR:  unterminated quoted identifier at or near "\" mikro_orm_migrations\""
+
+[2026-02-04 06:04:28] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; $db='medusa_sql_rollback_test'; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT count(*) FROM mikro_orm_migrations WHERE name='Migration20250203000001';"
+RESULT: PASS
+
+[2026-02-04 06:04:47] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; $db='medusa_sql_rollback_test'; (compliance/business/consultation) Get-Content -Raw scripts/rollback/*.sql | docker compose exec ...; verify to_regclass + mikro_orm_migrations counts
+RESULT: PASS
+
+[2026-02-04 06:05:23] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Content docs/MIGRATIONS.md
+RESULT: PASS
+
+[2026-02-04 06:05:41] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; rg -n "Start dependencies|Option A|Option B|Verify expected schema|Emergency fallback" docs/MIGRATIONS.md
+RESULT: PASS
+
+[2026-02-04 06:05:43] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Content docs/MIGRATIONS.md | Select-Object -Skip 24 -First 90
+RESULT: PASS
+
+[2026-02-04 06:06:02] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; rg -n "< scripts/" docs/MIGRATIONS.md scripts/rollback/*.sql scripts/db/clean-migrate.mjs
+RESULT: FAIL
+ERROR: rg: scripts\rollback\*.sql: The filename, directory name, or volume label syntax is incorrect. (os error 123)
+
+[2026-02-04 06:06:15] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; rg -n "< scripts/" docs/MIGRATIONS.md scripts/rollback scripts/db/clean-migrate.mjs scripts/db/verify-schema.sql
+RESULT: PASS (no matches)
+
+[2026-02-04 06:07:01] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; git diff --name-only
+RESULT: PASS
+
+[2026-02-04 06:07:43] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Test-Path PRD_CHECKLIST.md; if (Test-Path PRD_CHECKLIST.md) { (Get-Content PRD_CHECKLIST.md | Select-Object -First 40) }
+RESULT: PASS
+
+[2026-02-04 06:07:43] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Test-Path PLAN.txt; if (Test-Path PLAN.txt) { (Get-Content PLAN.txt | Select-Object -First 80) }
+RESULT: PASS
+
+[2026-02-04 06:08:19] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Content progress.txt | Select-Object -Last 120
+RESULT: PASS
+
+[2026-02-04 06:09:54] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; $db='medusa_sql_rollback_test2'; npm run db:clean-migrate -- --db $db; run scripts/rollback/*.sql via PowerShell pipe; verify to_regclass + migration rows removed
+RESULT: PASS
+
+[2026-02-04 06:10:11] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; rg -n "set DB_NAME|```bash|< scripts" docs/MIGRATIONS.md
+RESULT: PASS (no matches)
+
+[2026-02-04 06:10:17] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Content docs/MIGRATIONS.md | Select-Object -First 40
+RESULT: PASS
+
+[2026-02-04 06:11:08] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Content progress.txt | Select-Object -Last 30
+RESULT: PASS
+
+[2026-02-04 06:11:19] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+RESULT: PASS
+
+[2026-02-04 06:11:20] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; $db='medusa_sql_rollback_test'; Get-Content -Raw scripts/rollback/20250203000002_compliance.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT to_regclass('public.document') as document, to_regclass('public.audit_log') as audit_log;"; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT count(*) FROM mikro_orm_migrations WHERE name='Migration20250203000002';"; Get-Content -Raw scripts/rollback/20250203000003_business.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT to_regclass('public.order_status_event') as order_status_event;"; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT count(*) FROM mikro_orm_migrations WHERE name='Migration20250203000003';"; Get-Content -Raw scripts/rollback/20250203000004_consultation.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT to_regclass('public.clinician_schedule') as clinician_schedule, to_regclass('public.clinician_availability_exception') as clinician_availability_exception;"; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT count(*) FROM mikro_orm_migrations WHERE name='Migration20250203000004';"
+RESULT: PASS
+
+[2026-02-04 06:11:21] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; $db='medusa_sql_rollback_test2'; npm run db:clean-migrate -- --db $db; Get-Content -Raw scripts/rollback/20250203000001_financials.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; Get-Content -Raw scripts/rollback/20250203000002_compliance.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; Get-Content -Raw scripts/rollback/20250203000003_business.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; Get-Content -Raw scripts/rollback/20250203000004_consultation.sql | docker compose exec -T postgres psql -U medusa -d $db -v ON_ERROR_STOP=1; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT to_regclass('public.earning_entry') as earning_entry, to_regclass('public.payout') as payout, to_regclass('public.document') as document, to_regclass('public.audit_log') as audit_log, to_regclass('public.order_status_event') as order_status_event, to_regclass('public.clinician_schedule') as clinician_schedule, to_regclass('public.clinician_availability_exception') as clinician_availability_exception;"; docker compose exec -T postgres psql -U medusa -d $db -c "SELECT name, count(*) FROM mikro_orm_migrations WHERE name in ('Migration20250203000001','Migration20250203000002','Migration20250203000003','Migration20250203000004') GROUP BY name ORDER BY name;"
+RESULT: PASS

@@ -18,10 +18,10 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
   - [x] Create src/utils/env-validator.ts
   - [x] Validate all required env vars at startup
   - [x] Add type-safe env config object
-  - [ ] Verify all module migrations run successfully
-  - [ ] Test medusa db:migrate on clean database
-  - [ ] Add rollback scripts for each migration
-  - [ ] Document migration order dependencies
+  - [x] Verify all module migrations run successfully
+  - [x] Test medusa db:migrate on clean database
+  - [x] Add rollback scripts for each migration
+  - [x] Document migration order dependencies
 - [ ] API Completeness
   - [ ] Consultation Approval Endpoint (2h)
   - [ ] GET /store/consultations/approvals?product_id={id}
