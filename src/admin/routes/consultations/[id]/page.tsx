@@ -133,6 +133,171 @@ function computeAge(dob?: string | null): string {
   return `${age}`
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+}
+
+function isProbablyHtml(value: string): boolean {
+  return /<\/?[a-z][\s\S]*>/i.test(value)
+}
+
+function normalizeClinicianNotes(value: string): string {
+  const trimmed = value ?? ""
+  if (!trimmed) return ""
+  if (isProbablyHtml(trimmed)) return trimmed
+  return `<p>${escapeHtml(trimmed).replace(/\r?\n/g, "<br/>")}</p>`
+}
+
+function sanitizeRichTextHtml(html: string): string {
+  if (!html) return ""
+  if (typeof window === "undefined") return html
+
+  const parser = new DOMParser()
+  const doc = parser.parseFromString(html, "text/html")
+
+  const blocked = ["script", "style", "iframe", "object", "embed", "link", "meta"]
+  for (const tag of blocked) {
+    doc.querySelectorAll(tag).forEach((n) => n.remove())
+  }
+
+  const allowed = new Set([
+    "b",
+    "strong",
+    "i",
+    "em",
+    "u",
+    "p",
+    "br",
+    "ul",
+    "ol",
+    "li",
+    "div",
+    "span",
+  ])
+
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT)
+  const toRemove: Element[] = []
+
+  while (walker.nextNode()) {
+    const el = walker.currentNode as Element
+    const name = el.tagName.toLowerCase()
+
+    // Strip non-allowed tags but keep their text content.
+    if (!allowed.has(name)) {
+      toRemove.push(el)
+      continue
+    }
+
+    // Remove potentially dangerous attributes.
+    for (const attr of Array.from(el.attributes)) {
+      const key = attr.name.toLowerCase()
+      if (key.startsWith("on") || key === "style") {
+        el.removeAttribute(attr.name)
+      }
+      if (key === "href" || key === "src") {
+        el.removeAttribute(attr.name)
+      }
+    }
+  }
+
+  for (const el of toRemove) {
+    const parent = el.parentNode
+    if (!parent) continue
+    parent.replaceChild(doc.createTextNode(el.textContent || ""), el)
+  }
+
+  return (doc.body.innerHTML || "").trim()
+}
+
+function RichTextEditor({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string
+  onChange: (next: string) => void
+  placeholder: string
+}) {
+  const ref = useRef<HTMLDivElement | null>(null)
+  const lastApplied = useRef<string>("")
+
+  useEffect(() => {
+    if (!ref.current) return
+    if (value === lastApplied.current) return
+    ref.current.innerHTML = value || ""
+    lastApplied.current = value
+  }, [value])
+
+  const emit = () => {
+    const html = ref.current?.innerHTML ?? ""
+    lastApplied.current = html
+    onChange(html)
+  }
+
+  const command = (cmd: string, arg?: string) => {
+    ref.current?.focus()
+    try {
+      // eslint-disable-next-line deprecation/deprecation
+      document.execCommand(cmd, false, arg)
+    } catch {
+      // Best-effort formatting only.
+    }
+    emit()
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button variant="secondary" size="small" type="button" onClick={() => command("bold")}>
+          Bold
+        </Button>
+        <Button variant="secondary" size="small" type="button" onClick={() => command("italic")}>
+          Italic
+        </Button>
+        <Button variant="secondary" size="small" type="button" onClick={() => command("underline")}>
+          Underline
+        </Button>
+        <Button
+          variant="secondary"
+          size="small"
+          type="button"
+          onClick={() => command("insertUnorderedList")}
+        >
+          Bullets
+        </Button>
+        <Button variant="secondary" size="small" type="button" onClick={() => command("removeFormat")}>
+          Clear
+        </Button>
+      </div>
+
+      <div className="relative">
+        {!value ? (
+          <div className="pointer-events-none absolute top-3 left-3 text-ui-fg-subtle text-sm">
+            {placeholder}
+          </div>
+        ) : null}
+        <div
+          ref={ref}
+          className="min-h-[120px] rounded-md border bg-ui-bg-base px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ui-border-interactive"
+          contentEditable
+          suppressContentEditableWarning
+          onInput={emit}
+          onPaste={(e) => {
+            e.preventDefault()
+            const text = e.clipboardData?.getData("text/plain") ?? ""
+            command("insertText", text)
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
 const ConsultationDetailPage = () => {
   const navigate = useNavigate()
   const params = useParams()
@@ -456,7 +621,8 @@ const ConsultationDetailPage = () => {
   }
 
   const saveNotesNow = async () => {
-    const next = { notes, admin_notes: adminNotes }
+    const sanitizedNotes = sanitizeRichTextHtml(notes)
+    const next = { notes: sanitizedNotes, admin_notes: adminNotes }
     if (next.notes === lastSaved.current.notes && next.admin_notes === lastSaved.current.admin_notes) {
       setSaveState("idle")
       return
@@ -481,6 +647,9 @@ const ConsultationDetailPage = () => {
       }
 
       lastSaved.current = next
+      if (sanitizedNotes !== notes) {
+        setNotes(sanitizedNotes)
+      }
       setSaveState("saved")
       await fetchAuditLogs()
       window.setTimeout(() => setSaveState("idle"), 1000)
@@ -509,7 +678,7 @@ const ConsultationDetailPage = () => {
 
   useEffect(() => {
     if (!consultation) return
-    const serverNotes = consultation.notes ?? ""
+    const serverNotes = normalizeClinicianNotes(consultation.notes ?? "")
     const serverAdminNotes = consultation.admin_notes ?? ""
 
     const unchanged =
@@ -1142,7 +1311,7 @@ const ConsultationDetailPage = () => {
             <div className="mt-3 space-y-4">
               <div>
                 <div className="text-xs font-medium mb-1">Clinician notes</div>
-                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Clinician notes…" />
+                <RichTextEditor value={notes} onChange={setNotes} placeholder="Clinician notes…" />
               </div>
               <div>
                 <div className="text-xs font-medium mb-1">Admin notes (internal)</div>

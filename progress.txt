@@ -37567,3 +37567,82 @@ OUTPUT:
 ?? src/types/
 
 
+[2026-02-04T18:43:15] CMD: git add progress.txt src/admin/routes/consultations/page.tsx src/admin/routes/consultations/[id]/page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add progress.txt src/admin/routes/consultations/page.tsx src/admi ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/admin/routes/consultations/[id]/page.tsx', LF will be replaced by CRLF the next 
+time Git touches it
+warning: in the working copy of 'src/admin/routes/consultations/page.tsx', LF will be replaced by CRLF the next time 
+Git touches it
+
+
+[2026-02-04T18:43:25] CMD: git commit -m "feat(admin-ui): add mode icons + clinician availability indicator (npm run build)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 2b5daff] feat(admin-ui): add mode icons + clinician availability indicator (npm run build)
+ 3 files changed, 583 insertions(+), 3 deletions(-)
+
+
+[2026-02-04T18:44:30] CMD: rg -n "const next = \{ notes, admin_notes: adminNotes \}" .\src\admin\routes\consultations\[id]\page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+624:    const next = { notes, admin_notes: adminNotes }
+
+
+[2026-02-04T18:44:47] CMD: rg -n "Clinician notes" .\src\admin\routes\consultations\[id]\page.tsx | Select-Object -First 20
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+1313:                <div className="text-xs font-medium mb-1">Clinician notes</div>
+1314:                <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Clinician notes…" />
+
+
+[2026-02-04T18:45:06] CMD: npm run build
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 build
+> medusa build
+
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from D:\GitHub\TheRxSpot_Marketplace\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa\server" folder
+[32minfo[39m:    Compiling frontend source...
+[32minfo[39m:    Backend build completed successfully (9.96s)
+[32minfo[39m:    Frontend build completed successfully (38.71s)
+
+
+[2026-02-04T18:46:00] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M progress.txt
+ M src/admin/routes/consultations/[id]/page.tsx
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
