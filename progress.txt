@@ -36230,3 +36230,182 @@ OUTPUT:
 ?? src/types/
 
 
+[2026-02-04T18:26:11] CMD: git add progress.txt src/tests/integration/consultations-management.test.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add progress.txt src/tests/integration/consultations-management.t ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/tests/integration/consultations-management.test.ts', LF will be replaced by CRLF 
+the next time Git touches it
+
+
+[2026-02-04T18:26:20] CMD: git commit -m "test(admin): cover consultation doc upload/download flow (node --experimental-vm-modules jest consultations-management.test.ts)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 80b7d3c] test(admin): cover consultation doc upload/download flow (node --experimental-vm-modules jest consultations-management.test.ts)
+ 2 files changed, 2769 insertions(+)
+
+
+[2026-02-04T18:26:35] CMD: Get-Content -LiteralPath .\jest.integration.config.js -TotalCount 120
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Jest Configuration for Integration Tests
+ * 
+ * This configuration extends the base Jest config for integration testing.
+ */
+
+const { loadEnv } = require("@medusajs/utils")
+loadEnv("test", process.cwd())
+
+module.exports = {
+  // Use SWC for fast TypeScript compilation
+  transform: {
+    "^.+\\.[jt]s$": [
+      "@swc/jest",
+      {
+        jsc: {
+          parser: { syntax: "typescript", decorators: true },
+          target: "es2020",
+        },
+      },
+    ],
+  },
+
+  // Test environment
+  testEnvironment: "node",
+
+  // File extensions
+  moduleFileExtensions: ["js", "ts", "json"],
+
+  // Ignore patterns
+  modulePathIgnorePatterns: [
+    "dist/",
+    "<rootDir>/.medusa/",
+    "node_modules/",
+  ],
+
+  // Test patterns for custom integration tests
+  testMatch: [
+    "**/src/tests/integration/**/*.test.ts",
+  ],
+
+  // Setup files (needs Jest globals like `expect`, `beforeAll`, etc.)
+  setupFilesAfterEnv: ["./src/tests/setup.ts"],
+
+  // Module name mapping for path aliases
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
+
+  // Coverage configuration
+  collectCoverageFrom: [
+    "src/**/*.ts",
+    "!src/**/*.d.ts",
+    "!src/scripts/**",
+    "!src/**/index.ts",
+  ],
+  coverageDirectory: "coverage/integration",
+  coverageReporters: ["text", "lcov", "html"],
+
+  // Test timeout (30 seconds default, 60 for long operations)
+  testTimeout: 30000,
+
+  // Verbose output for debugging
+  verbose: true,
+
+  // Clear mocks between tests
+  clearMocks: true,
+
+  // Restore mocks after each test
+  restoreMocks: true,
+
+  // Fail on console errors in tests
+  errorOnDeprecated: true,
+
+  // reporters
+  reporters: [
+    "default",
+    [
+      "jest-junit",
+      {
+...(truncated)
+
+[2026-02-04T18:26:42] CMD: node --experimental-vm-modules node_modules/jest/bin/jest.js src/tests/integration/consultation-apis.test.ts --config jest.integration.config.js --silent=false --runInBand --forceExit
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:5948) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules node_modules/jest/bin/jest.js src/test ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:5948) Exp...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+PASS src/tests/integration/consultation-apis.test.ts (64.537 s)
+    Consultation APIs
+      GET /store/consultations/approvals
+        v returns has_valid_approval=true for an approved consult within 90 days (2897 ms)
+        v returns has_valid_approval=false when approval is older than 90 days (6386 ms)
+      POST /admin/consultations/:id/assign
+        v assigns clinician and writes an audit log (6277 ms)
+      POST /store/carts/:id/consultation-fee
+        v adds a consultation fee line item for an approved consultation (6693 ms)
+        v de-dupes when called twice for the same consultation (6592 ms)
+      POST /admin/consultations/:id/status
+        v enforces pending ? scheduled ? completed ? approved and updates consult approval (6346 ms)
+        v reject requires reason and invalid transitions are blocked (6547 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        64.692 s
+Ran all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.
+
+
+[2026-02-04T18:28:44] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M progress.txt
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
+[MANUAL_LOG] Pre-wrapper commands (executed outside scripts/run-logged.ps1):
+- cd d:\GitHub\TheRxSpot_Marketplace && ls  -> FAIL (PowerShell parser: token && not valid statement separator)
+- cd d:\GitHub\TheRxSpot_Marketplace; Get-ChildItem -> PASS
+- Get-Content .\scripts\run-logged.ps1 -TotalCount 200 -> PASS
+
+[2026-02-04T18:29:09] CMD: Add-Content -Encoding Default -LiteralPath .\progress.txt -Value @('[MANUAL_LOG] Pre-wrapper commands (executed outside scripts/run-logged.ps1):','- cd d:\GitHub\TheRxSpot_Marketplace && ls  -> FAIL (PowerShell parser: token && not valid statement separator)','- cd d:\GitHub\TheRxSpot_Marketplace; Get-ChildItem -> PASS','- Get-Content .\scripts\run-logged.ps1 -TotalCount 200 -> PASS','')
+CWD: .
+RESULT: PASS (exit 0)
+
