@@ -1,5 +1,5 @@
 import { defineLink } from "@medusajs/framework/utils"
-import { BUSINESS_MODULE } from "../business"
+import { BUSINESS_MODULE } from "../modules/business"
 import CartModule from "@medusajs/medusa/cart"
 
 export default defineLink(

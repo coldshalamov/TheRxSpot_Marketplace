@@ -1,5 +1,5 @@
 import { defineLink } from "@medusajs/framework/utils"
-import { BUSINESS_MODULE } from "../business"
+import { BUSINESS_MODULE } from "../modules/business"
 import OrderModule from "@medusajs/medusa/order"
 
 export default defineLink(
@@ -10,8 +10,5 @@ export default defineLink(
   {
     linkable: OrderModule.linkable.order,
     isList: true,
-  },
-  {
-    readOnly: true,
   }
 )
