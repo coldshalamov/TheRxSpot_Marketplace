@@ -124,7 +124,7 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
   - [ ] Consultation history (linked to consultations page)
   - [ ] Activity log (last 50 actions)
   - [ ] Deactivation reason (if inactive)
-- [ ] Consultations Management Page (16h)
+- [x] Consultations Management Page (16h)
   - [ ] Create src/admin/routes/consultations/page.tsx (list view)
   - [ ] Table Columns:
   - [ ] ID (CO-{number}, clickable)
