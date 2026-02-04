@@ -16241,3 +16241,320 @@ At line:1 char:1
 [32minfo[39m:    Frontend build completed successfully (40.73s)
 
 
+[2026-02-04T15:08:06] CMD: git add PRD_CHECKLIST.md progress.txt
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'PRD_CHECKLIST.md', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add PRD_CHECKLIST.md progress.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+
+
+[2026-02-04T15:08:14] CMD: git commit -m "Check off consultations management in PRD checklist (npm run build)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 1df441f] Check off consultations management in PRD checklist (npm run build)
+ 2 files changed, 60 insertions(+), 1 deletion(-)
+
+
+[2026-02-04T15:09:27] CMD: node -e "const fs=require(\"fs\"); fs.appendFileSync(\"progress.txt\", [\"\",\"==== Consultations Admin UI (Validated Flows) ====\",\"Date: 2026-02-04\",\"UI Pages:\",\"- /consultations (list): search + filters, bulk assign, export HTML->PDF\",\"- /consultations/:id (detail): assignment, status transitions, documents upload/preview/download, notes autosave (5s), history timeline\",\"API Examples (replace BASE_URL and ADMIN_TOKEN):\",\"- Assign clinician:\",\"  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/assign -H \\\"Authorization: Bearer $ADMIN_TOKEN\\\" -H \\\"Content-Type: application/json\\\" -d {\\\"clinician_id\\\":\\\"<CLINICIAN_ID>\\\"}\",\"- Schedule/Complete/Approve:\",\"  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/status -H \\\"Authorization: Bearer $ADMIN_TOKEN\\\" -H \\\"Content-Type: application/json\\\" -d {\\\"status\\\":\\\"scheduled\\\"}\",\"  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/status -H \\\"Authorization: Bearer $ADMIN_TOKEN\\\" -H \\\"Content-Type: application/json\\\" -d {\\\"status\\\":\\\"completed\\\"}\",\"  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/status -H \\\"Authorization: Bearer $ADMIN_TOKEN\\\" -H \\\"Content-Type: application/json\\\" -d {\\\"status\\\":\\\"approved\\\"}\",\"- Reject (reason required):\",\"  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/status -H \\\"Authorization: Bearer $ADMIN_TOKEN\\\" -H \\\"Content-Type: application/json\\\" -d {\\\"status\\\":\\\"rejected\\\",\\\"reason\\\":\\\"<REASON>\\\"}\",\"- Document upload (multipart):\",\"  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/documents -H \\\"Authorization: Bearer $ADMIN_TOKEN\\\" -F type=medical_record -F title=\\\"Test Doc\\\" -F access_level=clinician -F document=@./test.pdf\",\"- Document list (by consultation):\",\"  curl -X GET $BASE_URL/admin/documents?consultation_id=<CONSULT_ID> -H \\\"Authorization: Bearer $ADMIN_TOKEN\\\"\",\"- Document download:\",\"  curl -L $BASE_URL/admin/documents/<DOC_ID>/download -H \\\"Authorization: Bearer $ADMIN_TOKEN\\\" --output downloaded.bin\",\"\"].join(\"\\n\"));"
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+System.Management.Automation.ParseException: At line:1 char:1507
++ ... pe: application/json\\\" -d {\\\"status\\\":\\\"rejected\\\",\\\"reas ...
++                                                                 ~
+Missing argument in parameter list.
+   at System.Management.Automation.ScriptBlock.Create(Parser parser, String fileName, String fileContents)
+   at System.Management.Automation.ScriptBlock.Create(ExecutionContext context, String script)
+   at Microsoft.PowerShell.Commands.InvokeExpressionCommand.ProcessRecord()
+   at System.Management.Automation.CommandProcessor.ProcessRecord()
+
+[2026-02-04T15:09:40] CMD: type scripts/run-logged.ps1
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+param(
+  [Parameter(Mandatory = $true)]
+  [string]$Cmd,
+
+  [string]$Workdir = ".",
+
+  [int]$MaxLines = 80
+)
+
+$ErrorActionPreference = "Stop"
+
+# PowerShell 7+ can treat native stderr as PowerShell errors when this is true.
+# We want to log stderr output but not fail the wrapper unless the process exits non-zero.
+if (Get-Variable -Name PSNativeCommandUseErrorActionPreference -Scope Global -ErrorAction SilentlyContinue) {
+  $global:PSNativeCommandUseErrorActionPreference = $false
+}
+
+function Append-Progress([string[]]$Lines) {
+  $progressPath = Join-Path $PSScriptRoot "..\\progress.txt"
+  Add-Content -Encoding Default -Path $progressPath -Value ($Lines -join "`r`n")
+  Add-Content -Encoding Default -Path $progressPath -Value ""
+}
+
+$timestamp = Get-Date -Format s
+$startedIn = (Get-Location).Path
+
+try {
+  Set-Location -Path $Workdir
+  $global:LASTEXITCODE = 0
+  $prevEap = $ErrorActionPreference
+  # Don't let native stderr (e.g., npm warnings) terminate this wrapper.
+  $ErrorActionPreference = "Continue"
+  $output = & { Invoke-Expression $Cmd } 2>&1 | Out-String
+  $ErrorActionPreference = $prevEap
+
+  $exitCode = if ($LASTEXITCODE -ne $null) { [int]$LASTEXITCODE } else { 0 }
+} catch {
+  $exitCode = 1
+  $output = ($output + "`r`n" + $_.Exception.ToString()).Trim()
+} finally {
+  Set-Location -Path $startedIn
+}
+
+$status = if ($exitCode -eq 0) { "PASS" } else { "FAIL" }
+
+$lines = ($output -split "`r?`n")
+if ($lines.Length -gt $MaxLines) {
+  if ($exitCode -eq 0) {
+    $excerpt = $lines[0..($MaxLines - 1)]
+    $excerpt += "...(truncated)"
+  } else {
+    $excerpt = $lines[($lines.Length - $MaxLines)..($lines.Length - 1)]
+    $excerpt = @("...(truncated)") + $excerpt
+  }
+} else {
+  $excerpt = $lines
+}
+
+$progressLines = @(
+  "[$timestamp] CMD: $Cmd",
+  "CWD: $Workdir",
+  "RESULT: $status (exit $exitCode)"
+)
+
+if ($excerpt -and ($excerpt -join "").Trim().Length -gt 0) {
+  $progressLines += "OUTPUT:"
+  $progressLines += $excerpt
+}
+
+Append-Progress -Lines $progressLines
+
+Write-Output $output
+exit $exitCode
+
+
+[2026-02-04T15:11:17] CMD: powershell -NoProfile -Command "Get-Content progress.txt -Tail 30"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+$lines = ($output -split "`r?`n")
+if ($lines.Length -gt $MaxLines) {
+  if ($exitCode -eq 0) {
+    $excerpt = $lines[0..($MaxLines - 1)]
+    $excerpt += "...(truncated)"
+  } else {
+    $excerpt = $lines[($lines.Length - $MaxLines)..($lines.Length - 1)]
+    $excerpt = @("...(truncated)") + $excerpt
+  }
+} else {
+  $excerpt = $lines
+}
+
+$progressLines = @(
+  "[$timestamp] CMD: $Cmd",
+  "CWD: $Workdir",
+  "RESULT: $status (exit $exitCode)"
+)
+
+if ($excerpt -and ($excerpt -join "").Trim().Length -gt 0) {
+  $progressLines += "OUTPUT:"
+  $progressLines += $excerpt
+}
+
+Append-Progress -Lines $progressLines
+
+Write-Output $output
+exit $exitCode
+
+
+
+
+
+==== Consultations Admin UI (Validated Flows) ====
+Date: 2026-02-04
+UI Pages:
+- /consultations (list): search + filters, bulk assign, export HTML->PDF
+- /consultations/:id (detail): assignment, status transitions, documents upload/preview/download, notes autosave (5s), history timeline
+
+API Examples (replace BASE_URL and ADMIN_TOKEN):
+- Assign clinician:
+  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/assign -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"clinician_id":"<CLINICIAN_ID>"}'
+- Schedule/Complete/Approve:
+  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/status -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"status":"scheduled"}'
+  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/status -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"status":"completed"}'
+  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/status -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"status":"approved"}'
+- Reject (reason required):
+  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/status -H "Authorization: Bearer $ADMIN_TOKEN" -H "Content-Type: application/json" -d '{"status":"rejected","reason":"<REASON>"}'
+- Document upload (multipart):
+  curl -X POST $BASE_URL/admin/consultations/<CONSULT_ID>/documents -H "Authorization: Bearer $ADMIN_TOKEN" -F type=medical_record -F title="Test Doc" -F access_level=clinician -F document=@./test.pdf
+- Document list (by consultation):
+  curl -X GET $BASE_URL/admin/documents?consultation_id=<CONSULT_ID> -H "Authorization: Bearer $ADMIN_TOKEN"
+- Document download:
+  curl -L $BASE_URL/admin/documents/<DOC_ID>/download -H "Authorization: Bearer $ADMIN_TOKEN" --output downloaded.bin
+
+[2026-02-04T15:12:16] CMD: Add-Content -Encoding Default -Path progress.txt -Value ""; Get-Content -LiteralPath scripts/tmp_consultations_validation_notes.txt | Add-Content -Encoding Default -Path progress.txt; Add-Content -Encoding Default -Path progress.txt -Value ""
+CWD: .
+RESULT: PASS (exit 0)
+
+[2026-02-04T15:12:55] CMD: powershell -NoProfile -Command "$env:NODE_OPTIONS=\"--experimental-vm-modules\"; node .\node_modules\jest\bin\jest.js --config=jest.integration.config.js src/tests/integration/consultations-management.test.ts --runInBand --silent=false"
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+...(truncated)
+    Consultations management (PLAN)
+      × lists consultations with pagination + filters + search (7 ms)
+      × returns consultation detail payload (2 ms)
+      × updates notes (autosave) and writes an audit log (2 ms)
+      × exports HTML for list + detail (PDF flow) (2 ms)
+
+  ?  › Consultations management (PLAN) › lists consultations with pagination + filters + search
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at configLoaderOverride (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/config.ts:11:29)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:263:33)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:20)
+
+  ?  › Consultations management (PLAN) › lists consultations with pagination + filters + search
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions 
+(node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ?  › Consultations management (PLAN) › returns consultation detail payload
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at configLoaderOverride (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/config.ts:11:29)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:263:33)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:20)
+
+  ?  › Consultations management (PLAN) › returns consultation detail payload
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions 
+(node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ?  › Consultations management (PLAN) › updates notes (autosave) and writes an audit log
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at configLoaderOverride (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/config.ts:11:29)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:263:33)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:20)
+
+  ?  › Consultations management (PLAN) › updates notes (autosave) and writes an audit log
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions 
+(node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+  ?  › Consultations management (PLAN) › exports HTML for list + detail (PDF flow)
+
+    TypeError: A dynamic import callback was invoked without --experimental-vm-modules
+
+      at configLoaderOverride (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/config.ts:11:29)
+      at MedusaTestRunner.beforeAll (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:263:33)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:376:20)
+
+  ?  › Consultations management (PLAN) › exports HTML for list + detail (PDF flow)
+
+    TypeError: Cannot read properties of null (reading 'resolve')
+
+      at waitWorkflowExecutions 
+(node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)
+      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)
+      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)
+
+Test Suites: 1 failed, 1 total
+Tests:       4 failed, 4 total
+Snapshots:   0 total
+Time:        7.159 s, estimated 48 s
+Ran all test suites matching /src\\tests\\integration\\consultations-management.test.ts/i.
+
+
+[2026-02-04T15:13:20] CMD: node --experimental-vm-modules .\node_modules\jest\bin\jest.js --config=jest.integration.config.js src/tests/integration/consultations-management.test.ts --runInBand --silent=false
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:23320) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules .\node_modules\jest\bin\jest.js --conf ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:23320) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+PASS src/tests/integration/consultations-management.test.ts (49.854 s)
+    Consultations management (PLAN)
+      v lists consultations with pagination + filters + search (3629 ms)
+      v returns consultation detail payload (6847 ms)
+      v updates notes (autosave) and writes an audit log (7308 ms)
+      v exports HTML for list + detail (PDF flow) (7383 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        50.014 s
+Ran all test suites matching /src\\tests\\integration\\consultations-management.test.ts/i.
+
+
+[2026-02-04T15:14:27] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M progress.txt
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
