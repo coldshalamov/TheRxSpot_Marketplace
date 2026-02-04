@@ -10,8 +10,17 @@ type EarningsType =
 
 interface SummaryQueryParams {
   business_id?: string
+  business_ids?: string
   date_from?: string
   date_to?: string
+}
+
+function parseCommaList(value?: string): string[] {
+  if (!value) return []
+  return value
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean)
 }
 
 function parseIsoDate(value?: string): Date | undefined {
@@ -52,13 +61,17 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     const financialsService = req.scope.resolve(FINANCIALS_MODULE) as any
     const query = req.query as SummaryQueryParams
 
-    const businessId = (query.business_id || getOptionalTenantBusinessId(req) || "").trim()
-    if (!businessId) {
-      return res.status(400).json({
-        code: "INVALID_INPUT",
-        message: "business_id is required",
+    const tenantBusinessId = getOptionalTenantBusinessId(req)
+
+    const requestedBusinessIds = parseCommaList(query.business_ids || query.business_id)
+    if (tenantBusinessId && requestedBusinessIds.length && !requestedBusinessIds.includes(tenantBusinessId)) {
+      return res.status(403).json({
+        code: "FORBIDDEN",
+        message: "business_id is restricted by tenant context",
       })
     }
+
+    const businessIds = tenantBusinessId ? [tenantBusinessId] : requestedBusinessIds
 
     const dateFrom = parseIsoDate(query.date_from)
     const dateTo = parseIsoDate(query.date_to)
@@ -75,7 +88,12 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       })
     }
 
-    const filters: any = { business_id: businessId }
+    const filters: any = {}
+    if (businessIds.length === 1) {
+      filters.business_id = businessIds[0]
+    } else if (businessIds.length > 1) {
+      filters.business_id = businessIds
+    }
     if (dateFrom || dateTo) {
       filters.created_at = {}
       if (dateFrom) filters.created_at.$gte = dateFrom
@@ -95,12 +113,21 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     let totalEarnings = 0
     let commissionBalance = 0
     let pendingPayout = 0
+    let platformCommissionBalance = 0
+    let commissionPending = 0
 
     for (const earning of earnings) {
       if (!earning || earning.status === "reversed") continue
 
       const net = asIntegerCents(earning.net_amount)
       totalEarnings += net
+
+      const platformFee = asIntegerCents(earning.platform_fee)
+      if (earning.status === "pending") {
+        commissionPending += platformFee
+      } else {
+        platformCommissionBalance += platformFee
+      }
 
       const isAvailable = earning.status === "available" && !earning.payout_id
       if (isAvailable) {
@@ -123,13 +150,16 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     }
 
     return res.json({
-      business_id: businessId,
+      business_id: businessIds.length === 1 ? businessIds[0] : null,
+      business_ids: businessIds.length ? businessIds : null,
       date_from: dateFrom ? dateFrom.toISOString() : null,
       date_to: dateTo ? dateTo.toISOString() : null,
       pending_payout: pendingPayout,
       total_earnings: totalEarnings,
       commission_balance: commissionBalance,
       available_payout: commissionBalance,
+      platform_commission_balance: platformCommissionBalance,
+      commission_pending: commissionPending,
       breakdown,
     })
   } catch (error) {
