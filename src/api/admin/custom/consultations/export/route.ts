@@ -225,7 +225,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
             const client = [r.patient?.first_name, r.patient?.last_name].filter(Boolean).join(" ") || "-"
             const provider =
               [r.clinician?.first_name, r.clinician?.last_name].filter(Boolean).join(" ") || "Unassigned"
-            const businessName = r.business?.name || r.business_id || "-"
+            const businessName = r.business?.name || r.business?.id || "-"
             const scheduled = r.scheduled_at ? new Date(r.scheduled_at).toISOString() : "-"
             const productTitle = r.product?.title || "-"
             return `<tr>

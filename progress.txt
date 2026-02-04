@@ -12681,3 +12681,1146 @@ Untracked files:
 no changes added to commit (use "git add" and/or "git commit -a")
 
 
+[2026-02-04T13:54:17] CMD: git add src\\api\\admin\\custom\\consultations src\\modules\\business\\migrations\\Migration20260204000015.ts src\\modules\\consultation\\migrations\\Migration20260204000016.ts src\\modules\\consultation\\models\\consultation.ts src\\tests\\integration\\consultations-management.test.ts progress.txt
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add src\\api\\admin\\custom\\consultations src\\modules\\business ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/modules/consultation/models/consultation.ts', LF will be replaced by CRLF the 
+next time Git touches it
+warning: in the working copy of 'src/api/admin/custom/consultations/[id]/export/route.ts', LF will be replaced by CRLF 
+the next time Git touches it
+warning: in the working copy of 'src/api/admin/custom/consultations/[id]/notes/route.ts', LF will be replaced by CRLF 
+the next time Git touches it
+warning: in the working copy of 'src/api/admin/custom/consultations/[id]/route.ts', LF will be replaced by CRLF the 
+next time Git touches it
+warning: in the working copy of 'src/api/admin/custom/consultations/_helpers.ts', LF will be replaced by CRLF the next 
+time Git touches it
+warning: in the working copy of 'src/api/admin/custom/consultations/export/route.ts', LF will be replaced by CRLF the 
+next time Git touches it
+warning: in the working copy of 'src/api/admin/custom/consultations/route.ts', LF will be replaced by CRLF the next 
+time Git touches it
+warning: in the working copy of 'src/modules/business/migrations/Migration20260204000015.ts', LF will be replaced by 
+CRLF the next time Git touches it
+warning: in the working copy of 'src/modules/consultation/migrations/Migration20260204000016.ts', LF will be replaced 
+by CRLF the next time Git touches it
+warning: in the working copy of 'src/tests/integration/consultations-management.test.ts', LF will be replaced by CRLF 
+the next time Git touches it
+
+
+[2026-02-04T13:54:44] CMD: git commit -m "fix(consultations): custom admin APIs + notes/export (PASS: node .\node_modules\jest\bin\jest.js --config=jest.integration.config.js src/tests/integration/consultations-management.test.ts)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main b0e9e6b] fix(consultations): custom admin APIs + notes/export (PASS: node .\node_modules\jest\bin\jest.js --config=jest.integration.config.js src/tests/integration/consultations-management.test.ts)
+ 11 files changed, 5466 insertions(+)
+ create mode 100644 src/api/admin/custom/consultations/[id]/export/route.ts
+ create mode 100644 src/api/admin/custom/consultations/[id]/notes/route.ts
+ create mode 100644 src/api/admin/custom/consultations/[id]/route.ts
+ create mode 100644 src/api/admin/custom/consultations/_helpers.ts
+ create mode 100644 src/api/admin/custom/consultations/export/route.ts
+ create mode 100644 src/api/admin/custom/consultations/route.ts
+ create mode 100644 src/modules/business/migrations/Migration20260204000015.ts
+ create mode 100644 src/modules/consultation/migrations/Migration20260204000016.ts
+ create mode 100644 src/tests/integration/consultations-management.test.ts
+
+
+[2026-02-04T13:55:04] CMD: Get-Content src\\admin\\routes\\businesses\\page.tsx -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import { Container, Heading, Table, Button, Badge, Select } from "@medusajs/ui"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
+
+const STATUS_COLORS: Record<string, "green" | "orange" | "blue" | "red" | "grey"> = {
+  pending: "orange",
+  approved: "blue",
+  active: "green",
+  suspended: "red",
+}
+
+const BusinessesPage = () => {
+  const navigate = useNavigate()
+  const [businesses, setBusinesses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [statusFilter, setStatusFilter] = useState("")
+
+  useEffect(() => {
+    fetchBusinesses()
+  }, [statusFilter])
+
+  const fetchBusinesses = async () => {
+    try {
+      const params = statusFilter ? `?status=${statusFilter}` : ""
+      const response = await fetch(`/admin/businesses${params}`, {
+        credentials: "include",
+      })
+      const data = await response.json()
+      setBusinesses(data.businesses || [])
+    } catch (error) {
+      console.error("Failed to fetch businesses:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleProvision = async (id: string) => {
+    try {
+      const response = await fetch(`/admin/businesses/${id}/provision`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({}),
+      })
+      if (response.ok) {
+        fetchBusinesses()
+      }
+    } catch (error) {
+      console.error("Failed to provision:", error)
+    }
+  }
+
+  const handleStatusChange = async (id: string, status: string) => {
+    try {
+      const response = await fetch(`/admin/businesses/${id}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status }),
+      })
+      if (response.ok) {
+        fetchBusinesses()
+      }
+    } catch (error) {
+      console.error("Failed to update status:", error)
+    }
+  }
+
+  if (loading) {
+    return (
+      <Container>
+        <Heading level="h1">Businesses</Heading>
+        <p>Loading...</p>
+      </Container>
+    )
+  }
+
+  return (
+    <Container>
+...(truncated)
+
+[2026-02-04T13:55:16] CMD: rg -n -S -m 20 "Checkbox" src\\admin
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T13:55:33] CMD: rg -n -S -m 20 "Modal" src\\admin
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T13:58:37] CMD: Get-Content -LiteralPath 'src\\api\\admin\\consultations\\[id]\\documents\\route.ts' -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Consultation Document Upload (PLAN)
+ *
+ * POST /admin/consultations/:id/documents
+ *
+ * Accepts multipart/form-data with:
+ * - document: file (PDF/JPG/PNG, max 10MB)
+ * - type: document type
+ * - title: document title
+ * - description?: optional
+ * - access_level: patient_only | clinician | business_staff | platform_admin
+ * - expires_at?: ISO date string
+ *
+ * Access control:
+ * - Admin/business staff can upload for any consultation in their business.
+ * - Clinicians can upload only for consultations they are assigned to.
+ *
+ * Storage:
+ * - Uses the compliance module storage provider (local in dev, S3 in prod).
+ */
+
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import ComplianceModuleService from "../../../../../modules/compliance/service"
+import {
+  uploadSingleDocument,
+  handleMulterError,
+  virusScanMiddleware,
+} from "../../../../middlewares/document-upload"
+import { isValidAccessLevel } from "../../../../../modules/compliance/utils/access-control"
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+type UserType = "clinician" | "business_staff"
+
+function getOptionalTenantBusinessId(req: MedusaRequest): string | undefined {
+  const authContext = (req as any).auth_context as
+    | {
+        business_id?: string
+        metadata?: Record<string, any>
+        app_metadata?: Record<string, any>
+      }
+    | undefined
+
+  return (
+    authContext?.business_id ||
+    authContext?.metadata?.business_id ||
+    authContext?.app_metadata?.business_id ||
+    (req as any)?.tenant_context?.business_id
+  )
+}
+
+async function resolveUserType(
+  req: MedusaRequest,
+  consultationService: any
+): Promise<{ actorId: string | null; userType: UserType; clinicianId: string | null }> {
+  const authContext = (req as any).auth_context as
+    | { actor_id?: string; actor_type?: string }
+    | undefined
+
+  const actorId = authContext?.actor_id || null
+  const rawActorType = authContext?.actor_type || "user"
+
+  if (!actorId) {
+    return { actorId: null, userType: "business_staff", clinicianId: null }
+  }
+
+  // If the auth system explicitly marks clinicians, prefer it.
+  if (rawActorType === "clinician") {
+    return { actorId, userType: "clinician", clinicianId: actorId }
+  }
+
+  // In this repo, clinicians can be represented as admin `user` actors with a clinician record linked by `user_id`.
+  try {
+    const [clinicians] = await consultationService.listAndCountClinicians(
+      { user_id: actorId },
+...(truncated)
+
+[2026-02-04T13:59:05] CMD: Get-Content src\\api\\admin\\documents\\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Documents API Routes
+ * 
+ * GET /admin/documents - List documents with filters
+ * POST /admin/documents - Upload new document
+ * 
+ * HIPAA-008 SECURITY NOTICE:
+ * The GET endpoint may expose PHI (patient_id, consultation_id) in URL query parameters.
+ * For searches involving PHI, use POST /admin/documents/search instead.
+ */
+
+import {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+import ComplianceModuleService from "../../../modules/compliance/service"
+import { CONSULTATION_MODULE } from "../../../modules/consultation"
+import { uploadSingleDocument, handleMulterError, virusScanMiddleware } from "../../middlewares/document-upload"
+import { logAuditEvent } from "../../middlewares/audit-logging"
+
+// Export config to disable body parsing for multipart uploads
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+/**
+ * GET /admin/documents
+ * List documents with filters and pagination
+ * 
+ * ⚠️ DEPRECATION WARNING:
+ * For searches involving PHI identifiers (patient_id, consultation_id), 
+ * use POST /admin/documents/search instead to prevent PHI exposure in URLs.
+ * 
+ * Query params (for non-PHI filters only):
+ * - business_id: Filter by business
+ * - order_id: Filter by order
+ * - type: Filter by document type
+ * - access_level: Filter by access level
+ * - date_from: Filter by date range start
+ * - date_to: Filter by date range end
+ * - limit: Number of results (default: 20, max: 100)
+ * - offset: Pagination offset (default: 0)
+ * 
+ * PHI filters (patient_id, consultation_id) should use POST /admin/documents/search
+ */
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const complianceService: ComplianceModuleService = req.scope.resolve(
+      "complianceModuleService"
+    )
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE) as any
+
+    const authContext = (req as any).auth_context as
+      | {
+          actor_id?: string
+          actor_type?: string
+          business_id?: string
+          metadata?: Record<string, any>
+          app_metadata?: Record<string, any>
+        }
+      | undefined
+
+    const actorId = authContext?.actor_id || null
+    if (!actorId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Unauthorized",
+        code: "UNAUTHORIZED",
+      })
+    }
+
+    const tenantBusinessId =
+      authContext?.business_id ||
+      authContext?.metadata?.business_id ||
+      authContext?.app_metadata?.business_id ||
+      (req as any)?.tenant_context?.business_id
+
+    // Resolve "business_staff" vs "clinician" for access control.
+...(truncated)
+
+[2026-02-04T14:05:13] CMD: Get-Content -LiteralPath 'src\\admin\\routes\\consultations\\[id]\\page.tsx' -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+
+const ConsultationDetailPage = () => {
+  return null
+}
+
+export const config = defineRouteConfig({
+  label: "Consultation detail",
+  icon: "ChatBubbleLeftRight",
+})
+
+export default ConsultationDetailPage
+
+
+
+
+[2026-02-04T14:09:32] CMD: rg -n "Patient information" -n 'src\\admin\\routes\\consultations\\[id]\\page.tsx'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+266:        <div className=\"text-sm font-medium\">Patient information</div>
+
+
+[2026-02-04T14:10:47] CMD: (Get-Content -LiteralPath 'src\\admin\\routes\\consultations\\[id]\\page.tsx').Count
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+351
+
+
+[2026-02-04T14:42:05] CMD: ls
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/4/2026   8:34 AM                .claude                                                              
+d-----          2/3/2026   6:51 PM                .github                                                              
+d-----          2/4/2026   1:15 PM                .medusa                                                              
+d-----          2/2/2026  10:20 PM                .vscode                                                              
+d-----          2/4/2026   8:34 AM                docs                                                                 
+d-----          2/2/2026  10:20 PM                integration-tests                                                    
+d-----          2/4/2026  12:10 PM                node_modules                                                         
+d-----          2/4/2026   1:38 PM                reports                                                              
+d-----          2/4/2026  11:50 AM                scripts                                                              
+d-----          2/4/2026   9:02 AM                src                                                                  
+d-----          2/4/2026   5:40 AM                TheRxSpot_Marketplace-storefront                                     
+d-----          2/4/2026   9:05 AM                uploads                                                              
+-a----          2/3/2026   6:52 PM           1476 .dockerignore                                                        
+-a----          2/4/2026   5:26 AM            802 .env                                                                 
+-a----          2/4/2026   5:40 AM           4260 .env.template                                                        
+-a----          2/4/2026   8:32 AM            710 .env.test                                                            
+-a----          2/4/2026   1:19 PM            271 .gitignore                                                           
+-a----          2/2/2026  10:20 PM            160 .npmrc                                                               
+-a----          2/2/2026  10:20 PM             70 .yarnrc.yml                                                          
+-a----          2/3/2026  11:04 AM            418 docker-compose.yml                                                   
+-a----          2/3/2026   6:51 PM           2077 Dockerfile                                                           
+-a----          2/4/2026  12:06 AM           6327 DOCS_CLEANUP_SUMMARY.md                                              
+-a----          2/4/2026  12:06 AM           4496 DOCUMENTATION_INDEX.md                                               
+-a----          2/2/2026  10:20 PM            804 instrumentation.ts                                                   
+-a----          2/2/2026  10:20 PM            869 jest.config.js                                                       
+-a----          2/4/2026  12:23 PM           2055 jest.integration.config.js                                           
+-a----          2/4/2026   5:40 AM           1450 medusa-config.ts                                                     
+-a----          2/4/2026  12:10 PM         872590 package-lock.json                                                    
+-a----          2/4/2026  12:10 PM           2844 package.json                                                         
+-a----          2/4/2026   5:41 AM          92523 PLAN.txt                                                             
+-a----          2/4/2026   1:16 PM          48423 PRD_CHECKLIST.md                                                     
+-a----          2/4/2026   2:10 PM         734077 progress.txt                                                         
+-a----          2/4/2026  12:01 AM           6119 README.md                                                            
+-a----          2/4/2026   5:40 AM            976 tsconfig.json                                                        
+
+
+
+
+[2026-02-04T14:42:34] CMD: rg -n "Consultations Management" PLAN.txt
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+160:Consultations Management Page (16h)
+
+
+[2026-02-04T14:42:42] CMD: powershell -NoProfile -Command "(Get-Content PLAN.txt | Select-Object -Skip 145 -First 120)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ Filter by status (Active/Inactive)
+ Filter by role (Customer/Admin/Clinician)
+ Date range filter (joined between X and Y)
+ Pagination: Server-side, 25 per page
+ Bulk Actions:
+ Select all checkbox
+ Bulk deactivate
+ Bulk export to CSV
+ User Detail Modal:
+ Personal info (editable)
+ Order history (linked to orders page)
+ Consultation history (linked to consultations page)
+ Activity log (last 50 actions)
+ Deactivation reason (if inactive)
+Consultations Management Page (16h)
+ Create src/admin/routes/consultations/page.tsx (list view)
+ Table Columns:
+ ID (CO-{number}, clickable)
+ Client Name (linked to user profile)
+ Provider (clinician name or "Unassigned")
+ Business (business name with logo)
+ Scheduled Date/Time (with timezone)
+ State (patient state, e.g. "FL")
+ Status (badge: Pending/Scheduled/Completed/Approved/Rejected)
+ Mode (icon: video/audio/form)
+ Product (linked medication)
+ Type (Initial/Follow-up)
+ Actions (View, Assign, Approve, Reject)
+ Search & Filters:
+ Search by client name, clinician name, order ID
+ Filter by status (multi-select)
+ Filter by mode (video/audio/form)
+ Filter by type (initial/follow-up)
+ Filter by business (dropdown)
+ Date range filter (scheduled between X and Y)
+ Filter by state (for compliance review)
+ Bulk Actions:
+ Bulk assign to clinician
+ Bulk export to PDF report
+ Create src/admin/routes/consultations/[id]/page.tsx (detail view)
+ Detail Layout:
+Header Section:
+ Consultation ID (large, copyable)
+ Status badge (with last updated timestamp)
+ [Print] and [Export PDF] buttons
+Patient Information Card:
+ Full name, DOB, age
+ Phone (formatted, click-to-call if web calling enabled)
+ Email (click-to-email)
+ Address (full, with map link)
+ State (highlighted for compliance)
+Consultation Details Card:
+ Linked product (name, dosage, image)
+ Mode (video/audio/form with icon)
+ Type (initial/follow-up)
+ Scheduled date/time (with timezone, countdown if upcoming)
+ Chief complaint (patient's primary concern)
+ Medical history (formatted, expandable)
+ Current medications (list)
+ Allergies (highlighted in red if any)
+Clinician Assignment Section:
+ Current clinician (avatar + name)
+ [Reassign] button → modal with clinician dropdown
+ Clinician availability indicator (available/busy)
+Status Management Section:
+ Status timeline (visual stepper: Pending → Scheduled → Completed → Approved)
+ Status action buttons:
+ [Schedule] (if pending)
+ [Mark Complete] (if scheduled)
+ [Approve] (if completed)
+ [Reject] (if completed) → requires rejection reason
+ Rejection reason field (if rejected)
+Documents Section:
+ Uploaded documents list (filename, type, size, uploaded by, timestamp)
+ [Download] button per document
+ [Upload New Document] button → file picker
+ Document preview (PDFs render inline, images show thumbnail)
+ Support drag-and-drop upload
+Notes Section:
+ Clinician notes (rich text editor)
+...(truncated)
+
+[2026-02-04T14:42:59] CMD: powershell -NoProfile -Command "Get-Content src/admin/routes/consultations/page.tsx -TotalCount 240"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import {
+  Avatar,
+  Badge,
+  Button,
+  Container,
+  Copy,
+  DatePicker,
+  Drawer,
+  Heading,
+  Input,
+  Select,
+  Table,
+  Toaster,
+  toast,
+} from "@medusajs/ui"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
+
+type PlanStatus = "pending" | "scheduled" | "completed" | "approved" | "rejected"
+type PlanMode = "video" | "audio" | "form"
+type PlanType = "initial" | "follow-up"
+
+type ConsultationRow = {
+  id: string
+  business_id: string
+  order_id: string | null
+  scheduled_at: string | null
+  updated_at: string | null
+  plan_status: PlanStatus
+  mode: PlanMode
+  type: PlanType
+  state: string | null
+  patient: {
+    id: string
+    first_name: string | null
+    last_name: string | null
+    email: string | null
+    phone: string | null
+  } | null
+  clinician: {
+    id: string
+    first_name: string | null
+    last_name: string | null
+    status?: string | null
+  } | null
+  business: {
+    id: string
+    name: string
+    logo_url?: string | null
+  } | null
+  product: {
+    id: string
+    title: string
+    handle?: string | null
+  } | null
+}
+
+type ConsultationsListResponse = {
+  consultations: ConsultationRow[]
+  count: number
+  limit: number
+  offset: number
+}
+
+const LIMIT = 25
+
+function stableDisplayNumber(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  }
+  const num = hash % 1000000
+  return String(num).padStart(6, "0")
+}
+
+function consultationDisplayId(id: string): string {
+  return `CO-${stableDisplayNumber(id)}`
+}
+
+...(truncated)
+
+[2026-02-04T14:43:07] CMD: powershell -NoProfile -Command "Get-Content src/admin/routes/consultations/page.tsx | Select-Object -Skip 240 -First 260"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+      setClinicians([])
+    } finally {
+      setCliniciansLoading(false)
+    }
+  }
+
+  const selectedRows = rows.filter((r) => selected.has(r.id))
+  const selectedBusinessIds = Array.from(new Set(selectedRows.map((r) => r.business_id)))
+  const canBulkAssign = selected.size > 0 && selectedBusinessIds.length <= 1
+  const bulkAssignBusinessId = selectedBusinessIds.length === 1 ? selectedBusinessIds[0] : null
+
+  const openAssign = async () => {
+    if (!canBulkAssign) {
+      toast.error("Bulk assign requires selections from one business", {
+        description: "Select consultations belonging to a single business.",
+      })
+      return
+    }
+    setAssignClinicianId("")
+    setAssignOpen(true)
+    await loadClinicians(bulkAssignBusinessId)
+  }
+
+  const assignSelected = async () => {
+    const ids = Array.from(selected)
+    if (!ids.length) return
+    const clinicianId = assignClinicianId.trim()
+    if (!clinicianId) {
+      toast.error("Choose a clinician to assign")
+      return
+    }
+
+    try {
+      let ok = 0
+      for (const id of ids) {
+        const res = await fetch(`/admin/consultations/${encodeURIComponent(id)}/assign`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ clinician_id: clinicianId }),
+        })
+        if (res.ok) ok += 1
+        else {
+          const text = await res.text().catch(() => "")
+          throw new Error(text || `Assign failed for ${id}`)
+        }
+      }
+      toast.success("Assigned clinician", { description: `${ok} consultation(s) updated.` })
+      setAssignOpen(false)
+      setSelected(new Set())
+      await fetchConsultations()
+    } catch (e) {
+      toast.error("Failed to assign clinician", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+    }
+  }
+
+  const exportPdf = () => {
+    const params = new URLSearchParams()
+    if (selected.size > 0) {
+      params.set("ids", Array.from(selected).join(","))
+    } else {
+      if (q.trim()) params.set("q", q.trim())
+      if (status.length) params.set("status", status.join(","))
+      if (mode.length) params.set("mode", mode.join(","))
+      if (type) params.set("type", type)
+      if (businessId) params.set("business_id", businessId)
+      if (stateFilter.trim()) params.set("state", stateFilter.trim().toUpperCase())
+      if (dateFrom) params.set("date_from", dateFrom.toISOString())
+      if (dateTo) params.set("date_to", dateTo.toISOString())
+    }
+
+    const url = `/admin/custom/consultations/export?${params.toString()}`
+    window.open(url, "_blank", "noopener,noreferrer")
+  }
+
+  const updateStatus = async (id: string, next: PlanStatus, reason?: string) => {
+...(truncated)
+
+[2026-02-04T14:43:15] CMD: powershell -NoProfile -Command "Get-Content src/admin/routes/consultations/[id]/page.tsx -TotalCount 260"
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+powershell : Get-Content : An object at the specified path src/admin/routes/consultations/[id]/page.tsx does not 
+exist, or has been 
+At line:1 char:1
++ powershell -NoProfile -Command "Get-Content src/admin/routes/consulta ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Get-Content : A...t, or has been :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+filtered by the -Include or -Exclude parameter.
+At line:1 char:1
++ Get-Content src/admin/routes/consultations/[id]/page.tsx -TotalCount  ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (System.String[]:String[]) [Get-Content], Exception
+    + FullyQualifiedErrorId : ItemNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+ 
+
+
+[2026-02-04T14:43:24] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/admin/routes/consultations/[id]/page.tsx' -TotalCount 260"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import { Badge, Button, Container, Copy, Drawer, Heading, Select, Toaster, toast } from "@medusajs/ui"
+import { formatDistanceToNowStrict } from "date-fns"
+import { DragEvent, useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+
+type PlanStatus = "pending" | "scheduled" | "completed" | "approved" | "rejected"
+
+type ConsultationDetail = {
+  id: string
+  business_id: string
+  plan_status: PlanStatus
+  scheduled_at: string | null
+  updated_at: string | null
+  chief_complaint: string | null
+  medical_history: any | null
+  rejection_reason: string | null
+  notes: string | null
+  admin_notes: string | null
+  clinician_id: string | null
+  state: string | null
+  patient: any | null
+  clinician: any | null
+  submission: any | null
+  product: any | null
+  mode: string
+  type: string
+}
+
+type DocumentRow = {
+  id: string
+  title: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  created_at: string
+  access_level: string
+}
+
+function statusBadge(status: PlanStatus): { color: "grey" | "blue" | "green" | "orange" | "red"; label: string } {
+  if (status === "pending") return { color: "orange", label: "Pending" }
+  if (status === "scheduled") return { color: "blue", label: "Scheduled" }
+  if (status === "completed") return { color: "grey", label: "Completed" }
+  if (status === "approved") return { color: "green", label: "Approved" }
+  return { color: "red", label: "Rejected" }
+}
+
+function formatDateTime(value?: string | null): string {
+  if (!value) return "-"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleString(undefined, { timeZoneName: "short" })
+}
+
+function formatBytes(bytes?: number | null): string {
+  if (!bytes || bytes <= 0) return "-"
+  const units = ["B", "KB", "MB", "GB"]
+  let i = 0
+  let v = bytes
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024
+    i++
+  }
+  return `${v.toFixed(i === 0 ? 0 : 1)} ${units[i]}`
+}
+
+function computeAge(dob?: string | null): string {
+  if (!dob) return ""
+  const d = new Date(dob)
+  if (Number.isNaN(d.getTime())) return ""
+  const now = new Date()
+  let age = now.getFullYear() - d.getFullYear()
+  const m = now.getMonth() - d.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age -= 1
+  if (age < 0 || age > 125) return ""
+  return `${age}`
+}
+
+const ConsultationDetailPage = () => {
+  const navigate = useNavigate()
+...(truncated)
+
+[2026-02-04T14:43:32] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/admin/routes/consultations/[id]/page.tsx' | Select-Object -Skip 260 -First 260"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+          <div>
+            <div className="text-xs font-medium mb-1">Full name</div>
+            <div className="text-sm">{patientName}</div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">DOB / Age</div>
+            <div className="text-sm">
+              {patient?.date_of_birth || "—"}
+              {age ? ` (${age})` : ""}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">Phone</div>
+            <div className="text-sm">
+              {patient?.phone ? (
+                <a className="text-ui-fg-interactive hover:underline" href={`tel:${patient.phone}`}>
+                  {patient.phone}
+                </a>
+              ) : (
+                "—"
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">Email</div>
+            <div className="text-sm">
+              {patient?.email ? (
+                <a className="text-ui-fg-interactive hover:underline" href={`mailto:${patient.email}`}>
+                  {patient.email}
+                </a>
+              ) : (
+                "—"
+              )}
+            </div>
+          </div>
+          <div className="sm:col-span-2">
+            <div className="text-xs font-medium mb-1">Address</div>
+            <div className="text-sm">
+              {address ? (
+                mapLink ? (
+                  <a className="text-ui-fg-interactive hover:underline" href={mapLink} target="_blank" rel="noreferrer">
+                    {address}
+                  </a>
+                ) : (
+                  address
+                )
+              ) : (
+                <span className="text-ui-fg-subtle">—</span>
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">State</div>
+            <div className="text-sm font-medium">{consultation.state || "—"}</div>
+          </div>
+        </div>
+      </div>
+    </Container>
+  )
+}
+
+export const config = defineRouteConfig({
+  label: "Consultation detail",
+  icon: "ChatBubbleLeftRight",
+})
+
+export default ConsultationDetailPage
+
+
+[2026-02-04T14:43:45] CMD: type package.json
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+{
+  "name": "TheRxSpot_Marketplace",
+  "version": "0.0.1",
+  "description": "A starter for Medusa projects.",
+  "author": "Medusa (https://medusajs.com)",
+  "license": "MIT",
+  "keywords": [
+    "sqlite",
+    "postgres",
+    "typescript",
+    "ecommerce",
+    "headless",
+    "medusa"
+  ],
+  "scripts": {
+    "postinstall": "node ./scripts/ensure-date-fns-locale.mjs",
+    "build": "medusa build",
+    "db:clean-migrate": "node ./scripts/db/clean-migrate.mjs",
+    "seed": "medusa exec ./src/scripts/seed.ts",
+    "start": "medusa start",
+    "dev": "medusa develop",
+    "test:integration:http": "TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
+    "test:integration:modules": "TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
+    "test:integration:custom": "NODE_OPTIONS=--experimental-vm-modules jest --config=jest.integration.config.js --silent=false --runInBand --forceExit",
+    "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit",
+    "test:consult-gating": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/consult-gating.test.ts --silent=false --runInBand --forceExit",
+    "test:consultation": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/consultation-lifecycle.test.ts --silent=false --runInBand --forceExit",
+    "test:earnings": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/earnings.test.ts --silent=false --runInBand --forceExit",
+    "test:documents": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/documents.test.ts --silent=false --runInBand --forceExit",
+    "test:audit": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/audit-logging.test.ts --silent=false --runInBand --forceExit"
+  },
+  "dependencies": {
+    "@medusajs/admin-sdk": "2.13.1",
+    "@medusajs/cli": "2.13.1",
+    "@medusajs/framework": "2.13.1",
+    "@medusajs/medusa": "2.13.1",
+    "@types/qrcode": "^1.5.6",
+    "clamscan": "^1.4.2",
+    "date-fns": "^3.6.0",
+    "file-type": "^19.6.0",
+    "ioredis": "^5.3.2",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@medusajs/test-utils": "2.13.1",
+    "@swc/core": "^1.7.28",
+    "@swc/jest": "^0.2.36",
+    "@types/jest": "^29.5.13",
+    "@types/node": "^20.12.11",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.2.25",
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "prop-types": "^15.8.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.14",
+    "yalc": "^1.0.0-pre.53"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "npm@11.5.2"
+}
+
+
+[2026-02-04T14:43:56] CMD: npm run build
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 build
+> medusa build
+
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from D:\GitHub\TheRxSpot_Marketplace\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa\server" folder
+[32minfo[39m:    Compiling frontend source...
+[96msrc/api/admin/custom/consultations/export/route.ts[0m:[93m228[0m:[93m56[0m - [91merror[0m[90m TS2551: 
+[0mProperty 'business_id' does not exist on type '{ id: any; plan_status: PlanStatus; mode: PlanMode; type: PlanType; 
+scheduled_at: any; order_id: any; state: string | null; patient: any; clinician: any; business: any; product: any; }'. 
+Did you mean 'business'?
+
+[7m228[0m             const businessName = r.business?.name || r.business_id || "-"
+[7m   [0m [91m                                                       ~~~~~~~~~~~[0m
+
+  [96msrc/api/admin/custom/consultations/export/route.ts[0m:[93m140[0m:[93m11[0m
+    [7m140[0m           business: businessById.get(consultation.business_id) ?? null,
+    [7m   [0m [96m          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+    'business' is declared here.
+
+[33mwarn[39m:    Backend build completed with errors (9.17s)
+[32minfo[39m:    Frontend build completed successfully (36.71s)
+
+
+[2026-02-04T14:44:51] CMD: powershell -NoProfile -Command "Get-Content src/api/admin/custom/consultations/export/route.ts | Select-Object -Skip 200 -First 60"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+      .muted { color: #666; }
+    </style>
+  </head>
+  <body>
+    <h1>${htmlEscape(title)}</h1>
+    <div class="meta">Printable HTML export (use browser print dialog to "Save as PDF").</div>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Client</th>
+          <th>Provider</th>
+          <th>Business</th>
+          <th>Scheduled</th>
+          <th>State</th>
+          <th>Status</th>
+          <th>Mode</th>
+          <th>Product</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows
+          .map((r) => {
+            const client = [r.patient?.first_name, r.patient?.last_name].filter(Boolean).join(" ") || "-"
+            const provider =
+              [r.clinician?.first_name, r.clinician?.last_name].filter(Boolean).join(" ") || "Unassigned"
+            const businessName = r.business?.name || r.business_id || "-"
+            const scheduled = r.scheduled_at ? new Date(r.scheduled_at).toISOString() : "-"
+            const productTitle = r.product?.title || "-"
+            return `<tr>
+              <td>${htmlEscape(r.id)}</td>
+              <td>${htmlEscape(client)}</td>
+              <td>${htmlEscape(provider)}</td>
+              <td>${htmlEscape(businessName)}</td>
+              <td>${htmlEscape(scheduled)}</td>
+              <td>${htmlEscape(r.state || "-")}</td>
+              <td>${htmlEscape(r.plan_status)}</td>
+              <td>${htmlEscape(r.mode)}</td>
+              <td>${htmlEscape(productTitle)}</td>
+              <td>${htmlEscape(r.type)}</td>
+            </tr>`
+          })
+          .join("\n")}
+      </tbody>
+    </table>
+  </body>
+</html>`
+
+      res.setHeader("Content-Type", "text/html; charset=utf-8")
+      return res.send(html)
+    } catch (error) {
+      return res.status(500).json({
+        code: "INTERNAL_ERROR",
+        message: "Failed to export consultations report",
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    }
+}
+
+
+[2026-02-04T14:45:03] CMD: powershell -NoProfile -Command "Get-Content src/api/admin/custom/consultations/export/route.ts -TotalCount 180"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { Modules } from "@medusajs/framework/utils"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import { BUSINESS_MODULE } from "../../../../../modules/business"
+import {
+  asInt,
+  derivePlanType,
+  extractStateFromSubmission,
+  getAuthActor,
+  getOptionalTenantBusinessId,
+  getPlanStatus,
+  modeToPlanMode,
+  parseCommaList,
+  parseIsoDate,
+  planModeToInternalModes,
+  type PlanMode,
+  type PlanStatus,
+  type PlanType,
+} from "../_helpers"
+
+function unique<T>(values: (T | null | undefined)[]): T[] {
+  return Array.from(new Set(values.filter((v): v is T => v != null)))
+}
+
+async function listByIds<T>(
+  fn: (filters: any, options: any) => Promise<[T[], number] | T[]>,
+  ids: string[],
+  take: number
+): Promise<T[]> {
+  if (!ids.length) return []
+  const res: any = await fn({ id: ids }, { take })
+  return Array.isArray(res?.[0]) ? (res[0] as T[]) : (res as T[])
+}
+
+function htmlEscape(value: any): string {
+  const str = value == null ? "" : String(value)
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;")
+}
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+    try {
+      const query = req.query as Record<string, any>
+
+      const statuses = parseCommaList(query.status) as PlanStatus[]
+      const modes = parseCommaList(query.mode) as PlanMode[]
+      const type = (typeof query.type === "string" ? query.type.trim() : "") as PlanType | ""
+      const state = typeof query.state === "string" ? query.state.trim().toUpperCase() : ""
+      const ids = parseCommaList(query.ids)
+
+      if (type && !["initial", "follow-up"].includes(type)) {
+        return res.status(400).json({ code: "INVALID_INPUT", message: "type must be one of: initial, follow-up" })
+      }
+
+      const dateFrom = parseIsoDate(typeof query.date_from === "string" ? query.date_from : undefined)
+      const dateTo = parseIsoDate(typeof query.date_to === "string" ? query.date_to : undefined)
+      if (query.date_from && !dateFrom) {
+        return res.status(400).json({ code: "INVALID_INPUT", message: "date_from must be a valid ISO date string" })
+      }
+      if (query.date_to && !dateTo) {
+        return res.status(400).json({ code: "INVALID_INPUT", message: "date_to must be a valid ISO date string" })
+      }
+
+      const businessIdRaw = typeof query.business_id === "string" ? query.business_id.trim() : ""
+      const tenantBusinessId = getOptionalTenantBusinessId(req)
+      if (tenantBusinessId && businessIdRaw && businessIdRaw !== tenantBusinessId) {
+        return res.status(403).json({ code: "FORBIDDEN", message: "business_id is restricted by tenant context" })
+      }
+      const effectiveBusinessId = tenantBusinessId || businessIdRaw || ""
+
+      const consultationService = req.scope.resolve(CONSULTATION_MODULE) as any
+      const businessService = req.scope.resolve(BUSINESS_MODULE) as any
+      const productService = req.scope.resolve(Modules.PRODUCT) as any
+      const complianceService = req.scope.resolve("complianceModuleService") as any
+
+      const scanTarget = Math.min(Math.max(asInt(query.take, 1000), 1), 10000)
+...(truncated)
+
+[2026-02-04T14:45:30] CMD: npm run build
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 build
+> medusa build
+
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from D:\GitHub\TheRxSpot_Marketplace\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa\server" folder
+[32minfo[39m:    Compiling frontend source...
+[32minfo[39m:    Backend build completed successfully (8.98s)
+[32minfo[39m:    Frontend build completed successfully (35.93s)
+
+
+[2026-02-04T14:46:23] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M progress.txt
+ M src/api/admin/custom/consultations/export/route.ts
+?? src/admin/routes/consultations/
+
+
