@@ -73,7 +73,7 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
   - [x] Store IP address, user agent, timestamp
 
 ## Week 3-4: Admin Dashboard Completion
-- [ ] Dashboard Home Page (8h)
+- [x] Dashboard Home Page (8h)
   - [ ] Create src/admin/routes/home/page.tsx
   - [ ] Metrics Cards (top row, 5 cards):
   - [ ] Total Businesses (with % change vs last month)
