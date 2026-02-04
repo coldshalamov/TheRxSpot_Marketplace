@@ -13824,3 +13824,2219 @@ OUTPUT:
 ?? src/admin/routes/consultations/
 
 
+[2026-02-04T14:46:36] CMD: git add src/api/admin/custom/consultations/export/route.ts progress.txt
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add src/api/admin/custom/consultations/export/route.ts progress.t ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/api/admin/custom/consultations/export/route.ts', LF will be replaced by CRLF the 
+next time Git touches it
+
+
+[2026-02-04T14:46:41] CMD: git commit -m "Fix consultations export business fallback (npm run build)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main dc9da2a] Fix consultations export business fallback (npm run build)
+ 2 files changed, 1144 insertions(+), 1 deletion(-)
+
+
+[2026-02-04T14:46:59] CMD: powershell -NoProfile -Command "Get-Content src/api/admin/custom/consultations/route.ts -TotalCount 260"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { Modules } from "@medusajs/framework/utils"
+import { CONSULTATION_MODULE } from "../../../../modules/consultation"
+import { BUSINESS_MODULE } from "../../../../modules/business"
+import {
+  asInt,
+  derivePlanType,
+  extractStateFromSubmission,
+  getOptionalTenantBusinessId,
+  getPlanStatus,
+  modeToPlanMode,
+  normalizeDigits,
+  normalizeText,
+  parseCommaList,
+  parseIsoDate,
+  planModeToInternalModes,
+  type PlanMode,
+  type PlanStatus,
+  type PlanType,
+} from "./_helpers"
+
+function matchesQuery(row: any, q: string): boolean {
+  const query = normalizeText(q)
+  if (!query) return true
+
+  const tokens = query.split(/\s+/).filter(Boolean)
+  const hay = normalizeText(
+    [
+      row.id || "",
+      row.order_id || "",
+      row.patient?.first_name || "",
+      row.patient?.last_name || "",
+      row.patient?.email || "",
+      row.clinician?.first_name || "",
+      row.clinician?.last_name || "",
+      row.business?.name || "",
+      row.product?.title || "",
+    ].join(" ")
+  )
+
+  const qDigits = normalizeDigits(query)
+  const phoneDigits = normalizeDigits(row.patient?.phone || "")
+
+  return (
+    tokens.every((t) => {
+      const tDigits = normalizeDigits(t)
+      if (tDigits.length >= 4) {
+        return phoneDigits.includes(tDigits) || hay.includes(normalizeText(t))
+      }
+      return hay.includes(normalizeText(t))
+    }) || (qDigits.length >= 4 && phoneDigits.includes(qDigits))
+  )
+}
+
+function unique<T>(values: (T | null | undefined)[]): T[] {
+  return Array.from(new Set(values.filter((v): v is T => v != null)))
+}
+
+async function listByIds<T>(
+  fn: (filters: any, options: any) => Promise<[T[], number] | T[]>,
+  ids: string[],
+  take: number
+): Promise<T[]> {
+  if (!ids.length) return []
+  const res: any = await fn({ id: ids }, { take })
+  return Array.isArray(res?.[0]) ? (res[0] as T[]) : (res as T[])
+}
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+    try {
+      const query = req.query as Record<string, any>
+
+      const limit = Math.min(Math.max(asInt(query.limit, 25), 1), 100)
+      const offset = Math.max(asInt(query.offset, 0), 0)
+
+      const q = typeof query.q === "string" ? query.q.trim() : ""
+
+      const statuses = parseCommaList(query.status) as PlanStatus[]
+      const modes = parseCommaList(query.mode) as PlanMode[]
+      const type = (typeof query.type === "string" ? query.type.trim() : "") as PlanType | ""
+...(truncated)
+
+[2026-02-04T14:47:08] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/api/admin/custom/consultations/[id]/route.ts' -TotalCount 260"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { Modules } from "@medusajs/framework/utils"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import { BUSINESS_MODULE } from "../../../../../modules/business"
+import {
+  derivePlanType,
+  extractStateFromSubmission,
+  getOptionalTenantBusinessId,
+  getPlanStatus,
+  modeToPlanMode,
+} from "../_helpers"
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+    const { id } = req.params
+
+    const tenantBusinessId = getOptionalTenantBusinessId(req)
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE) as any
+    const businessService = req.scope.resolve(BUSINESS_MODULE) as any
+    const productService = req.scope.resolve(Modules.PRODUCT) as any
+
+    try {
+      const consultation = await consultationService.getConsultationOrThrow(id)
+
+      if (tenantBusinessId && consultation.business_id !== tenantBusinessId) {
+        return res.status(404).json({ code: "NOT_FOUND", message: "Consultation not found" })
+      }
+
+      const patient = await consultationService.getPatientOrThrow(consultation.patient_id)
+      const clinician = consultation.clinician_id
+        ? await consultationService.getClinicianOrThrow(consultation.clinician_id).catch(() => null)
+        : null
+
+      const [businesses] = (await businessService
+        .listAndCountBusinesses({ id: consultation.business_id }, { take: 1 })
+        .catch(() => [[], 0])) as [any[], number]
+      const business = businesses?.[0] ?? null
+
+      const submission = consultation.originating_submission_id
+        ? await businessService
+            .listConsultSubmissions({ id: consultation.originating_submission_id }, { take: 1 })
+            .then((list: any[]) => list?.[0] ?? null)
+            .catch(() => null)
+        : null
+
+      const state = submission ? extractStateFromSubmission(submission) : null
+
+      let product: any = null
+      if (submission?.product_id) {
+        try {
+          const listed = await productService.listProducts({ id: submission.product_id }, { take: 1 })
+          // Depending on Medusa version, listProducts may return `Product[]` or `[Product[], count]`.
+          if (Array.isArray(listed?.[0])) {
+            product = listed?.[0]?.[0] ?? null
+          } else if (Array.isArray(listed)) {
+            product = listed?.[0] ?? null
+          } else {
+            product = null
+          }
+        } catch {
+          product = null
+        }
+      }
+
+      const [statusEvents] = await consultationService.listStatusEventsByConsultation(id).catch(() => [[]])
+
+      return res.json({
+        consultation: {
+          ...consultation,
+          plan_status: getPlanStatus(consultation),
+          mode: modeToPlanMode(consultation.mode),
+          type: derivePlanType(consultation),
+          state,
+          patient,
+          clinician,
+          business,
+          submission,
+          product,
+          status_history: statusEvents || [],
+        },
+      })
+...(truncated)
+
+[2026-02-04T14:47:17] CMD: rg -n "chief_complaint" -S src/modules
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src/modules\consultation\models\consultation.ts:14:  chief_complaint: model.text().nullable(),
+src/modules\consultation\migrations\Migration20260204000002.ts:77:        "chief_complaint" TEXT NULL,
+
+
+[2026-02-04T14:47:25] CMD: type src/modules/consultation/models/consultation.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { model } from "@medusajs/framework/utils"
+
+export const Consultation = model.define("consultation", {
+  id: model.id().primaryKey(),
+  business_id: model.text(),
+  patient_id: model.text(),
+  clinician_id: model.text().nullable(),
+  mode: model.enum(["async_form", "video", "phone", "chat"]),
+  status: model.enum(["draft", "scheduled", "in_progress", "completed", "incomplete", "no_show", "cancelled"]),
+  scheduled_at: model.dateTime().nullable(),
+  started_at: model.dateTime().nullable(),
+  ended_at: model.dateTime().nullable(),
+  duration_minutes: model.number().nullable(),
+  chief_complaint: model.text().nullable(),
+  medical_history: model.json().nullable(),
+  assessment: model.text().nullable(),
+  plan: model.text().nullable(),
+  /**
+   * Clinician-facing notes. In admin UI this is labeled "Clinician notes".
+   */
+  notes: model.text().nullable(),
+  /**
+   * Internal admin notes (not visible to patients).
+   */
+  admin_notes: model.text().nullable(),
+  outcome: model.enum(["approved", "rejected", "pending", "requires_followup"]).nullable(),
+  rejection_reason: model.text().nullable(),
+  approved_medications: model.array().nullable(),
+  originating_submission_id: model.text().nullable(),
+  order_id: model.text().nullable(),
+})
+
+
+[2026-02-04T14:47:33] CMD: rg -n "define\(\"consult_submission\"" -S src/modules/business
+CWD: .
+RESULT: FAIL (exit 2)
+OUTPUT:
+rg : rg: regex parse error:
+At line:1 char:1
++ rg -n "define\(\"consult_submission\"" -S src/modules/business
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (rg: regex parse error::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    (?:define\(\)
+    ^
+error: unclosed group
+
+
+[2026-02-04T14:47:39] CMD: rg -n "consult_submission" src/modules/business
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src/modules/business\migrations\Migration20260204000015.ts:9: *   column "raw_consult_fee" of relation "consult_submission" does not exist
+src/modules/business\migrations\Migration20260204000015.ts:14:      `ALTER TABLE "consult_submission" ADD COLUMN IF NOT EXISTS "raw_consult_fee" JSONB NULL`
+src/modules/business\migrations\Migration20260204000015.ts:19:      UPDATE "consult_submission"
+src/modules/business\migrations\Migration20260204000009.ts:27:      `CREATE INDEX IF NOT EXISTS "IDX_consult_submission_deleted_at" ON "consult_submission" ("deleted_at")`
+src/modules/business\migrations\Migration20260204000009.ts:103:    this.addSql(`DROP INDEX IF EXISTS "IDX_consult_submission_deleted_at"`)
+src/modules/business\migrations\Migration20260204000001.ts:89:    // `consult_submission`
+src/modules/business\migrations\Migration20260204000001.ts:91:      CREATE TABLE IF NOT EXISTS "consult_submission" (
+src/modules/business\migrations\Migration20260204000001.ts:113:      `CREATE INDEX IF NOT EXISTS "IDX_consult_submission_business_id" ON "consult_submission" ("business_id")`
+src/modules/business\migrations\Migration20260204000001.ts:116:      `CREATE INDEX IF NOT EXISTS "IDX_consult_submission_product_id" ON "consult_submission" ("product_id")`
+src/modules/business\migrations\Migration20260204000001.ts:193:    this.addSql(`DROP TABLE IF EXISTS "consult_submission" CASCADE`)
+src/modules/business\models\consult-submission.ts:3:export const ConsultSubmission = model.define("consult_submission", {
+
+
+[2026-02-04T14:47:43] CMD: type src/modules/business/models/consult-submission.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { model } from "@medusajs/framework/utils"
+
+export const ConsultSubmission = model.define("consult_submission", {
+  id: model.id().primaryKey(),
+  business_id: model.text(),
+  location_id: model.text().nullable(),
+  product_id: model.text(),
+  customer_email: model.text(),
+  customer_first_name: model.text(),
+  customer_last_name: model.text(),
+  customer_phone: model.text().nullable(),
+  customer_dob: model.text().nullable(),
+  eligibility_answers: model.json().default({}),
+  status: model.enum(["pending", "approved", "rejected", "expired"]).default("pending"),
+  consult_fee: model.bigNumber().nullable(),
+  notes: model.text().nullable(),
+  reviewed_by: model.text().nullable(),
+  reviewed_at: model.dateTime().nullable(),
+})
+
+
+[2026-02-04T14:47:54] CMD: rg -n "\/admin\/documents" -S src/api
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src/api\middlewares\audit-logging.ts:296:    "/admin/documents",
+src/api\middlewares.ts:113:      matcher: "/admin/documents*",
+src/api\admin\documents\[id]\verify\route.ts:4: * GET /admin/documents/:id/verify - Verify document integrity
+src/api\admin\documents\[id]\verify\route.ts:14: * GET /admin/documents/:id/verify
+src/api\admin\documents\[id]\route.ts:4: * GET /admin/documents/:id - Get document metadata
+src/api\admin\documents\[id]\route.ts:5: * PUT /admin/documents/:id - Update document metadata
+src/api\admin\documents\[id]\route.ts:6: * DELETE /admin/documents/:id - Delete document
+src/api\admin\documents\[id]\route.ts:23: * GET /admin/documents/:id
+src/api\admin\documents\[id]\route.ts:105: * PUT /admin/documents/:id
+src/api\admin\documents\[id]\route.ts:224: * DELETE /admin/documents/:id
+src/api\admin\documents\[id]\download\route.ts:4: * GET /admin/documents/:id/download
+src/api\admin\documents\[id]\download\route.ts:19: * GET /admin/documents/:id/download
+src/api\admin\documents\search\route.ts:4: * POST /admin/documents/search
+src/api\admin\documents\search\route.ts:9: * This endpoint replaces the GET /admin/documents endpoint for searches
+src/api\admin\documents\search\route.ts:17: * POST /admin/documents/search
+src/api\admin\documents\route.ts:4: * GET /admin/documents - List documents with filters
+src/api\admin\documents\route.ts:5: * POST /admin/documents - Upload new document
+src/api\admin\documents\route.ts:9: * For searches involving PHI, use POST /admin/documents/search instead.
+src/api\admin\documents\route.ts:29: * GET /admin/documents
+src/api\admin\documents\route.ts:34: * use POST /admin/documents/search instead to prevent PHI exposure in URLs.
+src/api\admin\documents\route.ts:46: * PHI filters (patient_id, consultation_id) should use POST /admin/documents/search
+src/api\admin\documents\route.ts:110:      console.warn("[HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.")
+src/api\admin\documents\route.ts:121:            recommendation: "Use POST /admin/documents/search for PHI filters",
+src/api\admin\documents\route.ts:188:      // HIPAA-008: These should ideally be moved to POST /admin/documents/search
+src/api\admin\documents\route.ts:237:        ? "PHI filters in URLs are deprecated. Use POST /admin/documents/search for PHI queries."
+src/api\admin\documents\route.ts:250: * POST /admin/documents
+
+
+[2026-02-04T14:48:02] CMD: rg -n "consultations.*documents" -S src/api
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src/api\admin\consultations\[id]\documents\route.ts:4: * POST /admin/consultations/:id/documents
+
+
+[2026-02-04T14:48:09] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/api/admin/consultations/[id]/documents/route.ts' -TotalCount 260"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Consultation Document Upload (PLAN)
+ *
+ * POST /admin/consultations/:id/documents
+ *
+ * Accepts multipart/form-data with:
+ * - document: file (PDF/JPG/PNG, max 10MB)
+ * - type: document type
+ * - title: document title
+ * - description?: optional
+ * - access_level: patient_only | clinician | business_staff | platform_admin
+ * - expires_at?: ISO date string
+ *
+ * Access control:
+ * - Admin/business staff can upload for any consultation in their business.
+ * - Clinicians can upload only for consultations they are assigned to.
+ *
+ * Storage:
+ * - Uses the compliance module storage provider (local in dev, S3 in prod).
+ */
+
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import ComplianceModuleService from "../../../../../modules/compliance/service"
+import {
+  uploadSingleDocument,
+  handleMulterError,
+  virusScanMiddleware,
+} from "../../../../middlewares/document-upload"
+import { isValidAccessLevel } from "../../../../../modules/compliance/utils/access-control"
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+type UserType = "clinician" | "business_staff"
+
+function getOptionalTenantBusinessId(req: MedusaRequest): string | undefined {
+  const authContext = (req as any).auth_context as
+    | {
+        business_id?: string
+        metadata?: Record<string, any>
+        app_metadata?: Record<string, any>
+      }
+    | undefined
+
+  return (
+    authContext?.business_id ||
+    authContext?.metadata?.business_id ||
+    authContext?.app_metadata?.business_id ||
+    (req as any)?.tenant_context?.business_id
+  )
+}
+
+async function resolveUserType(
+  req: MedusaRequest,
+  consultationService: any
+): Promise<{ actorId: string | null; userType: UserType; clinicianId: string | null }> {
+  const authContext = (req as any).auth_context as
+    | { actor_id?: string; actor_type?: string }
+    | undefined
+
+  const actorId = authContext?.actor_id || null
+  const rawActorType = authContext?.actor_type || "user"
+
+  if (!actorId) {
+    return { actorId: null, userType: "business_staff", clinicianId: null }
+  }
+
+  // If the auth system explicitly marks clinicians, prefer it.
+  if (rawActorType === "clinician") {
+    return { actorId, userType: "clinician", clinicianId: actorId }
+  }
+
+  // In this repo, clinicians can be represented as admin `user` actors with a clinician record linked by `user_id`.
+  try {
+    const [clinicians] = await consultationService.listAndCountClinicians(
+      { user_id: actorId },
+...(truncated)
+
+[2026-02-04T14:48:18] CMD: ls src/api/admin/audit-logs
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\api\admin\audit-logs
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/3/2026   6:29 PM                summary                                                              
+d-----          2/3/2026   6:30 PM                [id]                                                                 
+-a----          2/3/2026   6:29 PM           2732 route.ts                                                             
+
+
+
+
+[2026-02-04T14:48:23] CMD: type src/api/admin/audit-logs/route.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Audit Logs API Routes
+ * 
+ * GET /admin/audit-logs - Query audit logs with filters
+ */
+
+import {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+import ComplianceModuleService from "../../../modules/compliance/service"
+
+/**
+ * GET /admin/audit-logs
+ * Query audit logs with various filters
+ * 
+ * Query params:
+ * - actor_id: Filter by actor ID
+ * - actor_type: Filter by actor type (customer, business_user, clinician, system, api_key)
+ * - entity_type: Filter by entity type (consultation, order, document, patient, business, earning, payout)
+ * - entity_id: Filter by entity ID
+ * - business_id: Filter by business ID
+ * - consultation_id: Filter by consultation ID
+ * - order_id: Filter by order ID
+ * - action: Filter by action (create, read, update, delete, download, login, logout, export)
+ * - risk_level: Filter by risk level (low, medium, high, critical)
+ * - flagged: Filter by flagged status (true/false)
+ * - date_from: Filter by date range start (ISO date)
+ * - date_to: Filter by date range end (ISO date)
+ * - limit: Number of results (default: 50, max: 200)
+ * - offset: Pagination offset (default: 0)
+ */
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const complianceService: ComplianceModuleService = req.scope.resolve(
+      "complianceModuleService"
+    )
+
+    // Parse query parameters
+    const query = req.query as Record<string, any>
+    const filters = {
+      actor_id: query.actor_id,
+      actor_type: query.actor_type,
+      entity_type: query.entity_type,
+      entity_id: query.entity_id,
+      business_id: query.business_id,
+      consultation_id: query.consultation_id,
+      order_id: query.order_id,
+      action: query.action,
+      risk_level: query.risk_level,
+      flagged: query.flagged !== undefined ? query.flagged === "true" : undefined,
+      date_from: query.date_from ? new Date(query.date_from) : undefined,
+      date_to: query.date_to ? new Date(query.date_to) : undefined,
+      skip: parseInt(query.offset) || 0,
+      take: Math.min(parseInt(query.limit) || 50, 200),
+    }
+
+    // Remove undefined filters
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] === undefined) delete filters[key]
+    })
+
+    const result = await complianceService.queryAuditLogs(filters)
+
+    res.json({
+      logs: result.logs,
+      count: result.count,
+      total: result.total,
+      limit: filters.take,
+      offset: filters.skip,
+    })
+  } catch (error) {
+    console.error("Error querying audit logs:", error)
+    res.status(500).json({
+      error: "Failed to query audit logs",
+      message: error.message,
+    })
+  }
+}
+
+
+[2026-02-04T14:48:30] CMD: ls src/api/admin/consultations/[id]
+CWD: .
+RESULT: PASS (exit 0)
+
+[2026-02-04T14:48:37] CMD: powershell -NoProfile -Command "Get-ChildItem -LiteralPath 'src/api/admin/consultations/[id]' | Select-Object Name"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+Name     
+----     
+assign   
+complete 
+documents
+restore  
+status   
+route.ts 
+
+
+
+
+[2026-02-04T14:48:48] CMD: rg -n "@medusajs/icons" src/admin/routes
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T14:48:57] CMD: rg -n "Textarea" src/admin/routes | head
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+System.Management.Automation.CommandNotFoundException: The term 'head' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)
+   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.Interpreter.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.LightLambda.RunVoid1[T0](T0 arg0)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipeImpl(ScriptBlockClauseToInvoke clauseToInvoke, Boolean createLocalScope, Dictionary`2 functionsToDefine, List`1 variablesToDefine, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Object[] args)
+   at System.Management.Automation.ScriptBlock.<>c__DisplayClass57_0.<InvokeWithPipe>b__0()
+   at System.Management.Automation.Runspaces.RunspaceBase.RunActionIfNoRunningPipelinesWithThreadCheck(Action action)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipe(Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Boolean propagateAllExceptionsToTop, List`1 variablesToDefine, Dictionary`2 functionsToDefine, Object[] args)
+   at System.Management.Automation.ScriptBlock.InvokeUsingCmdlet(Cmdlet contextCmdlet, Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Object[] args)
+   at Microsoft.PowerShell.Commands.InvokeExpressionCommand.ProcessRecord()
+   at System.Management.Automation.CommandProcessor.ProcessRecord()
+
+[2026-02-04T14:49:04] CMD: powershell -NoProfile -Command "rg -n \"Textarea\" src/admin/routes | Select-Object -First 20"
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+powershell : The string is missing the terminator: ".
+At line:1 char:1
++ powershell -NoProfile -Command "rg -n \"Textarea\" src/admin/routes | ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (The string is missing the terminator: ".:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : TerminatorExpectedAtEndOfString
+ 
+
+
+[2026-02-04T14:49:10] CMD: rg -n "Textarea" src/admin/routes
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T14:49:17] CMD: rg -n "TextArea" src/admin/routes
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T14:49:25] CMD: ls src/admin/routes
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\admin\routes
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/3/2026   2:22 PM                businesses                                                           
+d-----          2/4/2026   2:02 PM                consultations                                                        
+d-----          2/4/2026  12:34 PM                home                                                                 
+d-----          2/3/2026   2:24 PM                orders-global                                                        
+d-----          2/4/2026   1:14 PM                users                                                                
+
+
+
+
+[2026-02-04T14:49:34] CMD: powershell -NoProfile -Command "Get-Content src/admin/routes/users/page.tsx -TotalCount 120"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import {
+  Avatar,
+  Badge,
+  Button,
+  Container,
+  Copy,
+  Drawer,
+  Heading,
+  Input,
+  Select,
+  Table,
+  Toaster,
+  toast,
+  DatePicker,
+} from "@medusajs/ui"
+import { format, formatDistanceToNowStrict } from "date-fns"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
+
+type UserRole = "customer" | "admin" | "clinician"
+type UserStatus = "active" | "inactive"
+
+type UserRow = {
+  id: string
+  entity_id: string
+  role: UserRole
+  status: UserStatus
+  first_name: string | null
+  last_name: string | null
+  email: string | null
+  phone: string | null
+  date_of_birth: string | null
+  created_at: string
+  avatar_url?: string | null
+  deactivation_reason?: string | null
+}
+
+type UsersListResponse = {
+  users: UserRow[]
+  count: number
+  limit: number
+  offset: number
+}
+
+const LIMIT = 25
+
+function initials(firstName?: string | null, lastName?: string | null, email?: string | null): string {
+  const f = (firstName || "").trim()
+  const l = (lastName || "").trim()
+  if (f || l) {
+    return `${f.slice(0, 1)}${l.slice(0, 1)}`.toUpperCase()
+  }
+  const e = (email || "").trim()
+  if (!e) return "U"
+  return e.slice(0, 2).toUpperCase()
+}
+
+function formatPhone(value?: string | null): string {
+  if (!value) return "-"
+  const digits = value.replace(/[^\d]/g, "")
+  const ten = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits
+  if (ten.length === 10) {
+    return `+1-${ten.slice(0, 3)}-${ten.slice(3, 6)}-${ten.slice(6)}`
+  }
+  return value
+}
+
+function formatDobAndAge(dob?: string | null): { label: string; ageLabel: string } {
+  if (!dob) return { label: "-", ageLabel: "" }
+  const date = new Date(dob)
+  if (Number.isNaN(date.getTime())) {
+    return { label: dob, ageLabel: "" }
+  }
+  const now = new Date()
+  let age = now.getFullYear() - date.getFullYear()
+  const m = now.getMonth() - date.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < date.getDate())) {
+    age -= 1
+  }
+...(truncated)
+
+[2026-02-04T14:49:42] CMD: type src/api/admin/custom/consultations/[id]/notes/route.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+type : An object at the specified path src/api/admin/custom/consultations/[id]/notes/route.ts does not exist, or has 
+been filtered by the -Include or -Exclude parameter.
+At line:1 char:1
++ type src/api/admin/custom/consultations/[id]/notes/route.ts
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (System.String[]:String[]) [Get-Content], Exception
+    + FullyQualifiedErrorId : ItemNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+ 
+
+
+[2026-02-04T14:49:51] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/api/admin/custom/consultations/[id]/notes/route.ts'"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { CONSULTATION_MODULE } from "../../../../../../modules/consultation"
+import { getAuthActor, getOptionalTenantBusinessId } from "../../_helpers"
+
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+    const { id } = req.params
+    const body = (req.body ?? {}) as Record<string, any>
+
+    const notes = typeof body.notes === "string" ? body.notes : undefined
+    const adminNotes = typeof body.admin_notes === "string" ? body.admin_notes : undefined
+
+    if (notes === undefined && adminNotes === undefined) {
+      return res.status(400).json({
+        code: "INVALID_INPUT",
+        message: "notes and/or admin_notes must be provided",
+      })
+    }
+
+    if (notes != null && notes.length > 50000) {
+      return res.status(400).json({
+        code: "INVALID_INPUT",
+        message: "notes is too large",
+      })
+    }
+    if (adminNotes != null && adminNotes.length > 50000) {
+      return res.status(400).json({
+        code: "INVALID_INPUT",
+        message: "admin_notes is too large",
+      })
+    }
+
+    const tenantBusinessId = getOptionalTenantBusinessId(req)
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE) as any
+    const complianceService = req.scope.resolve("complianceModuleService") as any
+
+    let consultation: any
+    try {
+      consultation = await consultationService.getConsultationOrThrow(id)
+    } catch {
+      return res.status(404).json({ code: "NOT_FOUND", message: "Consultation not found" })
+    }
+
+    if (tenantBusinessId && consultation.business_id !== tenantBusinessId) {
+      return res.status(404).json({ code: "NOT_FOUND", message: "Consultation not found" })
+    }
+
+    const before = { notes: consultation.notes ?? null, admin_notes: consultation.admin_notes ?? null }
+
+    try {
+      const update: any = { id }
+      if (notes !== undefined) update.notes = notes
+      if (adminNotes !== undefined) update.admin_notes = adminNotes
+
+      await consultationService.updateConsultations(update)
+
+      const updated = await consultationService.getConsultationOrThrow(id)
+
+      const actor = getAuthActor(req)
+      await complianceService?.logAuditEvent?.({
+        actor_type: actor.actor_type,
+        actor_id: actor.actor_id,
+        actor_email: actor.actor_email,
+        ip_address: actor.ip_address,
+        user_agent: actor.user_agent,
+        action: "update",
+        entity_type: "consultation",
+        entity_id: id,
+        business_id: updated.business_id ?? null,
+        consultation_id: id,
+        changes: {
+          before,
+          after: { notes: updated.notes ?? null, admin_notes: updated.admin_notes ?? null },
+        },
+        metadata: { event: "consultation_notes_update" },
+        risk_level: "medium",
+      })
+
+      return res.json({ consultation: updated })
+    } catch (error) {
+      return res.status(400).json({
+...(truncated)
+
+[2026-02-04T14:50:00] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/api/admin/consultations/[id]/status/route.ts' -TotalCount 260"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import { BUSINESS_MODULE } from "../../../../../modules/business"
+
+type PlanStatus = "pending" | "scheduled" | "completed" | "approved" | "rejected"
+
+const ALLOWED_TRANSITIONS: Record<PlanStatus, PlanStatus[]> = {
+  pending: ["scheduled"],
+  scheduled: ["completed"],
+  completed: ["approved", "rejected"],
+  approved: [],
+  rejected: [],
+}
+
+function getOptionalTenantBusinessId(req: MedusaRequest): string | undefined {
+  const authContext = (req as any).auth_context as
+    | {
+        business_id?: string
+        metadata?: Record<string, any>
+        app_metadata?: Record<string, any>
+      }
+    | undefined
+
+  return (
+    authContext?.business_id ||
+    authContext?.metadata?.business_id ||
+    authContext?.app_metadata?.business_id
+  )
+}
+
+function getRequestIp(req: MedusaRequest): string | null {
+  return (
+    ((req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ??
+      (req as any).request_context?.ip_address ??
+      (req as any).ip ??
+      null)
+  )
+}
+
+function getPlanStatus(consultation: any): PlanStatus {
+  if (consultation.status === "draft") return "pending"
+  if (consultation.status === "scheduled") return "scheduled"
+  if (consultation.status === "completed") {
+    if (consultation.outcome === "approved") return "approved"
+    if (consultation.outcome === "rejected") return "rejected"
+    return "completed"
+  }
+  // For non-plan statuses, treat as pending to force explicit handling.
+  return "pending"
+}
+
+/**
+ * POST /admin/consultations/:id/status
+ *
+ * Body:
+ * - status: "pending" | "scheduled" | "completed" | "approved" | "rejected"
+ * - reason?: string (required when status="rejected")
+ */
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const { id } = req.params
+  const body = (req.body ?? {}) as Record<string, any>
+
+  const requestedStatus = typeof body.status === "string" ? body.status.trim() : ""
+  const nextStatus = requestedStatus as PlanStatus
+
+  if (!["pending", "scheduled", "completed", "approved", "rejected"].includes(nextStatus)) {
+    return res.status(400).json({
+      code: "INVALID_INPUT",
+      message:
+        "status must be one of: pending, scheduled, completed, approved, rejected",
+    })
+  }
+
+  const reason = typeof body.reason === "string" ? body.reason.trim() : ""
+  if (nextStatus === "rejected" && !reason) {
+    return res.status(400).json({
+      code: "REJECTION_REASON_REQUIRED",
+      message: "reason is required when status is rejected",
+    })
+  }
+...(truncated)
+
+[2026-02-04T14:50:22] CMD: powershell -NoProfile -Command "Get-Content src/api/admin/documents/route.ts -TotalCount 220"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Documents API Routes
+ * 
+ * GET /admin/documents - List documents with filters
+ * POST /admin/documents - Upload new document
+ * 
+ * HIPAA-008 SECURITY NOTICE:
+ * The GET endpoint may expose PHI (patient_id, consultation_id) in URL query parameters.
+ * For searches involving PHI, use POST /admin/documents/search instead.
+ */
+
+import {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+import ComplianceModuleService from "../../../modules/compliance/service"
+import { CONSULTATION_MODULE } from "../../../modules/consultation"
+import { uploadSingleDocument, handleMulterError, virusScanMiddleware } from "../../middlewares/document-upload"
+import { logAuditEvent } from "../../middlewares/audit-logging"
+
+// Export config to disable body parsing for multipart uploads
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
+
+/**
+ * GET /admin/documents
+ * List documents with filters and pagination
+ * 
+ * ‚ö†Ô∏è DEPRECATION WARNING:
+ * For searches involving PHI identifiers (patient_id, consultation_id), 
+ * use POST /admin/documents/search instead to prevent PHI exposure in URLs.
+ * 
+ * Query params (for non-PHI filters only):
+ * - business_id: Filter by business
+ * - order_id: Filter by order
+ * - type: Filter by document type
+ * - access_level: Filter by access level
+ * - date_from: Filter by date range start
+ * - date_to: Filter by date range end
+ * - limit: Number of results (default: 20, max: 100)
+ * - offset: Pagination offset (default: 0)
+ * 
+ * PHI filters (patient_id, consultation_id) should use POST /admin/documents/search
+ */
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const complianceService: ComplianceModuleService = req.scope.resolve(
+      "complianceModuleService"
+    )
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE) as any
+
+    const authContext = (req as any).auth_context as
+      | {
+          actor_id?: string
+          actor_type?: string
+          business_id?: string
+          metadata?: Record<string, any>
+          app_metadata?: Record<string, any>
+        }
+      | undefined
+
+    const actorId = authContext?.actor_id || null
+    if (!actorId) {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Unauthorized",
+        code: "UNAUTHORIZED",
+      })
+    }
+
+    const tenantBusinessId =
+      authContext?.business_id ||
+      authContext?.metadata?.business_id ||
+      authContext?.app_metadata?.business_id ||
+      (req as any)?.tenant_context?.business_id
+
+    // Resolve "business_staff" vs "clinician" for access control.
+...(truncated)
+
+[2026-02-04T14:50:29] CMD: powershell -NoProfile -Command "Get-Content src/api/admin/documents/route.ts | Select-Object -Skip 220 -First 120"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+      access_level: doc.access_level,
+      is_encrypted: doc.is_encrypted,
+      download_count: doc.download_count,
+      last_downloaded_at: doc.last_downloaded_at,
+      expires_at: doc.expires_at,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at,
+    }))
+
+    res.json({
+      documents: sanitizedDocuments,
+      count: result.count,
+      limit: filters.take,
+      offset: filters.skip,
+      // Add deprecation notice to response
+      _security_notice: (query.patient_id || query.consultation_id) 
+        ? "PHI filters in URLs are deprecated. Use POST /admin/documents/search for PHI queries."
+        : undefined,
+    })
+  } catch (error) {
+    console.error("Error listing documents:", error)
+    res.status(500).json({
+      error: "Failed to list documents",
+      message: error.message,
+    })
+  }
+}
+
+/**
+ * POST /admin/documents
+ * Upload a new document
+ * 
+ * Form data:
+ * - document: File to upload (required)
+ * - business_id: Business ID (required)
+ * - patient_id: Patient ID (required) - PHI, passed in body (secure)
+ * - consultation_id: Consultation ID (optional) - PHI, passed in body (secure)
+ * - order_id: Order ID (optional)
+ * - type: Document type (required)
+ * - title: Document title (required)
+ * - description: Document description (optional)
+ * - access_level: Access level (required)
+ * - expires_at: Expiration date (optional)
+ */
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  // Use multer middleware
+  uploadSingleDocument(req as any, res as any, async (err: any) => {
+    if (err) {
+      return handleMulterError(err, req, res, () => {})
+    }
+
+    try {
+      const complianceService: ComplianceModuleService = req.scope.resolve(
+        "complianceModuleService"
+      )
+
+      // Get uploaded file
+      const file = (req as any).file
+      if (!file) {
+        return res.status(400).json({
+          error: "No file uploaded",
+          message: "Please provide a file in the 'document' field",
+        })
+      }
+
+      // Parse metadata from request body
+      const body = (req.body ?? {}) as Record<string, any>
+      
+      // Validate required fields
+      const requiredFields = ["business_id", "patient_id", "type", "title", "access_level"]
+      const missingFields = requiredFields.filter((field) => !body[field])
+      
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          error: "Missing required fields",
+          message: `Missing: ${missingFields.join(", ")}`,
+        })
+      }
+
+      // Get current user ID from auth context
+...(truncated)
+
+[2026-02-04T14:50:35] CMD: rg -n "uploaded_by|created_by" src/modules/compliance -S
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src/modules/compliance\service.ts:183:      uploaded_by: uploadedBy,
+src/modules/compliance\migrations\Migration20250203000002.ts:14:        "uploaded_by" TEXT NOT NULL,
+src/modules/compliance\models\document.ts:9:  uploaded_by: model.text(),
+src/modules/compliance\utils\access-control.ts:129:  if (document.uploaded_by === userId) {
+src/modules/compliance\utils\access-control.ts:155:  if (document.uploaded_by === userId) {
+src/modules/compliance\utils\access-control.ts:191:  if (document.uploaded_by === userId || userType === "business_staff") {
+src/modules/compliance\utils\access-control.ts:282:    "uploaded_by",
+src/modules/compliance\utils\access-control.ts:291:    return pickFields(document, [...baseFields, "uploaded_by"])
+
+
+[2026-02-04T14:50:45] CMD: powershell -NoProfile -Command "Get-Content src/modules/compliance/service.ts | Select-Object -Skip 130 -First 140"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+  /**
+   * Upload a new document with file storage
+   */
+  async uploadDocument(
+    file: { buffer: Buffer; originalname: string; mimetype: string; size: number },
+    metadata: UploadDocumentDTO,
+    uploadedBy: string,
+    uploadedByActorType: CreateAuditLogDTO["actor_type"] = "business_user"
+  ): Promise<any> {
+    // Validate file type
+    if (!validateFileType(file.mimetype)) {
+      throw new Error(`File type '${file.mimetype}' is not allowed`)
+    }
+
+    // Validate file size (10MB default)
+    if (!validateFileSize(file.size)) {
+      throw new Error(`File size exceeds maximum allowed (10MB)`)
+    }
+
+    // Generate storage key
+    const storageKey = generateStorageKey(
+      metadata.business_id,
+      metadata.patient_id,
+      file.originalname
+    )
+
+    // Generate checksum for integrity
+    const checksum = generateChecksum(file.buffer)
+
+    // Get storage config
+    const storageConfig = {
+      provider: process.env.DOCUMENT_STORAGE_PROVIDER || "local",
+      bucket: process.env.DOCUMENT_STORAGE_BUCKET || "therxspot-documents",
+    }
+
+    // Upload to storage provider
+    await this.storageProvider.upload(storageKey, file.buffer, {
+      contentType: file.mimetype,
+      originalName: file.originalname,
+      uploadedBy,
+      businessId: metadata.business_id,
+      patientId: metadata.patient_id,
+      checksum,
+    })
+
+    // Create document record
+    const documentData: Record<string, any> = {
+      business_id: metadata.business_id,
+      patient_id: metadata.patient_id,
+      consultation_id: metadata.consultation_id ?? null,
+      order_id: metadata.order_id ?? null,
+      uploaded_by: uploadedBy,
+      type: metadata.type,
+      title: metadata.title,
+      description: metadata.description ?? null,
+      storage_provider: storageConfig.provider as any,
+      storage_bucket: storageConfig.bucket,
+      storage_key: storageKey,
+      file_name: file.originalname,
+      file_size: file.size,
+      mime_type: file.mimetype,
+      checksum,
+      encryption_key_id: process.env.DOCUMENT_ENCRYPTION_KEY_ID ?? null,
+      is_encrypted: !!process.env.DOCUMENT_ENCRYPTION_KEY_ID,
+      access_level: metadata.access_level,
+      expires_at: metadata.expires_at ?? null,
+      download_count: 0,
+      last_downloaded_at: null,
+      last_downloaded_by: null,
+    }
+
+    const document = await this.createDocuments(documentData)
+
+    // Log audit event
+    await this.logAuditEvent({
+      actor_type: uploadedByActorType,
+      actor_id: uploadedBy,
+      action: "create",
+      entity_type: "document",
+...(truncated)
+
+[2026-02-04T14:50:57] CMD: powershell -NoProfile -Command "Get-Content src/tests/integration/documents.test.ts -TotalCount 260"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Document Storage Tests
+ * 
+ * Tests document upload, integrity verification, access control,
+ * and audit logging for document operations.
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import {
+  createTestBusiness,
+  createTestPatient,
+  createTestDocument,
+  createTestConsultation,
+  createTestClinician,
+} from "../utils/factories"
+import { getServices } from "../utils/test-server"
+
+jest.setTimeout(60000)
+
+describe("Document Storage", () => {
+  describe("Document Upload and Integrity", () => {
+    it("should upload document with checksum", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+          const business = await createTestBusiness(container)
+          const patient = await createTestPatient(container, { business_id: business.id })
+          
+          // Act: Create document with checksum
+          const document = await createTestDocument(container, {
+            business_id: business.id,
+            patient_id: patient.id,
+            uploaded_by: patient.id,
+            checksum: "sha256:a1b2c3d4e5f6...",
+            file_size: 1024,
+            mime_type: "application/pdf",
+          })
+          
+          // Assert
+          expect(document).toBeDefined()
+          expect(document.checksum).toBe("sha256:a1b2c3d4e5f6...")
+          expect(document.file_size).toBe(1024)
+        },
+      })
+    })
+
+    it("should verify document integrity", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+          const business = await createTestBusiness(container)
+          const patient = await createTestPatient(container, { business_id: business.id })
+          const expectedChecksum = "sha256:expected_hash_value"
+          
+          const document = await createTestDocument(container, {
+            business_id: business.id,
+            patient_id: patient.id,
+            uploaded_by: patient.id,
+            checksum: expectedChecksum,
+          })
+          
+          const { compliance } = getServices(container)
+          
+          // Act: Retrieve document and verify checksum
+          const retrievedDoc = await compliance.retrieveDocument(document.id)
+          
+          // Assert: Verify checksum matches
+          expect(retrievedDoc.checksum).toBe(expectedChecksum)
+          
+          // Simulate integrity check
+          const isValid = retrievedDoc.checksum === expectedChecksum
+          expect(isValid).toBe(true)
+        },
+      })
+    })
+
+    it("should reject upload of disallowed file type", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+...(truncated)
+
+[2026-02-04T14:51:05] CMD: rg -n "\/admin\/documents" src/tests/integration
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src/tests/integration\document-admin-apis.test.ts:6: * - GET /admin/documents?consultation_id={id}
+src/tests/integration\document-admin-apis.test.ts:7: * - GET /admin/documents/{id}/download
+src/tests/integration\document-admin-apis.test.ts:103:          .get(`/admin/documents?consultation_id=${consultation.id}`, {
+src/tests/integration\document-admin-apis.test.ts:112:        const downloadRes = await fetch(`${baseURL}/admin/documents/${documentId}/download`, {
+src/tests/integration\document-admin-apis.test.ts:256:          .get(`/admin/documents?consultation_id=${consultation.id}`, {
+src/tests/integration\document-admin-apis.test.ts:264:          .get(`/admin/documents?consultation_id=${consultation.id}`, {
+src/tests/integration\document-admin-apis.test.ts:271:        const downloadRes = await fetch(`${baseURL}/admin/documents/${documentId}/download`, {
+src/tests/integration\document-admin-apis.test.ts:278:        const deniedDownload = await fetch(`${baseURL}/admin/documents/${documentId}/download`, {
+src/tests/integration\soft-delete-restore.test.ts:171:          .delete(`/admin/documents/${document.id}`, {
+src/tests/integration\soft-delete-restore.test.ts:179:          .get(`/admin/documents?consultation_id=${consultation.id}&limit=100&offset=0`, {
+src/tests/integration\soft-delete-restore.test.ts:189:            `/admin/documents/${document.id}/restore`,
+src/tests/integration\soft-delete-restore.test.ts:198:          .get(`/admin/documents?consultation_id=${consultation.id}&limit=100&offset=0`, {
+
+
+[2026-02-04T14:51:12] CMD: powershell -NoProfile -Command "Get-Content src/tests/integration/document-admin-apis.test.ts -TotalCount 180"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Document API Endpoint Tests (PLAN)
+ *
+ * Covers:
+ * - POST /admin/consultations/{id}/documents
+ * - GET /admin/documents?consultation_id={id}
+ * - GET /admin/documents/{id}/download
+ *
+ * These tests use Node's built-in `fetch` + `FormData` for multipart uploads.
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import jwt from "jsonwebtoken"
+import {
+  createTestBusiness,
+  createTestPatient,
+  createTestClinician,
+  createTestConsultation,
+} from "../utils/factories"
+
+jest.setTimeout(60000)
+
+function signUserToken(userId: string, businessId?: string): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error("JWT_SECRET must be set for integration tests")
+  }
+
+  return jwt.sign(
+    {
+      actor_id: userId,
+      actor_type: "user",
+      auth_identity_id: "",
+      business_id: businessId,
+      app_metadata: businessId ? { business_id: businessId } : {},
+      user_metadata: {},
+    },
+    secret
+  )
+}
+
+function buildPdfBytes(): Uint8Array {
+  const contents = [
+    "%PDF-1.4\n",
+    "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+    "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n",
+    "3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] >>\nendobj\n",
+    "xref\n0 4\n0000000000 65535 f \n",
+    "trailer\n<< /Root 1 0 R /Size 4 >>\nstartxref\n0\n%%EOF\n",
+  ].join("")
+
+  return new TextEncoder().encode(contents)
+}
+
+medusaIntegrationTestRunner({
+  testSuite: ({ api, getContainer }) => {
+    describe("Admin Document APIs (PLAN)", () => {
+      it("uploads, lists, and downloads a PDF for a consultation (admin)", async () => {
+        const container = getContainer()
+
+        const business = await createTestBusiness(container)
+        const patient = await createTestPatient(container, { business_id: business.id })
+        const consultation = await createTestConsultation(container, "draft", {
+          business_id: business.id,
+          patient_id: patient.id,
+        })
+
+        const adminToken = signUserToken("user_admin_01", business.id)
+        const baseURL = (api as any).defaults?.baseURL || "http://localhost:9000"
+
+        // Upload (multipart/form-data)
+        const pdfBytes = buildPdfBytes()
+        const form = new FormData()
+        form.append(
+          "document",
+          new Blob([pdfBytes], { type: "application/pdf" }),
+          "test.pdf"
+        )
+        form.append("type", "medical_record")
+        form.append("title", "Test Medical Record")
+...(truncated)
+
+[2026-02-04T14:51:32] CMD: ls AGENTS.md
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ls : Cannot find path 'D:\GitHub\TheRxSpot_Marketplace\AGENTS.md' because it does not exist.
+At line:1 char:1
++ ls AGENTS.md
++ ~~~~~~~~~~~~
+    + CategoryInfo          : ObjectNotFound: (D:\GitHub\TheRx...place\AGENTS.md:String) [Get-ChildItem], ItemNotFound 
+   Exception
+    + FullyQualifiedErrorId : PathNotFound,Microsoft.PowerShell.Commands.GetChildItemCommand
+ 
+
+
+[2026-02-04T14:51:41] CMD: rg -n "Textarea" node_modules/@medusajs/ui/dist -S | Select-Object -First 20
+CWD: .
+RESULT: FAIL (exit -1)
+OUTPUT:
+node_modules/@medusajs/ui/dist\cjs\index.js.map:1:{"version":3,"file":"index.js","sourceRoot":"","sources":["../../src/index.ts"],"names":[],"mappings":";;;;AAAA,aAAa;AACb,4CAA0C;AAAjC,8FAAA,KAAK,OAAA;AACd,8CAA4C;AAAnC,gGAAA,MAAM,OAAA;AACf,4CAA0C;AAAjC,8FAAA,KAAK,OAAA;AACd,8CAA4C;AAAnC,gGAAA,MAAM,OAAA;AACf,kDAAgD;AAAvC,oGAAA,QAAQ,OAAA;AACjB,kDAA2E;AAAlE,oGAAA,QAAQ,OAAA;AACjB,0CAAwC;AAA/B,4FAAA,IAAI,OAAA;AACb,sDAAmD;AAA1C,uGAAA,SAAS,OAAA;AAClB,gDAA8C;AAArC,kGAAA,OAAO,OAAA;AAChB,wDAAqD;AAA5C,yGAAA,UAAU,OAAA;AACnB,oDAAkD;AAAzC,sGAAA,SAAS,OAAA;AAClB,0CAAwC;AAA/B,4FAAA,IAAI,OAAA;AACb,8DAA2D;AAAlD,+GAAA,aAAa,OAAA;AACtB,wDAAqD;AAA5C,yGAAA,UAAU,OAAA;AACnB,gDAA8C;AAArC,kGAAA,OAAO,OAAA;AAChB,8CAA4C;AAAnC,gGAAA,MAAM,OAAA;AACf,4DAAyD;AAAhD,6GAAA,YAAY,OAAA;AACrB,wDAAqD;AAA5C,yGAAA,UAAU,OAAA;AACnB,gDAA8C;AAArC,kGAAA,OAAO,OAAA;AAChB,0CAAwC;AAA/B,4FAAA,IAAI,OAAA;AACb,4DAAyD;AAAhD,6GAAA,YAAY,OAAA;AACrB,sDAAmD;AAA1C,uGAAA,SAAS,OAAA;AAClB,wDAAqD;AAA5C,yGAAA,UAAU,OAAA;AACnB,sDAAmD;AAA1C,uGAAA,SAAS,OAAA;AAClB,4CAA0C;AAAjC,8FAAA,KAAK,OAAA;AACd,wCAAsC;AAA7B,0FAAA,GAAG,OAAA;AACZ,4CAA0C;AAAjC,8FAAA,KAAK,OAAA;AACd,gDAA8C;AAArC,kGAAA,OAAO,OAAA;AAChB,sEAAmE;AAA1D,uHAAA,iBAAiB,OAAA;AAC1B,4DAAyD;AAAhD,6GAAA,YAAY,OAAA;AACrB,8CAA4C;AAAnC,gGAAA,MAAM,OAAA;AACf,wDAAqD;AAA5C,yGAAA,UAAU,OAAA;AACnB,8CAA4C;AAAnC,gGAAA,MAAM,OAAA;AACf,kDAAgD;AAAvC,oGAAA,QAAQ,OAAA;AACjB,0DAAuD;AAA9C,2GAAA,WAAW,OAAA;AACpB,8CAA4C;AAAnC,gGAAA,MAAM,OAAA;AACf,4CAA0C;AAAjC,8FAAA,KAAK,OAAA;AACd,0CAAwC;AAA/B,4FAAA,IAAI,OAAA;AACb,0CAAwC;AAA/B,4FAAA,IAAI,OAAA;AACb,kDAAgD;AAAvC,oGAAA,QAAQ,OAAA;AACjB,4CAA0C;AAAjC,8FAAA,KAAK,OAAA;AACd,gDAA8C;AAArC,kGAAA,OAAO,OAAA;AAChB,gDAA+D;AAAtD,kGAAA,OAAO,OAAA;AAAE,0GAAA,eAAe,OAAA;AAEjC,SAAS;AACT,8DAAmC;AAEnC,QAAQ;AACR,iDAA8C;AAArC,uGAAA,SAAS,OAAA;AAClB,6DAAyD;AAAhD,kHAAA,cAAc,OAAA;AAEvB,QAAQ;AACR,mCAAiC;AAAxB,0FAAA,GAAG,OAAA;AACZ,uCAAqC;AAA5B,8FAAA,KAAK,OAAA;AAEd,QAAQ;AACR,kDAAuB","sourcesContent":["// Components\nexport { Alert } from \"./components/alert\"\nexport { Avatar } from \"./components/avatar\"\nexport { Badge } from \"./components/badge\"\nexport { Button } from \"./components/button\"\nexport { Calendar } from \"./components/calendar\"\nexport { Checkbox, type CheckboxCheckedState } from \"./components/checkbox\"\nexport { Code } from \"./components/code\"\nexport { CodeBlock } from \"./components/code-block\"\nexport { Command } from \"./components/command\"\nexport { CommandBar } from \"./components/command-bar\"\nexport { Container } from \"./components/container\"\nexport { Copy } from \"./components/copy\"\nexport { CurrencyInput } from \"./components/currency-input\"\nexport { DatePicker } from \"./components/date-picker\"\nexport { Divider } from \"./components/divider\"\nexport { Drawer } from \"./components/drawer\"\nexport { DropdownMenu } from \"./components/dropdown-menu\"\nexport { FocusModal } from \"./components/focus-modal\"\nexport { Heading } from \"./components/heading\"\nexport { Hint } from \"./components/hint\"\nexport { I18nProvider } from \"./components/i18n-provider\"\nexport { IconBadge } from \"./components/icon-badge\"\nexport { IconButton } from \"./components/icon-button\"\nexport { InlineTip } from \"./components/inline-tip\"\nexport { Input } from \"./components/input\"\nexport { Kbd } from \"./components/kbd\"\nexport { Label } from \"./components/label\"\nexport { Popover } from \"./components/popover\"\nexport { ProgressAccordion } from \"./components/progress-accordion\"\nexport { ProgressTabs } from \"./components/progress-tabs\"\nexport { Prompt } from \"./components/prompt\"\nexport { RadioGroup } from \"./components/radio-group\"\nexport { Select } from \"./components/select\"\nexport { Skeleton } from \"./components/skeleton\"\nexport { StatusBadge } from \"./components/status-badge\"\nexport { Switch } from \"./components/switch\"\nexport { Table } from \"./components/table\"\nexport { Tabs } from \"./components/tabs\"\nexport { Text } from \"./components/text\"\nexport { Textarea } from \"./components/textarea\"\nexport { Toast } from \"./components/toast\"\nexport { Toaster } from \"./components/toaster\"\nexport { Tooltip, TooltipProvider } from \"./components/tooltip\"\n\n// Blocks\nexport * from \"./blocks/data-table\"\n\n// Hooks\nexport { usePrompt } from \"./hooks/use-prompt\"\nexport { useToggleState } from \"./hooks/use-toggle-state\"\n\n// Utils\nexport { clx } from \"./utils/clx\"\nexport { toast } from \"./utils/toast\"\n\n// Types\nexport * from \"./types\"\n"]}
+node_modules/@medusajs/ui/dist\cjs\index.js:3:exports.toast = exports.clx = exports.useToggleState = exports.usePrompt = exports.TooltipProvider = exports.Tooltip = exports.Toaster = exports.Toast = exports.Textarea = exports.Text = exports.Tabs = exports.Table = exports.Switch = exports.StatusBadge = exports.Skeleton = exports.Select = exports.RadioGroup = exports.Prompt = exports.ProgressTabs = exports.ProgressAccordion = exports.Popover = exports.Label = exports.Kbd = exports.Input = exports.InlineTip = exports.IconButton = exports.IconBadge = exports.I18nProvider = exports.Hint = exports.Heading = exports.FocusModal = exports.DropdownMenu = exports.Drawer = exports.Divider = exports.DatePicker = exports.CurrencyInput = exports.Copy = exports.Container = exports.CommandBar = exports.Command = exports.CodeBlock = exports.Code = exports.Checkbox = exports.Calendar = exports.Button = exports.Badge = exports.Avatar = exports.Alert = void 0;
+node_modules/@medusajs/ui/dist\cjs\index.js:85:Object.defineProperty(exports, "Textarea", { enumerable: true, get: function () { return textarea_1.Textarea; } });
+node_modules/@medusajs/ui/dist\cjs\index.d.ts:40:export { Textarea } from "./components/textarea";
+node_modules/@medusajs/ui/dist\esm\index.js.map:1:{"version":3,"file":"index.js","sourceRoot":"","sources":["../../src/index.ts"],"names":[],"mappings":"AAAA,aAAa;AACb,OAAO,EAAE,KAAK,EAAE,MAAM,oBAAoB,CAAA;AAC1C,OAAO,EAAE,MAAM,EAAE,MAAM,qBAAqB,CAAA;AAC5C,OAAO,EAAE,KAAK,EAAE,MAAM,oBAAoB,CAAA;AAC1C,OAAO,EAAE,MAAM,EAAE,MAAM,qBAAqB,CAAA;AAC5C,OAAO,EAAE,QAAQ,EAAE,MAAM,uBAAuB,CAAA;AAChD,OAAO,EAAE,QAAQ,EAA6B,MAAM,uBAAuB,CAAA;AAC3E,OAAO,EAAE,IAAI,EAAE,MAAM,mBAAmB,CAAA;AACxC,OAAO,EAAE,SAAS,EAAE,MAAM,yBAAyB,CAAA;AACnD,OAAO,EAAE,OAAO,EAAE,MAAM,sBAAsB,CAAA;AAC9C,OAAO,EAAE,UAAU,EAAE,MAAM,0BAA0B,CAAA;AACrD,OAAO,EAAE,SAAS,EAAE,MAAM,wBAAwB,CAAA;AAClD,OAAO,EAAE,IAAI,EAAE,MAAM,mBAAmB,CAAA;AACxC,OAAO,EAAE,aAAa,EAAE,MAAM,6BAA6B,CAAA;AAC3D,OAAO,EAAE,UAAU,EAAE,MAAM,0BAA0B,CAAA;AACrD,OAAO,EAAE,OAAO,EAAE,MAAM,sBAAsB,CAAA;AAC9C,OAAO,EAAE,MAAM,EAAE,MAAM,qBAAqB,CAAA;AAC5C,OAAO,EAAE,YAAY,EAAE,MAAM,4BAA4B,CAAA;AACzD,OAAO,EAAE,UAAU,EAAE,MAAM,0BAA0B,CAAA;AACrD,OAAO,EAAE,OAAO,EAAE,MAAM,sBAAsB,CAAA;AAC9C,OAAO,EAAE,IAAI,EAAE,MAAM,mBAAmB,CAAA;AACxC,OAAO,EAAE,YAAY,EAAE,MAAM,4BAA4B,CAAA;AACzD,OAAO,EAAE,SAAS,EAAE,MAAM,yBAAyB,CAAA;AACnD,OAAO,EAAE,UAAU,EAAE,MAAM,0BAA0B,CAAA;AACrD,OAAO,EAAE,SAAS,EAAE,MAAM,yBAAyB,CAAA;AACnD,OAAO,EAAE,KAAK,EAAE,MAAM,oBAAoB,CAAA;AAC1C,OAAO,EAAE,GAAG,EAAE,MAAM,kBAAkB,CAAA;AACtC,OAAO,EAAE,KAAK,EAAE,MAAM,oBAAoB,CAAA;AAC1C,OAAO,EAAE,OAAO,EAAE,MAAM,sBAAsB,CAAA;AAC9C,OAAO,EAAE,iBAAiB,EAAE,MAAM,iCAAiC,CAAA;AACnE,OAAO,EAAE,YAAY,EAAE,MAAM,4BAA4B,CAAA;AACzD,OAAO,EAAE,MAAM,EAAE,MAAM,qBAAqB,CAAA;AAC5C,OAAO,EAAE,UAAU,EAAE,MAAM,0BAA0B,CAAA;AACrD,OAAO,EAAE,MAAM,EAAE,MAAM,qBAAqB,CAAA;AAC5C,OAAO,EAAE,QAAQ,EAAE,MAAM,uBAAuB,CAAA;AAChD,OAAO,EAAE,WAAW,EAAE,MAAM,2BAA2B,CAAA;AACvD,OAAO,EAAE,MAAM,EAAE,MAAM,qBAAqB,CAAA;AAC5C,OAAO,EAAE,KAAK,EAAE,MAAM,oBAAoB,CAAA;AAC1C,OAAO,EAAE,IAAI,EAAE,MAAM,mBAAmB,CAAA;AACxC,OAAO,EAAE,IAAI,EAAE,MAAM,mBAAmB,CAAA;AACxC,OAAO,EAAE,QAAQ,EAAE,MAAM,uBAAuB,CAAA;AAChD,OAAO,EAAE,KAAK,EAAE,MAAM,oBAAoB,CAAA;AAC1C,OAAO,EAAE,OAAO,EAAE,MAAM,sBAAsB,CAAA;AAC9C,OAAO,EAAE,OAAO,EAAE,eAAe,EAAE,MAAM,sBAAsB,CAAA;AAE/D,SAAS;AACT,cAAc,qBAAqB,CAAA;AAEnC,QAAQ;AACR,OAAO,EAAE,SAAS,EAAE,MAAM,oBAAoB,CAAA;AAC9C,OAAO,EAAE,cAAc,EAAE,MAAM,0BAA0B,CAAA;AAEzD,QAAQ;AACR,OAAO,EAAE,GAAG,EAAE,MAAM,aAAa,CAAA;AACjC,OAAO,EAAE,KAAK,EAAE,MAAM,eAAe,CAAA;AAErC,QAAQ;AACR,cAAc,SAAS,CAAA","sourcesContent":["// Components\nexport { Alert } from \"./components/alert\"\nexport { Avatar } from \"./components/avatar\"\nexport { Badge } from \"./components/badge\"\nexport { Button } from \"./components/button\"\nexport { Calendar } from \"./components/calendar\"\nexport { Checkbox, type CheckboxCheckedState } from \"./components/checkbox\"\nexport { Code } from \"./components/code\"\nexport { CodeBlock } from \"./components/code-block\"\nexport { Command } from \"./components/command\"\nexport { CommandBar } from \"./components/command-bar\"\nexport { Container } from \"./components/container\"\nexport { Copy } from \"./components/copy\"\nexport { CurrencyInput } from \"./components/currency-input\"\nexport { DatePicker } from \"./components/date-picker\"\nexport { Divider } from \"./components/divider\"\nexport { Drawer } from \"./components/drawer\"\nexport { DropdownMenu } from \"./components/dropdown-menu\"\nexport { FocusModal } from \"./components/focus-modal\"\nexport { Heading } from \"./components/heading\"\nexport { Hint } from \"./components/hint\"\nexport { I18nProvider } from \"./components/i18n-provider\"\nexport { IconBadge } from \"./components/icon-badge\"\nexport { IconButton } from \"./components/icon-button\"\nexport { InlineTip } from \"./components/inline-tip\"\nexport { Input } from \"./components/input\"\nexport { Kbd } from \"./components/kbd\"\nexport { Label } from \"./components/label\"\nexport { Popover } from \"./components/popover\"\nexport { ProgressAccordion } from \"./components/progress-accordion\"\nexport { ProgressTabs } from \"./components/progress-tabs\"\nexport { Prompt } from \"./components/prompt\"\nexport { RadioGroup } from \"./components/radio-group\"\nexport { Select } from \"./components/select\"\nexport { Skeleton } from \"./components/skeleton\"\nexport { StatusBadge } from \"./components/status-badge\"\nexport { Switch } from \"./components/switch\"\nexport { Table } from \"./components/table\"\nexport { Tabs } from \"./components/tabs\"\nexport { Text } from \"./components/text\"\nexport { Textarea } from \"./components/textarea\"\nexport { Toast } from \"./components/toast\"\nexport { Toaster } from \"./components/toaster\"\nexport { Tooltip, TooltipProvider } from \"./components/tooltip\"\n\n// Blocks\nexport * from \"./blocks/data-table\"\n\n// Hooks\nexport { usePrompt } from \"./hooks/use-prompt\"\nexport { useToggleState } from \"./hooks/use-toggle-state\"\n\n// Utils\nexport { clx } from \"./utils/clx\"\nexport { toast } from \"./utils/toast\"\n\n// Types\nexport * from \"./types\"\n"]}
+node_modules/@medusajs/ui/dist\esm\index.js:41:export { Textarea } from "./components/textarea";
+node_modules/@medusajs/ui/dist\esm\index.d.ts:40:export { Textarea } from "./components/textarea";
+node_modules/@medusajs/ui/dist\esm\components\textarea\textarea.js.map:1:{"version":3,"file":"textarea.js","sourceRoot":"","sources":["../../../../src/components/textarea/textarea.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAA;AAE9B,OAAO,EAAE,eAAe,EAAE,MAAM,oBAAoB,CAAA;AACpD,OAAO,EAAE,GAAG,EAAE,MAAM,aAAa,CAAA;AAEjC;;GAEG;AACH,MAAM,QAAQ,GAAG,KAAK,CAAC,UAAU,CAG/B,CAAC,EAAE,SAAS,EAAE,GAAG,KAAK,EAAE,EAAE,GAAG,EAAE,EAAE;IACjC,OAAO,CACL,kCACE,GAAG,EAAE,GAAG,EACR,SAAS,EAAE,GAAG,CACZ,eAAe,EACf,2CAA2C,EAC3C,SAAS,CACV,KACG,KAAK,GACT,CACH,CAAA;AACH,CAAC,CAAC,CAAA;AACF,QAAQ,CAAC,WAAW,GAAG,UAAU,CAAA;AAEjC,OAAO,EAAE,QAAQ,EAAE,CAAA","sourcesContent":["import * as React from \"react\"\n\nimport { inputBaseStyles } from \"@/components/input\"\nimport { clx } from \"@/utils/clx\"\n\n/**\n * This component is based on the `textarea` element and supports all of its props\n */\nconst Textarea = React.forwardRef<\n  HTMLTextAreaElement,\n  React.ComponentPropsWithoutRef<\"textarea\">\n>(({ className, ...props }, ref) => {\n  return (\n    <textarea\n      ref={ref}\n      className={clx(\n        inputBaseStyles,\n        \"txt-small min-h-[60px] w-full px-2 py-1.5\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTextarea.displayName = \"Textarea\"\n\nexport { Textarea }\n"]}
+node_modules/@medusajs/ui/dist\esm\components\textarea\textarea.js:7:const Textarea = React.forwardRef(({ className, ...props }, ref) => {
+node_modules/@medusajs/ui/dist\esm\components\textarea\textarea.js:10:Textarea.displayName = "Textarea";
+node_modules/@medusajs/ui/dist\esm\components\textarea\textarea.js:11:export { Textarea };
+node_modules/@medusajs/ui/dist\esm\components\textarea\textarea.d.ts:5:declare const Textarea: React.ForwardRefExoticComponent<Omit<React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>, "ref"> & React.RefAttributes<HTMLTextAreaElement>>;
+node_modules/@medusajs/ui/dist\esm\components\textarea\textarea.d.ts:6:export { Textarea };
+node_modules/@medusajs/ui/dist\cjs\components\textarea\textarea.js.map:1:{"version":3,"file":"textarea.js","sourceRoot":"","sources":["../../../../src/components/textarea/textarea.tsx"],"names":[],"mappings":";;;;AAAA,qDAA8B;AAE9B,8CAAoD;AACpD,qCAAiC;AAEjC;;GAEG;AACH,MAAM,QAAQ,GAAG,KAAK,CAAC,UAAU,CAG/B,CAAC,EAAE,SAAS,EAAE,GAAG,KAAK,EAAE,EAAE,GAAG,EAAE,EAAE;IACjC,OAAO,CACL,kCACE,GAAG,EAAE,GAAG,EACR,SAAS,EAAE,IAAA,SAAG,EACZ,uBAAe,EACf,2CAA2C,EAC3C,SAAS,CACV,KACG,KAAK,GACT,CACH,CAAA;AACH,CAAC,CAAC,CAAA;AAGO,4BAAQ;AAFjB,QAAQ,CAAC,WAAW,GAAG,UAAU,CAAA","sourcesContent":["import * as React from \"react\"\n\nimport { inputBaseStyles } from \"@/components/input\"\nimport { clx } from \"@/utils/clx\"\n\n/**\n * This component is based on the `textarea` element and supports all of its props\n */\nconst Textarea = React.forwardRef<\n  HTMLTextAreaElement,\n  React.ComponentPropsWithoutRef<\"textarea\">\n>(({ className, ...props }, ref) => {\n  return (\n    <textarea\n      ref={ref}\n      className={clx(\n        inputBaseStyles,\n        \"txt-small min-h-[60px] w-full px-2 py-1.5\",\n        className\n      )}\n      {...props}\n    />\n  )\n})\nTextarea.displayName = \"Textarea\"\n\nexport { Textarea }\n"]}
+node_modules/@medusajs/ui/dist\cjs\components\textarea\textarea.js:3:exports.Textarea = void 0;
+node_modules/@medusajs/ui/dist\cjs\components\textarea\textarea.js:11:const Textarea = React.forwardRef(({ className, ...props }, ref) => {
+node_modules/@medusajs/ui/dist\cjs\components\textarea\textarea.js:14:exports.Textarea = Textarea;
+node_modules/@medusajs/ui/dist\cjs\components\textarea\textarea.js:15:Textarea.displayName = "Textarea";
+node_modules/@medusajs/ui/dist\cjs\components\textarea\textarea.d.ts:5:declare const Textarea: React.ForwardRefExoticComponent<Omit<React.DetailedHTMLProps<React.TextareaHTMLAttributes<HTMLTextAreaElement>, HTMLTextAreaElement>, "ref"> & React.RefAttributes<HTMLTextAreaElement>>;
+node_modules/@medusajs/ui/dist\cjs\components\textarea\textarea.d.ts:6:export { Textarea };
+
+
+[2026-02-04T14:51:53] CMD: type tsconfig.json
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "esModuleInterop": true,
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "declaration": false,
+    "sourceMap": false,
+    "inlineSourceMap": true,
+    "outDir": "./.medusa/server",
+    "rootDir": "./",
+    "jsx": "react-jsx",
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "checkJs": false,
+    "strictNullChecks": true
+  },
+  "ts-node": {
+    "swc": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "medusa-config.ts",
+    "instrumentation.ts",
+    ".medusa/types/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    ".medusa/server",
+    ".medusa/admin",
+    ".cache",
+    "TheRxSpot_Marketplace-storefront",
+    "integration-tests",
+    "docs",
+    ".claude",
+    "src/tests"
+  ]
+}
+
+
+[2026-02-04T14:52:04] CMD: powershell -NoProfile -Command "Get-ChildItem -Recurse -LiteralPath 'src/admin/routes/consultations' | Select-Object FullName"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+FullName                                                                    
+--------                                                                    
+D:\GitHub\TheRxSpot_Marketplace\src\admin\routes\consultations\[id]         
+D:\GitHub\TheRxSpot_Marketplace\src\admin\routes\consultations\page.tsx     
+D:\GitHub\TheRxSpot_Marketplace\src\admin\routes\consultations\[id]\page.tsx
+
+
+
+
+[2026-02-04T14:52:51] CMD: rg -n "‚" -n src/admin/routes/consultations/\[id\]/page.tsx
+CWD: .
+RESULT: FAIL (exit 2)
+OUTPUT:
+rg : rg: src/admin/routes/consultations/\[id\]/page.tsx: IO error for operation on 
+src/admin/routes/consultations/\[id\]/page.tsx: The system cannot find the path specified. (os error 3)
+At line:1 char:1
++ rg -n "‚" -n src/admin/routes/consultations/\[id\]/page.tsx
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (rg: src/admin/r...d. (os error 3):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+
+[2026-02-04T14:53:00] CMD: rg -n "‚" "src/admin/routes/consultations/[id]/page.tsx"
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T14:53:08] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/admin/routes/consultations/[id]/page.tsx' | Select-Object -Skip 120 -First 120"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  const [auditLoading, setAuditLoading] = useState(true)
+
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignClinicianId, setAssignClinicianId] = useState("")
+  const [clinicians, setClinicians] = useState<any[]>([])
+  const [cliniciansLoading, setCliniciansLoading] = useState(false)
+
+  const [notes, setNotes] = useState("")
+  const [adminNotes, setAdminNotes] = useState("")
+  const [saveState, setSaveState] = useState<"idle" | "dirty" | "saving" | "saved" | "error">("idle")
+  const lastSaved = useRef<{ notes: string; admin_notes: string }>({ notes: "", admin_notes: "" })
+  const saveTimer = useRef<number | null>(null)
+  const saveAbort = useRef<AbortController | null>(null)
+
+  const exportUrl = useMemo(() => `/admin/custom/consultations/${encodeURIComponent(id)}/export`, [id])
+
+  const fetchConsultation = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/admin/custom/consultations/${encodeURIComponent(id)}`, {
+        credentials: "include",
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+      const json = await res.json()
+      setConsultation(json.consultation as ConsultationDetail)
+    } catch (e) {
+      toast.error("Failed to load consultation", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+      setConsultation(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchDocuments = async () => {
+    setDocsLoading(true)
+    try {
+      const url = `/admin/documents?consultation_id=${encodeURIComponent(id)}&limit=100&offset=0`
+      const res = await fetch(url, { credentials: "include" })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+      const json = await res.json()
+      setDocuments((json.documents || []) as DocumentRow[])
+    } catch (e) {
+      toast.error("Failed to load documents", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+      setDocuments([])
+    } finally {
+      setDocsLoading(false)
+    }
+  }
+
+  const fetchAuditLogs = async () => {
+    setAuditLoading(true)
+    try {
+      const qs = new URLSearchParams()
+      qs.set("consultation_id", id)
+      qs.set("limit", "20")
+      qs.set("offset", "0")
+      const res = await fetch(`/admin/audit-logs?${qs.toString()}`, {
+        credentials: "include",
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+      const json = await res.json()
+      setAuditLogs(json.logs || [])
+    } catch (e) {
+      toast.error("Failed to load history", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+      setAuditLogs([])
+...(truncated)
+
+[2026-02-04T14:53:26] CMD: rg -n "Loading" "src/admin/routes/consultations/[id]/page.tsx"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+114:  const [loading, setLoading] = useState(true)
+117:  const [docsLoading, setDocsLoading] = useState(true)
+121:  const [auditLoading, setAuditLoading] = useState(true)
+126:  const [cliniciansLoading, setCliniciansLoading] = useState(false)
+138:    setLoading(true)
+155:      setLoading(false)
+160:    setDocsLoading(true)
+176:      setDocsLoading(false)
+181:    setAuditLoading(true)
+202:      setAuditLoading(false)
+219:        <div className="text-sm text-ui-fg-subtle">LoadingÖ</div>
+
+
+[2026-02-04T14:53:37] CMD: rg -n "‚Äî" "src/admin/routes/consultations/[id]/page.tsx"
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+System.Management.Automation.ParseException: At line:1 char:58
++ rg -n "‚Äî" "src/admin/routes/consultations/[id]/page.tsx"
++                                                          ~
+The string is missing the terminator: ".
+   at System.Management.Automation.ScriptBlock.Create(Parser parser, String fileName, String fileContents)
+   at System.Management.Automation.ScriptBlock.Create(ExecutionContext context, String script)
+   at Microsoft.PowerShell.Commands.InvokeExpressionCommand.ProcessRecord()
+   at System.Management.Automation.CommandProcessor.ProcessRecord()
+
+[2026-02-04T14:53:46] CMD: rg -n "ó" "src/admin/routes/consultations/[id]/page.tsx"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+240:  const patientName = [patient?.first_name, patient?.last_name].filter(Boolean).join(" ") || "ó"
+270:              {consultation.updated_at ? formatDistanceToNowStrict(new Date(consultation.updated_at)) : "ó"} ago
+297:              {patient?.date_of_birth || "ó"}
+309:                "ó"
+321:                "ó"
+337:                <span className="text-ui-fg-subtle">ó</span>
+343:            <div className="text-sm font-medium">{consultation.state || "ó"}</div>
+
+
+[2026-02-04T14:53:57] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/admin/routes/consultations/[id]/page.tsx' | Select-Object -Skip 252 -First 40"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  const mapLink = address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+    : null
+
+  return (
+    <Container>
+      <Toaster />
+      <div className="flex items-start justify-between gap-3 mb-6">
+        <div>
+          <Heading level="h1" className="flex items-center gap-2">
+            <span>{consultation.id}</span>
+            <Copy content={consultation.id} />
+          </Heading>
+          <div className="mt-2 flex items-center gap-2">
+            <Badge color={status.color}>{status.label}</Badge>
+            <div className="text-xs text-ui-fg-subtle">
+              Updated{" "}
+              {consultation.updated_at ? formatDistanceToNowStrict(new Date(consultation.updated_at)) : "‚Äî"} ago
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" onClick={() => window.print()}>
+            Print
+          </Button>
+          <Button variant="secondary" onClick={() => window.open(exportUrl, "_blank", "noopener,noreferrer")}>
+            Export PDF
+          </Button>
+          <Button variant="secondary" onClick={() => navigate("/consultations")}>
+            Back
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-white p-4">
+        <div className="text-sm font-medium">Patient information</div>
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <div className="text-xs font-medium mb-1">Full name</div>
+            <div className="text-sm">{patientName}</div>
+
+
+[2026-02-04T14:54:21] CMD: rg -n "\<span\>\{consultation\.id\}\</span\>" "src/admin/routes/consultations/[id]/page.tsx"
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T14:54:30] CMD: rg -n "consultation\.id\}" "src/admin/routes/consultations/[id]/page.tsx"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+263:            <span>{consultation.id}</span>
+264:            <Copy content={consultation.id} />
+
+
+[2026-02-04T14:56:36] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/admin/routes/consultations/[id]/page.tsx' | Select-Object -Skip 300 -First 80"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+      toast.error("Failed to update status", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+    } finally {
+      setStatusUpdating(false)
+    }
+  }
+
+  const openUploadDrawer = (file?: File | null) => {
+    const f = file ?? null
+    setUploadFile(f)
+    setUploadType("medical_record")
+    setUploadAccessLevel("clinician")
+    setUploadTitle(f?.name || "")
+    setUploadDescription("")
+    setUploadOpen(true)
+  }
+
+  const uploadDocument = async () => {
+    if (!uploadFile) {
+      toast.error("Choose a file to upload")
+      return
+    }
+
+    if (!uploadTitle.trim()) {
+      toast.error("Title is required")
+      return
+    }
+
+    setUploading(true)
+    try {
+      const form = new FormData()
+      form.append("document", uploadFile)
+      form.append("type", uploadType)
+      form.append("title", uploadTitle.trim())
+      form.append("access_level", uploadAccessLevel)
+      if (uploadDescription.trim()) form.append("description", uploadDescription.trim())
+
+      const res = await fetch(`/admin/consultations/${encodeURIComponent(id)}/documents`, {
+        method: "POST",
+        credentials: "include",
+        body: form,
+      })
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+
+      const json = await res.json().catch(() => ({} as any))
+      toast.success("Document uploaded")
+      setUploadOpen(false)
+      setUploadFile(null)
+      await fetchDocuments()
+      await fetchAuditLogs()
+
+      const created = json.document as any
+      if (created?.id) {
+        setActiveDoc(created as DocumentRow)
+      }
+    } catch (e) {
+      toast.error("Failed to upload document", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const saveNotesNow = async () => {
+    const next = { notes, admin_notes: adminNotes }
+    if (next.notes === lastSaved.current.notes && next.admin_notes === lastSaved.current.admin_notes) {
+      setSaveState("idle")
+      return
+    }
+
+    saveAbort.current?.abort()
+    const controller = new AbortController()
+    saveAbort.current = controller
+
+...(truncated)
+
+[2026-02-04T14:56:42] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/admin/routes/consultations/[id]/page.tsx' | Select-Object -Skip 430 -First 120"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+  useEffect(() => {
+    if (!consultation) return
+
+    if (notes === lastSaved.current.notes && adminNotes === lastSaved.current.admin_notes) {
+      if (saveState === "dirty") setSaveState("idle")
+      return
+    }
+
+    setSaveState("dirty")
+    if (saveTimer.current) window.clearTimeout(saveTimer.current)
+    saveTimer.current = window.setTimeout(() => {
+      void saveNotesNow()
+    }, 5000)
+
+    return () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notes, adminNotes])
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current)
+      saveAbort.current?.abort()
+    }
+  }, [])
+
+  if (loading) {
+    return (
+      <Container>
+        <Toaster />
+        <Heading level="h1">Consultation</Heading>
+        <div className="text-sm text-ui-fg-subtle">Loading‚Ä¶</div>
+      </Container>
+    )
+  }
+
+  if (!consultation) {
+    return (
+      <Container>
+        <Toaster />
+        <Heading level="h1">Consultation</Heading>
+        <div className="text-sm text-ui-fg-subtle">Not found.</div>
+        <Button variant="secondary" className="mt-4" onClick={() => navigate("/consultations")}>
+          Back
+        </Button>
+      </Container>
+    )
+  }
+
+  const planStatus = consultation.plan_status
+  const status = statusBadge(planStatus)
+  const patient = consultation.patient || null
+  const patientName = [patient?.first_name, patient?.last_name].filter(Boolean).join(" ") || "‚Äî"
+  const age = computeAge(patient?.date_of_birth || null)
+
+  const answers =
+    consultation.submission?.eligibility_answers && typeof consultation.submission.eligibility_answers === "object"
+      ? consultation.submission.eligibility_answers
+      : null
+  const address = answers
+    ? [answers.address, answers.city, answers.state, answers.zip]
+        .filter((v: any) => typeof v === "string" && v.trim())
+        .map((v: string) => v.trim())
+        .join(", ")
+    : ""
+  const mapLink = address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+    : null
+
+  return (
+    <Container>
+      <Toaster />
+      <div className="flex items-start justify-between gap-3 mb-6">
+        <div>
+          <Heading level="h1" className="flex items-center gap-2">
+            <span>{consultationDisplayId(consultation.id)}</span>
+            <Copy content={consultation.id} />
+          </Heading>
+...(truncated)
+
+[2026-02-04T14:56:53] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/admin/routes/consultations/[id]/page.tsx' | Select-Object -Skip 550 -First 120"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+                <a className="text-ui-fg-interactive hover:underline" href={`tel:${patient.phone}`}>
+                  {patient.phone}
+                </a>
+              ) : (
+                "‚Äî"
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">Email</div>
+            <div className="text-sm">
+              {patient?.email ? (
+                <a className="text-ui-fg-interactive hover:underline" href={`mailto:${patient.email}`}>
+                  {patient.email}
+                </a>
+              ) : (
+                "‚Äî"
+              )}
+            </div>
+          </div>
+          <div className="sm:col-span-2">
+            <div className="text-xs font-medium mb-1">Address</div>
+            <div className="text-sm">
+              {address ? (
+                mapLink ? (
+                  <a className="text-ui-fg-interactive hover:underline" href={mapLink} target="_blank" rel="noreferrer">
+                    {address}
+                  </a>
+                ) : (
+                  address
+                )
+              ) : (
+                <span className="text-ui-fg-subtle">‚Äî</span>
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">State</div>
+            <div className="text-sm font-medium">{consultation.state || "‚Äî"}</div>
+          </div>
+        </div>
+      </div>
+    </Container>
+  )
+}
+
+export const config = defineRouteConfig({
+  label: "Consultation detail",
+  icon: "ChatBubbleLeftRight",
+})
+
+export default ConsultationDetailPage
+
+
+[2026-02-04T14:57:56] CMD: rg -n "<Drawer" -n src/admin/routes/users/page.tsx | Select-Object -First 20
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+587:      <Drawer open={bulkDeactivateOpen} onOpenChange={setBulkDeactivateOpen}>
+588:        <Drawer.Content className="w-full max-w-xl">
+589:          <Drawer.Header>
+590:            <Drawer.Title>Bulk deactivate</Drawer.Title>
+591:            <Drawer.Description>
+595:          <Drawer.Body>
+603:          <Drawer.Footer className="flex items-center justify-end gap-2">
+604:            <Drawer.Close asChild>
+615:      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+616:        <Drawer.Content className="w-full max-w-2xl">
+617:          <Drawer.Header>
+618:            <Drawer.Title>User details</Drawer.Title>
+619:            <Drawer.Description>
+623:          <Drawer.Body>
+777:          <Drawer.Footer className="flex items-center justify-end gap-2">
+778:            <Drawer.Close asChild>
+
+
+[2026-02-04T14:58:04] CMD: powershell -NoProfile -Command "Get-Content src/admin/routes/users/page.tsx | Select-Object -Skip 612 -First 55"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+      {/* User detail drawer */}
+      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen}>
+        <Drawer.Content className="w-full max-w-2xl">
+          <Drawer.Header>
+            <Drawer.Title>User details</Drawer.Title>
+            <Drawer.Description>
+              View and edit personal info. Activity log shows last 50 actions.
+            </Drawer.Description>
+          </Drawer.Header>
+          <Drawer.Body>
+            {!activeUser ? (
+              <div className="text-sm text-ui-fg-subtle">No user selected</div>
+            ) : (
+              <div className="space-y-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Avatar fallback={initials(activeUser.first_name, activeUser.last_name, activeUser.email)} />
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">
+                        {`${activeUser.first_name || ""} ${activeUser.last_name || ""}`.trim() ||
+                          activeUser.email ||
+                          activeUser.id}
+                      </div>
+                      <div className="text-xs text-ui-fg-subtle truncate">
+                        {activeUser.email || activeUser.id}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge color={statusBadge(activeUser.status).color}>
+                      {statusBadge(activeUser.status).label}
+                    </Badge>
+                    <Badge color={roleBadge(activeUser.role).color}>
+                      {roleBadge(activeUser.role).label}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <div className="text-xs font-medium mb-1">First name</div>
+                    <Input value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium mb-1">Last name</div>
+                    <Input value={editLastName} onChange={(e) => setEditLastName(e.target.value)} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium mb-1">Email</div>
+                    <Input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium mb-1">Phone</div>
+                    <Input value={editPhone} onChange={(e) => setEditPhone(e.target.value)} />
+
+
+[2026-02-04T14:58:23] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/admin/routes/consultations/[id]/page.tsx' | Select-Object -Skip 522 -First 55"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+              {consultation.updated_at ? formatDistanceToNowStrict(new Date(consultation.updated_at)) : "‚Äî"} ago
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" onClick={() => window.print()}>
+            Print
+          </Button>
+          <Button variant="secondary" onClick={() => window.open(exportUrl, "_blank", "noopener,noreferrer")}>
+            Export PDF
+          </Button>
+          <Button variant="secondary" onClick={() => navigate("/consultations")}>
+            Back
+          </Button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-white p-4">
+        <div className="text-sm font-medium">Patient information</div>
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <div className="text-xs font-medium mb-1">Full name</div>
+            <div className="text-sm">{patientName}</div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">DOB / Age</div>
+            <div className="text-sm">
+              {patient?.date_of_birth || "‚Äî"}
+              {age ? ` (${age})` : ""}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">Phone</div>
+            <div className="text-sm">
+              {patient?.phone ? (
+                <a className="text-ui-fg-interactive hover:underline" href={`tel:${patient.phone}`}>
+                  {patient.phone}
+                </a>
+              ) : (
+                "‚Äî"
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">Email</div>
+            <div className="text-sm">
+              {patient?.email ? (
+                <a className="text-ui-fg-interactive hover:underline" href={`mailto:${patient.email}`}>
+                  {patient.email}
+                </a>
+              ) : (
+                "‚Äî"
+              )}
+            </div>
+          </div>
+
+
+[2026-02-04T14:58:30] CMD: powershell -NoProfile -Command "Get-Content -LiteralPath 'src/admin/routes/consultations/[id]/page.tsx' | Select-Object -Skip 577 -First 60"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+          <div className="sm:col-span-2">
+            <div className="text-xs font-medium mb-1">Address</div>
+            <div className="text-sm">
+              {address ? (
+                mapLink ? (
+                  <a className="text-ui-fg-interactive hover:underline" href={mapLink} target="_blank" rel="noreferrer">
+                    {address}
+                  </a>
+                ) : (
+                  address
+                )
+              ) : (
+                <span className="text-ui-fg-subtle">‚Äî</span>
+              )}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs font-medium mb-1">State</div>
+            <div className="text-sm font-medium">{consultation.state || "‚Äî"}</div>
+          </div>
+        </div>
+      </div>
+    </Container>
+  )
+}
+
+export const config = defineRouteConfig({
+  label: "Consultation detail",
+  icon: "ChatBubbleLeftRight",
+})
+
+export default ConsultationDetailPage
+
+
+[2026-02-04T15:01:32] CMD: rg -n "variant=\"danger\"" -S src/admin/routes | Select-Object -First 20
+CWD: .
+RESULT: FAIL (exit 2)
+OUTPUT:
+rg : rg: regex parse error:
+At line:1 char:1
++ rg -n "variant=\"danger\"" -S src/admin/routes | Select-Object -First ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (rg: regex parse error::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    (?:variant=\)
+    ^
+error: unclosed group
+
+
+[2026-02-04T15:01:43] CMD: rg -n -F "variant=\"danger\"" src/admin/routes
+CWD: .
+RESULT: FAIL (exit 2)
+OUTPUT:
+rg : rg: danger\: The system cannot find the file specified. (os error 2)
+At line:1 char:1
++ rg -n -F "variant=\"danger\"" src/admin/routes
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (rg: danger\: Th...d. (os error 2):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+
+[2026-02-04T15:01:52] CMD: powershell -NoProfile -Command "Get-Content node_modules/@medusajs/ui/dist/esm/components/button/button.d.ts -TotalCount 80"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { type VariantProps } from "cva";
+import * as React from "react";
+declare const buttonVariants: (props?: ({
+    variant?: "primary" | "transparent" | "secondary" | "danger" | undefined;
+    size?: "small" | "base" | "large" | "xlarge" | undefined;
+} & ({
+    class?: string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | /*elided*/ any | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined;
+    className?: never;
+} | {
+    class?: never;
+    className?: string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | (string | number | boolean | /*elided*/ any | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined)[] | {
+        [x: string]: any;
+    } | null | undefined;
+})) | undefined) => string;
+interface ButtonProps extends React.ComponentPropsWithoutRef<"button">, VariantProps<typeof buttonVariants> {
+    isLoading?: boolean;
+    asChild?: boolean;
+}
+/**
+ * This component is based on the `button` element and supports all of its props
+ */
+declare const Button: React.ForwardRefExoticComponent<ButtonProps & React.RefAttributes<HTMLButtonElement>>;
+export { Button, buttonVariants };
+//# sourceMappingURL=button.d.ts.map
+
+
+[2026-02-04T15:02:15] CMD: npm run build
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 build
+> medusa build
+
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from D:\GitHub\TheRxSpot_Marketplace\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa\server" folder
+[32minfo[39m:    Compiling frontend source...
+[32minfo[39m:    Backend build completed successfully (11.31s)
+[32minfo[39m:    Frontend build completed successfully (44.86s)
+
+
+[2026-02-04T15:03:25] CMD: rg -n "‚" src/admin/routes/consultations/page.tsx
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T15:03:33] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M progress.txt
+?? packages/
+?? render.yaml
+?? src/admin/routes/consultations/
+?? src/store/
+?? src/types/
+
+
