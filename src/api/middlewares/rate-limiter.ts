@@ -134,6 +134,13 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
     res: MedusaResponse,
     next: MedusaNextFunction
   ) => {
+    // Integration tests run against ephemeral databases but the Redis limiter
+    // uses a shared keyspace by IP/window. Disable in `test` to keep runs
+    // deterministic and isolated.
+    if ((process.env.NODE_ENV || "").toLowerCase() === "test") {
+      return next()
+    }
+
     const key = keyGenerator(req, keyPrefix)
     
     try {

@@ -218,6 +218,183 @@ medusaIntegrationTestRunner({
         })
       })
 
+      describe("POST /store/carts/:id/consultation-fee", () => {
+        it("adds a consultation fee line item for an approved consultation", async () => {
+          const container = getContainer()
+          const business = await createTestBusiness(container, {
+            settings: { consult_fee_cents: 5000 },
+          })
+          const customer = await createTestCustomer(container)
+          const product = await createTestProduct(container, true, {
+            metadata: { requires_consult: true },
+          })
+
+          const customerToken = signCustomerToken(customer.id)
+          const adminToken = signAdminToken("user_test_admin", business.id)
+
+          const cartService = container.resolve("cart") as any
+          const cart = await cartService.createCarts({
+            currency_code: "usd",
+            customer_id: customer.id,
+            metadata: { business_id: business.id },
+          })
+          const cartId = cart.id as string
+
+          const consultResp = await api.post(
+            `/store/businesses/${business.slug}/consult`,
+            {
+              product_id: product.id,
+              customer_email: customer.email,
+              customer_first_name: customer.first_name || "Test",
+              customer_last_name: customer.last_name || "Customer",
+              eligibility_answers: { state: "NY" },
+              consult_fee: 5000,
+              notes: "Requesting consultation for gated product",
+            },
+            {
+              headers: {
+                "x-publishable-api-key": publishableApiKey,
+                Authorization: `Bearer ${customerToken}`,
+                "x-business-slug": business.slug,
+              },
+            }
+          )
+
+          expect(consultResp.status).toBe(201)
+          const consultationId = consultResp.data.consultation.id as string
+          expect(consultationId).toBeTruthy()
+
+          await api.post(
+            `/admin/consultations/${consultationId}/status`,
+            { status: "scheduled" },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          await api.post(
+            `/admin/consultations/${consultationId}/status`,
+            { status: "completed" },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          await api.post(
+            `/admin/consultations/${consultationId}/status`,
+            { status: "approved" },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+
+          const feeResp = await api
+            .post(
+              `/store/carts/${cartId}/consultation-fee`,
+              { consultation_id: consultationId },
+              {
+                headers: {
+                  "x-publishable-api-key": publishableApiKey,
+                  Authorization: `Bearer ${customerToken}`,
+                  "x-business-slug": business.slug,
+                },
+              }
+            )
+            .catch((e: any) => e.response)
+
+          expect(feeResp.status).toBe(200)
+          expect(feeResp.data).toMatchObject({ added: true, fee_cents: 5000 })
+
+          const cartAfter = await cartService.retrieveCart(cartId, { relations: ["items"] })
+          const items = (cartAfter.items || []) as any[]
+          const feeItem = items.find((it) => it?.metadata?.type === "consultation_fee")
+          expect(feeItem).toBeTruthy()
+          expect(feeItem.metadata.consultation_id).toBe(consultationId)
+        })
+
+        it("de-dupes when called twice for the same consultation", async () => {
+          const container = getContainer()
+          const business = await createTestBusiness(container, {
+            settings: { consult_fee_cents: 2500 },
+          })
+          const customer = await createTestCustomer(container)
+          const product = await createTestProduct(container, true, {
+            metadata: { requires_consult: true },
+          })
+
+          const customerToken = signCustomerToken(customer.id)
+          const adminToken = signAdminToken("user_test_admin", business.id)
+
+          const cartService = container.resolve("cart") as any
+          const cart = await cartService.createCarts({
+            currency_code: "usd",
+            customer_id: customer.id,
+            metadata: { business_id: business.id },
+          })
+          const cartId = cart.id as string
+
+          const consultResp = await api.post(
+            `/store/businesses/${business.slug}/consult`,
+            {
+              product_id: product.id,
+              customer_email: customer.email,
+              customer_first_name: customer.first_name || "Test",
+              customer_last_name: customer.last_name || "Customer",
+              eligibility_answers: { state: "NY" },
+              consult_fee: 2500,
+              notes: "Requesting consultation for gated product",
+            },
+            {
+              headers: {
+                "x-publishable-api-key": publishableApiKey,
+                Authorization: `Bearer ${customerToken}`,
+                "x-business-slug": business.slug,
+              },
+            }
+          )
+
+          const consultationId = consultResp.data.consultation.id as string
+
+          await api.post(
+            `/admin/consultations/${consultationId}/status`,
+            { status: "scheduled" },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          await api.post(
+            `/admin/consultations/${consultationId}/status`,
+            { status: "completed" },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          await api.post(
+            `/admin/consultations/${consultationId}/status`,
+            { status: "approved" },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+
+          const first = await api.post(
+            `/store/carts/${cartId}/consultation-fee`,
+            { consultation_id: consultationId },
+            {
+              headers: {
+                "x-publishable-api-key": publishableApiKey,
+                Authorization: `Bearer ${customerToken}`,
+                "x-business-slug": business.slug,
+              },
+            }
+          )
+
+          expect(first.status).toBe(200)
+          expect(first.data.added).toBe(true)
+
+          const second = await api.post(
+            `/store/carts/${cartId}/consultation-fee`,
+            { consultation_id: consultationId },
+            {
+              headers: {
+                "x-publishable-api-key": publishableApiKey,
+                Authorization: `Bearer ${customerToken}`,
+                "x-business-slug": business.slug,
+              },
+            }
+          )
+
+          expect(second.status).toBe(200)
+          expect(second.data.added).toBe(false)
+        })
+      })
+
       describe("POST /admin/consultations/:id/status", () => {
         it("enforces pending → scheduled → completed → approved and updates consult approval", async () => {
           const container = getContainer()
