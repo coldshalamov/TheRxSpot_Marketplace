@@ -25,7 +25,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     )
 
     const { id } = req.params
-    const body = req.body || {}
+    type FlagAuditLogBody = {
+      reason?: string
+      flagged?: boolean
+    }
+    const body = (req.body ?? {}) as FlagAuditLogBody
 
     // Validate input
     if (!body.reason) {

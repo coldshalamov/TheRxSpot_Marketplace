@@ -1,6 +1,6 @@
 import { MedusaService } from "@medusajs/framework/utils"
-import { Document } from "./models/document"
-import { AuditLog } from "./models/audit-log"
+import { Document as DocumentModel } from "./models/document"
+import { AuditLog as AuditLogModel } from "./models/audit-log"
 import {
   createStorageProvider,
   StorageProvider,
@@ -94,17 +94,19 @@ export interface AuditLogStats {
   events_by_type: { action: string; count: number }[]
   events_by_risk_level: { risk_level: string; count: number }[]
   flagged_events: number
-  recent_events: AuditLog[]
+  recent_events: any[]
 }
 
 // ============================================================================
 // Service Class
 // ============================================================================
 
-class ComplianceModuleService extends MedusaService({
-  Document,
-  AuditLog,
-}) {
+const ComplianceBaseService = MedusaService({
+  Document: DocumentModel,
+  AuditLog: AuditLogModel,
+}) as any
+
+class ComplianceModuleService extends ComplianceBaseService {
   private storageProvider: StorageProvider
 
   constructor(...args: any[]) {
@@ -134,7 +136,7 @@ class ComplianceModuleService extends MedusaService({
     file: { buffer: Buffer; originalname: string; mimetype: string; size: number },
     metadata: UploadDocumentDTO,
     uploadedBy: string
-  ): Promise<Document> {
+  ): Promise<any> {
     // Validate file type
     if (!validateFileType(file.mimetype)) {
       throw new Error(`File type '${file.mimetype}' is not allowed`)
@@ -172,7 +174,7 @@ class ComplianceModuleService extends MedusaService({
     })
 
     // Create document record
-    const documentData: Partial<Document> = {
+    const documentData: Record<string, any> = {
       business_id: metadata.business_id,
       patient_id: metadata.patient_id,
       consultation_id: metadata.consultation_id ?? null,
@@ -220,7 +222,7 @@ class ComplianceModuleService extends MedusaService({
   /**
    * Get a document with access control check
    */
-  async getDocument(id: string, requestedBy: string, userType: Parameters<typeof canAccessDocument>[2]): Promise<Document> {
+  async getDocument(id: string, requestedBy: string, userType: Parameters<typeof canAccessDocument>[2]): Promise<any> {
     const document = await this.getDocumentById(id)
     
     if (!document) {
@@ -288,7 +290,7 @@ class ComplianceModuleService extends MedusaService({
   /**
    * Delete a document with access control
    */
-  async deleteDocument(id: string, deletedBy: string, userType: Parameters<typeof canDeleteDocument>[2]): Promise<void> {
+  async removeDocument(id: string, deletedBy: string, userType: Parameters<typeof canDeleteDocument>[2]): Promise<void> {
     const document = await this.getDocumentById(id)
     
     if (!document) {
@@ -327,10 +329,10 @@ class ComplianceModuleService extends MedusaService({
    */
   async updateDocumentMetadata(
     id: string,
-    data: Partial<Pick<Document, "title" | "description" | "access_level">>,
+    data: Partial<{ title: string; description: string | null; access_level: DocumentAccessLevel }>,
     updatedBy: string,
     userType: Parameters<typeof canModifyDocument>[2]
-  ): Promise<Document> {
+  ): Promise<any> {
     const document = await this.getDocumentById(id)
     
     if (!document) {
@@ -378,7 +380,7 @@ class ComplianceModuleService extends MedusaService({
     accessLevel: DocumentAccessLevel,
     updatedBy: string,
     userType: Parameters<typeof canChangeAccessLevel>[2]
-  ): Promise<Document> {
+  ): Promise<any> {
     return this.updateDocumentMetadata(id, { access_level: accessLevel }, updatedBy, userType)
   }
 
@@ -389,7 +391,7 @@ class ComplianceModuleService extends MedusaService({
   /**
    * List documents with filters and pagination
    */
-  async listDocuments(filters: ListDocumentsDTO): Promise<{ documents: Document[]; count: number }> {
+  async listDocuments(filters: ListDocumentsDTO): Promise<{ documents: any[]; count: number }> {
     const { skip = 0, take = 20, ...whereFilters } = filters
 
     // Build query filters
@@ -421,15 +423,15 @@ class ComplianceModuleService extends MedusaService({
   /**
    * Get document by ID
    */
-  async getDocumentById(documentId: string): Promise<Document | null> {
-    const documents = await this.listDocuments({ id: documentId }, { take: 1 })
-    return documents.documents[0] ?? null
+  async getDocumentById(documentId: string): Promise<any | null> {
+    const [documents] = await this.listDocumentsWithCount({ id: documentId }, { take: 1 })
+    return documents[0] ?? null
   }
 
   /**
    * Get documents by consultation
    */
-  async getDocumentsByConsultation(consultationId: string): Promise<Document[]> {
+  async getDocumentsByConsultation(consultationId: string): Promise<any[]> {
     const result = await this.listDocuments({ consultation_id: consultationId })
     return result.documents
   }
@@ -437,7 +439,7 @@ class ComplianceModuleService extends MedusaService({
   /**
    * Get documents by patient
    */
-  async getDocumentsByPatient(patientId: string): Promise<Document[]> {
+  async getDocumentsByPatient(patientId: string): Promise<any[]> {
     const result = await this.listDocuments({ patient_id: patientId })
     return result.documents
   }
@@ -445,7 +447,7 @@ class ComplianceModuleService extends MedusaService({
   /**
    * Get documents by order
    */
-  async getDocumentsByOrder(orderId: string): Promise<Document[]> {
+  async getDocumentsByOrder(orderId: string): Promise<any[]> {
     const result = await this.listDocuments({ order_id: orderId })
     return result.documents
   }
@@ -502,7 +504,7 @@ class ComplianceModuleService extends MedusaService({
   /**
    * Create an audit log entry
    */
-  async logAuditEvent(event: CreateAuditLogDTO): Promise<AuditLog> {
+  async logAuditEvent(event: CreateAuditLogDTO): Promise<any> {
     return await this.createAuditLogs({
       ...event,
       created_at: new Date(),
@@ -515,7 +517,7 @@ class ComplianceModuleService extends MedusaService({
   /**
    * Query audit logs with filters
    */
-  async queryAuditLogs(filters: QueryAuditLogsDTO): Promise<{ logs: AuditLog[]; count: number; total: number }> {
+  async queryAuditLogs(filters: QueryAuditLogsDTO): Promise<{ logs: any[]; count: number; total: number }> {
     const { skip = 0, take = 50, ...whereFilters } = filters
 
     // Build query filters
@@ -605,15 +607,15 @@ class ComplianceModuleService extends MedusaService({
   /**
    * Flag or unflag an audit log entry
    */
-  async flagAuditLog(id: string, reason: string, flagged: boolean = true): Promise<AuditLog> {
-    const logs = await this.listAuditLogs({ id }, { take: 1 })
-    if (!logs.logs.length) {
+  async flagAuditLog(id: string, reason: string, flagged: boolean = true): Promise<any> {
+    const logs = (await this.listAuditLogs({ id }, { take: 1 })) as any[]
+    if (!logs.length) {
       throw new Error(`Audit log not found: ${id}`)
     }
 
     return await this.updateAuditLogs(id, {
       flagged,
-      metadata: { ...logs.logs[0].metadata, flagReason: reason },
+      metadata: { ...logs[0].metadata, flagReason: reason },
     })
   }
 
@@ -638,7 +640,7 @@ class ComplianceModuleService extends MedusaService({
       changes?: { before: Record<string, any> | null; after: Record<string, any> | null }
       riskLevel?: CreateAuditLogDTO["risk_level"]
     }
-  ): Promise<AuditLog> {
+  ): Promise<any> {
     const userAgent = Array.isArray(req.headers["user-agent"])
       ? req.headers["user-agent"][0]
       : req.headers["user-agent"]

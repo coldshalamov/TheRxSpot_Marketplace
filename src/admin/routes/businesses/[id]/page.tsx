@@ -2,7 +2,6 @@ import { defineRouteConfig } from "@medusajs/admin-sdk"
 import {
   Container,
   Heading,
-  Section,
   Label,
   Input,
   Switch,
@@ -11,8 +10,10 @@ import {
   Toaster,
   toast,
 } from "@medusajs/ui"
-import { useState, useEffect } from "react"
+import { useState, useEffect, type HTMLAttributes } from "react"
 import { useParams, useNavigate } from "react-router-dom"
+
+const Section = (props: HTMLAttributes<HTMLDivElement>) => <div {...props} />
 
 const BusinessDetailPage = () => {
   const { id } = useParams()

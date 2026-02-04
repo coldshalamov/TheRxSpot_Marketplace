@@ -23,16 +23,7 @@ export default async function consultationCompletedHandler({
 
   try {
     // Fetch consultation
-    const consultation = await consultationService.retrieveConsultation(
-      consultationId
-    )
-
-    if (!consultation) {
-      console.error(
-        `[consultation-completed] Consultation not found: ${consultationId}`
-      )
-      return
-    }
+    const consultation = await consultationService.getConsultationOrThrow(consultationId)
 
     const { order_id: orderId, outcome, business_id: businessId } = consultation
 

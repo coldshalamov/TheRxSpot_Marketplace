@@ -1,5 +1,4 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { Container } from "@medusajs/framework/types"
 
 interface HealthCheckResponse {
   status: "healthy" | "unhealthy"
@@ -19,7 +18,7 @@ export async function GET(
   req: MedusaRequest,
   res: MedusaResponse<HealthCheckResponse>
 ): Promise<void> {
-  const container: Container = req.scope
+  const container = req.scope as any
   const timestamp = new Date().toISOString()
   
   const checks: HealthCheckResponse["checks"] = {

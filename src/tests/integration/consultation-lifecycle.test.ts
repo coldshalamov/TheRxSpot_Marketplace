@@ -162,7 +162,7 @@ describe("Consultation Lifecycle", () => {
           // Check if approval was created by subscriber
           // Note: In a real test, the subscriber would create the approval
           // Here we verify the consultation outcome is set correctly
-          const updatedConsult = await consultationService.retrieveConsultation(consultation.id)
+          const updatedConsult = await consultationService.getConsultationOrThrow(consultation.id)
           expect(updatedConsult.outcome).toBe("approved")
         },
       })

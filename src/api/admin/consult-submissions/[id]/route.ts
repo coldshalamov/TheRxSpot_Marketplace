@@ -13,8 +13,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
   const { id } = req.params
-  const { action, notes } = req.body
-  const reviewedBy = req.auth_context?.actor_id || "system"
+  const { action, notes } = (req.body ?? {}) as { action?: string; notes?: string }
+  const reviewedBy = ((req as any).auth_context?.actor_id as string | undefined) || "system"
   
   let submission
   if (action === "approve") {

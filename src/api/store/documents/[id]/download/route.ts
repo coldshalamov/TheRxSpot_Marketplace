@@ -41,7 +41,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     )
 
     // First verify document belongs to patient and is accessible
-    const document = await complianceService.getDocument(id, patientId, "patient")
+    const document = (await complianceService.getDocument(id, patientId, "patient")) as any
     
     if (document.patient_id !== patientId) {
       return res.status(403).json({

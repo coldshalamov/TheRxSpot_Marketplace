@@ -1,5 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { FINANCIALS_MODULE } from "../../../../modules/financials"
+import { FINANCIALS_MODULE } from "../../../../../modules/financials"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   try {

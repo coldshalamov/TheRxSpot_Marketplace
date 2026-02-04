@@ -74,7 +74,7 @@ describe("Order Workflow", () => {
           const { business: businessService } = getServices(container)
           
           // Act: Transition to consult_complete
-          await businessService.createOrderStatusEvent(
+          await businessService.recordOrderStatusEvent(
             order.id,
             "consult_pending",
             "consult_complete",
@@ -108,7 +108,7 @@ describe("Order Workflow", () => {
           const { business: businessService } = getServices(container)
           
           // Act: Transition to consult_rejected
-          await businessService.createOrderStatusEvent(
+          await businessService.recordOrderStatusEvent(
             order.id,
             "consult_pending",
             "consult_rejected",
@@ -199,7 +199,7 @@ describe("Order Workflow", () => {
           ]
           
           for (const transition of transitions) {
-            await businessService.createOrderStatusEvent(
+            await businessService.recordOrderStatusEvent(
               order.id,
               transition.from,
               transition.to,
@@ -257,7 +257,7 @@ describe("Order Workflow", () => {
           const { business: businessService } = getServices(container)
           
           // Act: Create event with metadata
-          await businessService.createOrderStatusEvent(
+          await businessService.recordOrderStatusEvent(
             order.id,
             "pending",
             "processing",
@@ -292,9 +292,9 @@ describe("Order Workflow", () => {
           const { business: businessService } = getServices(container)
           
           // Create events in sequence
-          await businessService.createOrderStatusEvent(order.id, "pending", "processing", "system")
-          await businessService.createOrderStatusEvent(order.id, "processing", "fulfilled", "system")
-          await businessService.createOrderStatusEvent(order.id, "fulfilled", "delivered", "system")
+          await businessService.recordOrderStatusEvent(order.id, "pending", "processing", "system")
+          await businessService.recordOrderStatusEvent(order.id, "processing", "fulfilled", "system")
+          await businessService.recordOrderStatusEvent(order.id, "fulfilled", "delivered", "system")
           
           // Act
           const latestEvent = await businessService.getLatestOrderStatusEvent(order.id)
@@ -321,7 +321,7 @@ describe("Order Workflow", () => {
           const { business: businessService } = getServices(container)
           
           // Act: Cancel order
-          await businessService.createOrderStatusEvent(
+          await businessService.recordOrderStatusEvent(
             order.id,
             "pending",
             "cancelled",
@@ -350,7 +350,7 @@ describe("Order Workflow", () => {
           const { business: businessService } = getServices(container)
           
           // Act: Refund order
-          await businessService.createOrderStatusEvent(
+          await businessService.recordOrderStatusEvent(
             order.id,
             "payment_captured",
             "refunded",

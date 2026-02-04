@@ -31,7 +31,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     }
 
     // Get document - patient can only access their own documents
-    const document = await complianceService.getDocument(id, patientId, "patient")
+    const document = (await complianceService.getDocument(id, patientId, "patient")) as any
 
     // Verify document belongs to patient and is accessible
     if (document.patient_id !== patientId) {

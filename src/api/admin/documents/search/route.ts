@@ -36,7 +36,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     )
 
     // Parse filters from request body (not query params)
-    const body = req.body as Record<string, any>
+    const body = (req.body ?? {}) as Record<string, any>
     const filters = {
       business_id: body.business_id,
       patient_id: body.patient_id,       // PHI - now in body, not URL
@@ -55,10 +55,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       if (filters[key] === undefined) delete filters[key]
     })
 
-    const result = await complianceService.listDocuments(filters)
+    const result = (await complianceService.listDocuments(filters)) as any
 
     // Remove sensitive storage information from response
-    const sanitizedDocuments = result.documents.map((doc) => ({
+    const sanitizedDocuments = (result.documents as any[]).map((doc: any) => ({
       id: doc.id,
       business_id: doc.business_id,
       patient_id: doc.patient_id,

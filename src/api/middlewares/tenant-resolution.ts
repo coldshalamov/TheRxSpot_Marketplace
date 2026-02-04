@@ -24,7 +24,7 @@ export const tenantResolutionMiddleware = async (
 ) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
 
-  let business = null
+  let business: any = null
 
   // 1. Host header -> BusinessDomain table lookup
   const host = req.headers["host"] as string | undefined

@@ -1,4 +1,3 @@
-import { MedusaContainer } from "@medusajs/framework/types"
 import { FINANCIALS_MODULE } from "../modules/financials"
 import { BUSINESS_MODULE } from "../modules/business"
 
@@ -25,7 +24,7 @@ const HOLD_PERIODS = {
  */
 async function getBusinessHoldPeriod(
   businessId: string,
-  container: MedusaContainer
+  container: any
 ): Promise<number> {
   const businessService = container.resolve(BUSINESS_MODULE)
   
@@ -74,7 +73,7 @@ async function getBusinessHoldPeriod(
  * 3. Process them through Stripe Connect or other payment provider
  * 4. Update payout status and linked earnings
  */
-export default async function processPayoutsJob(container: MedusaContainer) {
+export default async function processPayoutsJob(container: any) {
   const financialsService = container.resolve(FINANCIALS_MODULE)
 
   console.log("[process-payouts] Starting payout processing job")

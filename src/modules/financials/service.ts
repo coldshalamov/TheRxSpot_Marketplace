@@ -49,10 +49,12 @@ export interface ConsultationInput {
   currency_code?: string
 }
 
-class FinancialsService extends MedusaService({
+const FinancialsBaseService = MedusaService({
   EarningEntry,
   Payout,
-}) {
+}) as any
+
+class FinancialsService extends FinancialsBaseService {
   /**
    * Calculate earnings for an order
    * Creates earning entries for each line item and shipping
@@ -328,7 +330,7 @@ class FinancialsService extends MedusaService({
     businessId: string,
     earningsIds: string[],
     requestedBy?: string
-  ): Promise<typeof Payout> {
+  ): Promise<any> {
     // Validate input
     if (!businessId) {
       throw new Error("Business ID is required")
@@ -345,11 +347,11 @@ class FinancialsService extends MedusaService({
     }
 
     // Fetch all specified earnings
-    let earnings: typeof EarningEntry[]
+    let earnings: any[]
     try {
-      earnings = await Promise.all(
+      earnings = (await Promise.all(
         earningsIds.map((id) => this.retrieveEarningEntry(id))
-      )
+      )) as any[]
     } catch (error) {
       throw new Error(`Failed to retrieve earnings: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }

@@ -1,10 +1,10 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { authenticate } from "@medusajs/framework"
-import { CONSULTATION_MODULE } from "../../../../../../modules/consultation"
-import { CompleteConsultationData } from "../../../../../../modules/consultation/service"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import { CompleteConsultationData } from "../../../../../modules/consultation/service"
 
 export const POST = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
     const { id } = req.params

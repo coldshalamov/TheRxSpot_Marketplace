@@ -1,4 +1,3 @@
-import { ExecArgs } from "@medusajs/framework/types"
 import {
   ContainerRegistrationKeys,
   Modules,
@@ -48,7 +47,7 @@ const TENANTS: TenantSeedConfig[] = [
   },
 ]
 
-export default async function seedTenants({ container }: ExecArgs) {
+export default async function seedTenants({ container }: any) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
   const businessModuleService = container.resolve(BUSINESS_MODULE)
   const storeModuleService = container.resolve(Modules.STORE)

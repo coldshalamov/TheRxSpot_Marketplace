@@ -66,6 +66,7 @@ const checkProductRequiresConsultStep = createStep(
       if (!product) {
         return new StepResponse({
           valid: false,
+          requires_consult: false,
           message: "Product not found",
         })
       }
@@ -78,10 +79,12 @@ const checkProductRequiresConsultStep = createStep(
       return new StepResponse({
         valid: true,
         requires_consult: requiresConsult,
+        message: "OK",
       })
     } catch (error) {
       return new StepResponse({
         valid: false,
+        requires_consult: false,
         message: `Error checking product: ${error.message}`,
       })
     }
@@ -337,10 +340,12 @@ const createConsultApprovalStep = createStep(
       return new StepResponse({
         success: true,
         approval_id: approval.id,
+        message: "OK",
       })
     } catch (error) {
       return new StepResponse({
         success: false,
+        approval_id: null,
         message: `Failed to create approval: ${error.message}`,
       })
     }

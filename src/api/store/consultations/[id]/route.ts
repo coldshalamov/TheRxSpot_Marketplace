@@ -1,6 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { authenticate } from "@medusajs/framework"
-import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import { CONSULTATION_MODULE } from "../../../../modules/consultation"
 
 /**
  * GET /store/consultations/:id
@@ -20,7 +20,7 @@ export const GET = [
     }
 
     try {
-      const consultation = await consultationService.retrieveConsultation(id)
+      const consultation = await consultationService.getConsultationOrThrow(id)
 
       // Get patient record to verify ownership
       const patient = await consultationService.getPatientById(

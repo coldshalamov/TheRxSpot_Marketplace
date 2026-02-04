@@ -1,20 +1,20 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { authenticate } from "@medusajs/framework"
-import { CONSULTATION_MODULE } from "../../../../../../modules/consultation"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
 
 /**
  * GET /admin/clinicians/:id/availability
  * Get clinician's availability schedule
  */
 export const GET = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
     const { id } = req.params
 
     try {
       // Verify clinician exists
-      await consultationService.retrieveClinician(id)
+      await consultationService.getClinicianOrThrow(id)
 
       // Get availability (this would come from a separate table in a full implementation)
       const availability = await consultationService.getClinicianAvailability(id)
@@ -40,7 +40,7 @@ export const GET = [
  * Set clinician's availability schedule
  */
 export const POST = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
     const { id } = req.params

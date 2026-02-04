@@ -1,4 +1,3 @@
-import { MedusaContainer } from "@medusajs/framework/types"
 import { Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../modules/business"
 import { CONSULTATION_MODULE } from "../modules/consultation"
@@ -15,7 +14,7 @@ import { CONSULTATION_MODULE } from "../modules/consultation"
  * Schedule: Runs every 2 minutes to process pending submissions
  */
 
-export default async function processConsultSubmissionJob(container: MedusaContainer) {
+export default async function processConsultSubmissionJob(container: any) {
   const businessService = container.resolve(BUSINESS_MODULE)
   const consultationService = container.resolve(CONSULTATION_MODULE)
   const notificationService = container.resolve(Modules.NOTIFICATION)
@@ -54,7 +53,7 @@ export default async function processConsultSubmissionJob(container: MedusaConta
 /**
  * Process a single consult submission
  */
-async function processSubmission(container: MedusaContainer, submission: any) {
+async function processSubmission(container: any, submission: any) {
   const businessService = container.resolve(BUSINESS_MODULE)
   const consultationService = container.resolve(CONSULTATION_MODULE)
   const notificationService = container.resolve(Modules.NOTIFICATION)
@@ -130,7 +129,7 @@ async function sendBusinessNotification(
  * Auto-assign submission to an available clinician
  */
 async function autoAssignClinician(
-  container: MedusaContainer,
+  container: any,
   submission: any,
   business: any
 ) {
@@ -196,7 +195,7 @@ async function autoAssignClinician(
  * Create notification for tenant admin dashboard
  */
 async function createDashboardNotification(
-  container: MedusaContainer,
+  container: any,
   submission: any,
   business: any
 ) {

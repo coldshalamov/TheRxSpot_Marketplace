@@ -1,5 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { BUSINESS_MODULE } from "../../../../modules/business"
+import { BUSINESS_MODULE } from "../../../../../modules/business"
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
@@ -11,8 +11,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     return res.status(404).json({ message: "Business not found" })
   }
   
+  const body = (req.body ?? {}) as Record<string, any>
   const submission = await businessModuleService.createConsultSubmissions({
-    ...req.body,
+    ...body,
     business_id: business.id,
   })
   

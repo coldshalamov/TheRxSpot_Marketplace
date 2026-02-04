@@ -96,10 +96,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       if (filters[key] === undefined) delete filters[key]
     })
 
-    const result = await complianceService.listDocuments(filters)
+    const result = (await complianceService.listDocuments(filters)) as any
 
     // Remove sensitive storage information from response
-    const sanitizedDocuments = result.documents.map((doc) => ({
+    const sanitizedDocuments = (result.documents as any[]).map((doc: any) => ({
       id: doc.id,
       business_id: doc.business_id,
       patient_id: doc.patient_id,
@@ -177,7 +177,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       }
 
       // Parse metadata from request body
-      const body = req.body || {}
+      const body = (req.body ?? {}) as Record<string, any>
       
       // Validate required fields
       const requiredFields = ["business_id", "patient_id", "type", "title", "access_level"]
@@ -194,7 +194,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       const uploadedBy = (req as any).auth_context?.actor_id || "unknown"
 
       // Upload document
-      const document = await complianceService.uploadDocument(
+      const document = (await complianceService.uploadDocument(
         {
           buffer: file.buffer,
           originalname: file.originalname,
@@ -213,7 +213,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           expires_at: body.expires_at ? new Date(body.expires_at) : null,
         },
         uploadedBy
-      )
+      )) as any
 
       // Return sanitized document (without storage keys)
       res.status(201).json({

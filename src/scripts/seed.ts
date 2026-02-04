@@ -1,4 +1,3 @@
-import { CreateInventoryLevelInput, ExecArgs } from "@medusajs/framework/types";
 import {
   ContainerRegistrationKeys,
   Modules,
@@ -55,7 +54,7 @@ const updateStoreCurrencies = createWorkflow(
   }
 );
 
-export default async function seedDemoData({ container }: ExecArgs) {
+export default async function seedDemoData({ container }: any) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
   const link = container.resolve(ContainerRegistrationKeys.LINK);
   const query = container.resolve(ContainerRegistrationKeys.QUERY);
@@ -902,7 +901,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
     fields: ["id"],
   });
 
-  const inventoryLevels: CreateInventoryLevelInput[] = [];
+  const inventoryLevels: any[] = [];
   for (const inventoryItem of inventoryItems) {
     const inventoryLevel = {
       location_id: stockLocation.id,
@@ -923,7 +922,7 @@ export default async function seedDemoData({ container }: ExecArgs) {
   // Seed tenant businesses if enabled
   if (process.env.SEED_TENANTS !== "false") {
     try {
-      const seedTenants = (await import("./seed-tenants")).default
+      const seedTenants = (await import("./seed-tenants.js")).default as any
       await seedTenants({ container } as any)
     } catch (error) {
       logger.warn("Tenant seeding skipped or failed:", error)

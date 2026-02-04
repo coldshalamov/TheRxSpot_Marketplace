@@ -1,4 +1,3 @@
-import { MedusaContainer } from "@medusajs/framework/types"
 import { BUSINESS_MODULE } from "../modules/business"
 import dns from "dns"
 import { promisify } from "util"
@@ -22,7 +21,7 @@ const dnsResolve4 = promisify(dns.resolve4)
 const PLATFORM_TARGET_DOMAIN = process.env.PLATFORM_TARGET_DOMAIN || "therxspot.app"
 const PLATFORM_IPS = (process.env.PLATFORM_IPS || "").split(",").filter(Boolean)
 
-export default async function domainVerificationJob(container: MedusaContainer) {
+export default async function domainVerificationJob(container: any) {
   const businessService = container.resolve(BUSINESS_MODULE)
   const logger = container.resolve("logger")
   
@@ -60,7 +59,7 @@ export default async function domainVerificationJob(container: MedusaContainer) 
 /**
  * Verify a single domain's DNS configuration
  */
-async function verifyDomain(container: MedusaContainer, domain: any) {
+async function verifyDomain(container: any, domain: any) {
   const businessService = container.resolve(BUSINESS_MODULE)
   const logger = container.resolve("logger")
   
@@ -144,7 +143,7 @@ async function verifyDomain(container: MedusaContainer, domain: any) {
 /**
  * Send notification when domain is verified
  */
-async function notifyDomainVerified(container: MedusaContainer, domain: any) {
+async function notifyDomainVerified(container: any, domain: any) {
   const notificationService = container.resolve("notification")
   const logger = container.resolve("logger")
   
@@ -173,7 +172,7 @@ async function notifyDomainVerified(container: MedusaContainer, domain: any) {
  * Send notification when domain verification fails
  */
 async function notifyDomainError(
-  container: MedusaContainer,
+  container: any,
   domain: any,
   error: string | null
 ) {

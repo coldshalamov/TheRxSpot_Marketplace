@@ -240,8 +240,8 @@ async function createAuditLog(
     const userAgent = req.headers["user-agent"] as string
 
     // Extract business/consultation/order IDs from query or body if available
-    const body = req.body || {}
-    const query = req.query || {}
+    const body = (req.body ?? {}) as Record<string, any>
+    const query = (req.query ?? {}) as Record<string, any>
 
     // HIPAA-008: Redact sensitive parameters from URL before logging
     const originalUrl = req.originalUrl || req.url || ""

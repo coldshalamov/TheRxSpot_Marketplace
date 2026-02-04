@@ -12,7 +12,6 @@ import multer from "multer"
 import path from "path"
 import { v4 as uuidv4 } from "uuid"
 import NodeClam from "clamscan"
-import { fileTypeFromBuffer } from "file-type"
 
 // Allowed MIME types for medical documents
 const ALLOWED_MIME_TYPES = [
@@ -48,7 +47,7 @@ const storage = multer.memoryStorage()
  */
 const fileFilter = (
   req: any,
-  file: Express.Multer.File,
+  file: any,
   cb: multer.FileFilterCallback
 ) => {
   if (ALLOWED_MIME_TYPES.includes(file.mimetype.toLowerCase())) {
@@ -185,6 +184,7 @@ async function validateFileContent(
   expectedMimeType: string
 ): Promise<{ valid: boolean; detectedMimeType?: string }> {
   try {
+    const { fileTypeFromBuffer } = await import("file-type")
     const fileType = await fileTypeFromBuffer(buffer)
     
     if (!fileType) {

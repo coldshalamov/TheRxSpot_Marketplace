@@ -5,6 +5,7 @@ import { Patient } from "./models/patient"
 import { ConsultationStatusEvent } from "./models/consultation-status-event"
 import { ClinicianSchedule } from "./models/clinician-schedule"
 import { ClinicianAvailabilityException } from "./models/clinician-availability-exception"
+import { decryptFields, encryptFields } from "../../utils/encryption"
 
 // Valid status transitions for consultations
 const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
@@ -35,14 +36,33 @@ export interface CompleteConsultationData {
   rejection_reason?: string
 }
 
-class ConsultationModuleService extends MedusaService({
+const ConsultationBaseService = MedusaService({
   Consultation,
   Clinician,
   Patient,
   ConsultationStatusEvent,
   ClinicianSchedule,
   ClinicianAvailabilityException,
-}) {
+}) as any
+
+class ConsultationModuleService extends ConsultationBaseService {
+  private static readonly PATIENT_PHI_FIELDS = [
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "date_of_birth",
+    "medical_history",
+    "allergies",
+    "medications",
+    "emergency_contact_name",
+    "emergency_contact_phone",
+  ] as const
+
+  private static isPhiEncryptionEnabled(): boolean {
+    return (process.env.PHI_ENCRYPTION_ENABLED || "").toLowerCase() === "true"
+  }
+
   // ==========================================
   // CONSULTATION METHODS
   // ==========================================
@@ -63,7 +83,7 @@ class ConsultationModuleService extends MedusaService({
     })
   }
 
-  async retrieveConsultation(id: string, relations: string[] = []) {
+  async getConsultationOrThrow(id: string, relations: string[] = []) {
     const consultations = await this.listConsultationsWithCount(
       { id },
       { take: 1, relations }
@@ -74,11 +94,11 @@ class ConsultationModuleService extends MedusaService({
     return consultations[0][0]
   }
 
-  async createConsultation(data: Partial<Consultation>) {
+  async createConsultation(data: Record<string, any>) {
     return await this.createConsultations(data)
   }
 
-  async updateConsultation(id: string, data: Partial<Consultation>) {
+  async updateConsultation(id: string, data: Record<string, any>) {
     return await this.updateConsultations(id, data)
   }
 
@@ -158,7 +178,7 @@ class ConsultationModuleService extends MedusaService({
     })
 
     // Update consultation with new status and timestamps
-    const updateData: Partial<Consultation> = { status: newStatus }
+    const updateData: Record<string, any> = { status: newStatus }
 
     if (newStatus === "in_progress") {
       updateData.started_at = new Date()
@@ -281,7 +301,7 @@ class ConsultationModuleService extends MedusaService({
     })
   }
 
-  async retrieveClinician(id: string) {
+  async getClinicianOrThrow(id: string) {
     const clinicians = await this.listClinicians({ id }, { take: 1 })
     if (!clinicians[0].length) {
       throw new Error(`Clinician not found: ${id}`)
@@ -289,11 +309,11 @@ class ConsultationModuleService extends MedusaService({
     return clinicians[0][0]
   }
 
-  async createClinician(data: Partial<Clinician>) {
+  async createClinician(data: Record<string, any>) {
     return await this.createClinicians(data)
   }
 
-  async updateClinician(id: string, data: Partial<Clinician>) {
+  async updateClinician(id: string, data: Record<string, any>) {
     return await this.updateClinicians(id, data)
   }
 
@@ -394,14 +414,24 @@ class ConsultationModuleService extends MedusaService({
     } = {}
   ) {
     const { skip, take, order } = options
-    return await this.listPatientsWithCount(filters, {
+    const [patients, count] = await this.listPatientsWithCount(filters, {
       skip,
       take,
       order: order || { created_at: "DESC" },
     })
+
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return [patients, count] as any
+    }
+
+    const decrypted = patients.map((p) =>
+      decryptFields(p as any, ConsultationModuleService.PATIENT_PHI_FIELDS as any)
+    )
+
+    return [decrypted, count] as any
   }
 
-  async retrievePatient(id: string, relations: string[] = []) {
+  async getPatientOrThrow(id: string, relations: string[] = []) {
     const patients = await this.listPatientsWithCount(
       { id },
       { take: 1, relations }
@@ -409,15 +439,39 @@ class ConsultationModuleService extends MedusaService({
     if (!patients[0].length) {
       throw new Error(`Patient not found: ${id}`)
     }
-    return patients[0][0]
+
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return patients[0][0]
+    }
+
+    return decryptFields(
+      patients[0][0] as any,
+      ConsultationModuleService.PATIENT_PHI_FIELDS as any
+    ) as any
   }
 
-  async createPatient(data: Partial<Patient>) {
-    return await this.createPatients(data)
+  async createPatient(data: Record<string, any>) {
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return await this.createPatients(data)
+    }
+
+    const encrypted = encryptFields(
+      data as any,
+      ConsultationModuleService.PATIENT_PHI_FIELDS as any
+    )
+    return await this.createPatients(encrypted)
   }
 
-  async updatePatient(id: string, data: Partial<Patient>) {
-    return await this.updatePatients(id, data)
+  async updatePatient(id: string, data: Record<string, any>) {
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return await this.updatePatients(id, data)
+    }
+
+    const encrypted = encryptFields(
+      data as any,
+      ConsultationModuleService.PATIENT_PHI_FIELDS as any
+    )
+    return await this.updatePatients(id, encrypted)
   }
 
   async deletePatient(id: string) {
@@ -430,11 +484,23 @@ class ConsultationModuleService extends MedusaService({
   }
 
   async getPatientByEmail(businessId: string, email: string) {
-    const patients = await this.listPatients(
-      { business_id: businessId, email },
-      { take: 1 }
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      const [patients] = await this.listPatients(
+        { business_id: businessId, email },
+        { take: 1 }
+      )
+      return patients[0] ?? null
+    }
+
+    // NOTE: If PHI encryption is enabled, `email` is stored encrypted and can't be filtered
+    // using an equality query. For now, we fetch a bounded set of patients for the business
+    // and match in memory after decryption.
+    const [patients] = await this.listPatients(
+      { business_id: businessId },
+      { take: 250, order: { created_at: "DESC" } }
     )
-    return patients[0] ?? null
+
+    return (patients as any[]).find((p) => p?.email === email) ?? null
   }
 
   async listPatientsByBusiness(businessId: string) {
@@ -529,11 +595,11 @@ class ConsultationModuleService extends MedusaService({
     )
   }
 
-  async createClinicianSchedule(data: Partial<ClinicianSchedule>) {
+  async createClinicianSchedule(data: Record<string, any>) {
     return await this.createClinicianSchedules(data)
   }
 
-  async updateClinicianSchedule(id: string, data: Partial<ClinicianSchedule>) {
+  async updateClinicianSchedule(id: string, data: Record<string, any>) {
     return await this.updateClinicianSchedules(id, data)
   }
 
@@ -591,11 +657,11 @@ class ConsultationModuleService extends MedusaService({
     })
   }
 
-  async createClinicianAvailabilityException(data: Partial<ClinicianAvailabilityException>) {
+  async createClinicianAvailabilityException(data: Record<string, any>) {
     return await this.createClinicianAvailabilityExceptions(data)
   }
 
-  async updateClinicianAvailabilityException(id: string, data: Partial<ClinicianAvailabilityException>) {
+  async updateClinicianAvailabilityException(id: string, data: Record<string, any>) {
     return await this.updateClinicianAvailabilityExceptions(id, data)
   }
 

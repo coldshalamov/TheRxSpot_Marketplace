@@ -7,7 +7,7 @@ import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
  * Get consultation detail for tenant's business
  */
 export const GET = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
     const tenantContext = (req as any).tenant_context
@@ -18,7 +18,7 @@ export const GET = [
     }
 
     try {
-      const consultation = await consultationService.retrieveConsultation(id)
+      const consultation = await consultationService.getConsultationOrThrow(id)
 
       // Verify the consultation belongs to tenant's business
       if (consultation.business_id !== tenantContext.business_id) {
@@ -53,7 +53,7 @@ export const GET = [
  * Update consultation for tenant's business
  */
 export const PUT = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
     const tenantContext = (req as any).tenant_context
@@ -64,7 +64,7 @@ export const PUT = [
     }
 
     try {
-      const consultation = await consultationService.retrieveConsultation(id)
+      const consultation = await consultationService.getConsultationOrThrow(id)
 
       // Verify the consultation belongs to tenant's business
       if (consultation.business_id !== tenantContext.business_id) {
@@ -74,7 +74,7 @@ export const PUT = [
       }
 
       // Prevent changing business_id
-      const updateData = { ...req.body }
+      const updateData = { ...((req.body ?? {}) as Record<string, any>) }
       delete updateData.business_id
 
       const updated = await consultationService.updateConsultation(id, updateData)

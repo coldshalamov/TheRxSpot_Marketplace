@@ -1,5 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { BUSINESS_MODULE } from "../../../../modules/business"
+import { BUSINESS_MODULE } from "../../../../../modules/business"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
@@ -16,9 +16,10 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
   const { id } = req.params
+  const body = (req.body ?? {}) as Record<string, any>
   
   const location = await businessModuleService.createLocations({
-    ...req.body,
+    ...body,
     business_id: id,
   })
   

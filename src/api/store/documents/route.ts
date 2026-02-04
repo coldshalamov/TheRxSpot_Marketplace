@@ -60,16 +60,16 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     })
 
     // Get all patient's documents first
-    const result = await complianceService.listDocuments(filters)
+    const result = (await complianceService.listDocuments(filters)) as any
 
     // Filter to only include documents patient can access
     // Patient can access: patient_only and clinician level
-    const accessibleDocuments = result.documents.filter((doc) =>
+    const accessibleDocuments = (result.documents as any[]).filter((doc: any) =>
       ["patient_only", "clinician"].includes(doc.access_level)
     )
 
     // Remove sensitive storage information from response
-    const sanitizedDocuments = accessibleDocuments.map((doc) => ({
+    const sanitizedDocuments = accessibleDocuments.map((doc: any) => ({
       id: doc.id,
       consultation_id: doc.consultation_id,
       order_id: doc.order_id,
@@ -144,7 +144,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       }
 
       // Parse metadata from request body
-      const body = req.body || {}
+      const body = (req.body ?? {}) as Record<string, any>
       
       // Validate required fields
       const requiredFields = ["type", "title"]
@@ -177,7 +177,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       }
 
       // Upload document - patients can only upload as 'patient_only' access level
-      const document = await complianceService.uploadDocument(
+      const document = (await complianceService.uploadDocument(
         {
           buffer: file.buffer,
           originalname: file.originalname,
@@ -196,7 +196,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
           expires_at: body.expires_at ? new Date(body.expires_at) : null,
         },
         patientId // Patient uploads their own document
-      )
+      )) as any
 
       // Return sanitized document
       res.status(201).json({

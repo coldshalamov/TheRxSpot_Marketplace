@@ -1,20 +1,20 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { authenticate } from "@medusajs/framework"
-import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import { CONSULTATION_MODULE } from "../../../../modules/consultation"
 import { 
   requireTenantContext, 
   verifyTenantAccess, 
   createNotFoundResponse,
   logSecurityEvent,
   TenantContext 
-} from "../../../../middlewares/tenant-isolation"
+} from "../../../middlewares/tenant-isolation"
 
 /**
  * GET /admin/patients/:id
  * Get patient with tenant isolation
  */
 export const GET = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   requireTenantContext(),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
@@ -22,7 +22,7 @@ export const GET = [
     const tenantContext = (req as any).tenant_context as TenantContext
 
     try {
-      const patient = await consultationService.retrievePatient(id)
+      const patient = await consultationService.getPatientOrThrow(id)
       
       // ENFORCE tenant isolation
       if (!patient || patient.business_id !== tenantContext.business_id) {
@@ -73,7 +73,7 @@ export const GET = [
  * Update patient with tenant isolation
  */
 export const PUT = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   requireTenantContext(),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
@@ -82,7 +82,7 @@ export const PUT = [
 
     try {
       // First retrieve to check tenant isolation
-      const existingPatient = await consultationService.retrievePatient(id)
+      const existingPatient = await consultationService.getPatientOrThrow(id)
       
       // ENFORCE tenant isolation
       if (!existingPatient || existingPatient.business_id !== tenantContext.business_id) {
@@ -124,7 +124,7 @@ export const PUT = [
  * Delete patient with tenant isolation
  */
 export const DELETE = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   requireTenantContext(),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
@@ -133,7 +133,7 @@ export const DELETE = [
 
     try {
       // First retrieve to check tenant isolation
-      const existingPatient = await consultationService.retrievePatient(id)
+      const existingPatient = await consultationService.getPatientOrThrow(id)
       
       // ENFORCE tenant isolation
       if (!existingPatient || existingPatient.business_id !== tenantContext.business_id) {

@@ -22,8 +22,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   
   try {
     // Create cart with optional business context
+    const body = (req.body ?? {}) as Record<string, any>
     const cartData: any = {
-      ...req.body,
+      ...body,
     }
     
     // If a business context exists, store it in cart metadata

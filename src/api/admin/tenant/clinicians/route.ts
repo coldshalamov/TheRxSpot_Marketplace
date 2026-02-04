@@ -7,7 +7,7 @@ import { CONSULTATION_MODULE } from "../../../../modules/consultation"
  * List clinicians for the tenant's business
  */
 export const GET = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
     const tenantContext = (req as any).tenant_context
@@ -85,7 +85,7 @@ export const GET = [
  * Create a new clinician for the tenant's business
  */
 export const POST = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
     const tenantContext = (req as any).tenant_context
@@ -97,8 +97,9 @@ export const POST = [
     try {
       // Automatically set the business_id from tenant context
       // and ensure is_platform_clinician is false
+      const body = (req.body ?? {}) as Record<string, any>
       const clinician = await consultationService.createClinician({
-        ...req.body,
+        ...body,
         business_id: tenantContext.business_id,
         is_platform_clinician: false,
       })

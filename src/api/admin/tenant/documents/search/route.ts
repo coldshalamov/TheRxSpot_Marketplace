@@ -10,7 +10,7 @@
  */
 
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import ComplianceModuleService from "../../../../modules/compliance/service"
+import ComplianceModuleService from "../../../../../modules/compliance/service"
 
 /**
  * POST /admin/tenant/documents/search
@@ -44,7 +44,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     }
 
     // Parse filters from request body (not query params)
-    const body = req.body as Record<string, any>
+    const body = (req.body ?? {}) as Record<string, any>
     const filters = {
       business_id: businessId, // Force business filter
       patient_id: body.patient_id,       // PHI - now in body, not URL
@@ -63,10 +63,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       if (filters[key] === undefined) delete filters[key]
     })
 
-    const result = await complianceService.listDocuments(filters)
+    const result = (await complianceService.listDocuments(filters)) as any
 
     // Remove sensitive storage information from response
-    const sanitizedDocuments = result.documents.map((doc) => ({
+    const sanitizedDocuments = (result.documents as any[]).map((doc: any) => ({
       id: doc.id,
       patient_id: doc.patient_id,
       consultation_id: doc.consultation_id,

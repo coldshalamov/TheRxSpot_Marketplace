@@ -81,7 +81,7 @@ class BusinessModuleService extends MedusaService({
   }
 
   // Order Status Event methods
-  async createOrderStatusEvent(
+  async recordOrderStatusEvent(
     orderId: string,
     fromStatus: string,
     toStatus: string,

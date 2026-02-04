@@ -17,9 +17,10 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
+  const body = (req.body ?? {}) as Record<string, any>
 
   const business = await businessModuleService.createBusiness({
-    ...req.body,
+    ...body,
     status: "pending",
   })
 

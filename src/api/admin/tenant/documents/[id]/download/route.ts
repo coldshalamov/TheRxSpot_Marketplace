@@ -43,7 +43,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     )
 
     // First verify document belongs to tenant
-    const document = await complianceService.getDocument(id, userId, userType)
+    const document = (await complianceService.getDocument(id, userId, userType)) as any
     
     if (document.business_id !== businessId) {
       return res.status(403).json({

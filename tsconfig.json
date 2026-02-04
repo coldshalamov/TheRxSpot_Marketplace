@@ -23,13 +23,21 @@
     "swc": true
   },
   "include": [
-    "**/*",
-    ".medusa/types/*"
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "medusa-config.ts",
+    "instrumentation.ts",
+    ".medusa/types/**/*"
   ],
   "exclude": [
     "node_modules",
     ".medusa/server",
     ".medusa/admin",
-    ".cache"
+    ".cache",
+    "TheRxSpot_Marketplace-storefront",
+    "integration-tests",
+    "docs",
+    ".claude",
+    "src/tests"
   ]
 }

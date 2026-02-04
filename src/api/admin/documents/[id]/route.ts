@@ -18,14 +18,14 @@ import {
   createNotFoundResponse,
   logSecurityEvent,
   TenantContext 
-} from "../../../../middlewares/tenant-isolation"
+} from "../../../middlewares/tenant-isolation"
 
 /**
  * GET /admin/documents/:id
  * Get document metadata with tenant isolation
  */
 export const GET = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   requireTenantContext(),
   async (req: MedusaRequest, res: MedusaResponse) => {
     try {
@@ -37,16 +37,16 @@ export const GET = [
       const tenantContext = (req as any).tenant_context as TenantContext
 
       // Get document with access check
-      const document = await complianceService.getDocumentById(id)
+      const doc = (await complianceService.getDocumentById(id)) as any
       
       // ENFORCE tenant isolation
-      if (!document || document.business_id !== tenantContext.business_id) {
-        if (document) {
+      if (!doc || doc.business_id !== tenantContext.business_id) {
+        if (doc) {
           await logSecurityEvent(req, "CROSS_TENANT_ACCESS_ATTEMPT", {
             resource: "document",
             resource_id: id,
             attempted_by_business: tenantContext.business_id,
-            target_business_id: document.business_id,
+            target_business_id: doc.business_id,
           })
         } else {
           await logSecurityEvent(req, "RESOURCE_ENUMERATION_ATTEMPT", {
@@ -63,26 +63,26 @@ export const GET = [
       // Return sanitized document
       res.json({
         document: {
-          id: document.id,
-          business_id: document.business_id,
-          patient_id: document.patient_id,
-          consultation_id: document.consultation_id,
-          order_id: document.order_id,
-          uploaded_by: document.uploaded_by,
-          type: document.type,
-          title: document.title,
-          description: document.description,
-          file_name: document.file_name,
-          file_size: document.file_size,
-          mime_type: document.mime_type,
-          access_level: document.access_level,
-          is_encrypted: document.is_encrypted,
-          download_count: document.download_count,
-          last_downloaded_at: document.last_downloaded_at,
-          last_downloaded_by: document.last_downloaded_by,
-          expires_at: document.expires_at,
-          created_at: document.created_at,
-          updated_at: document.updated_at,
+          id: doc.id,
+          business_id: doc.business_id,
+          patient_id: doc.patient_id,
+          consultation_id: doc.consultation_id,
+          order_id: doc.order_id,
+          uploaded_by: doc.uploaded_by,
+          type: doc.type,
+          title: doc.title,
+          description: doc.description,
+          file_name: doc.file_name,
+          file_size: doc.file_size,
+          mime_type: doc.mime_type,
+          access_level: doc.access_level,
+          is_encrypted: doc.is_encrypted,
+          download_count: doc.download_count,
+          last_downloaded_at: doc.last_downloaded_at,
+          last_downloaded_by: doc.last_downloaded_by,
+          expires_at: doc.expires_at,
+          created_at: doc.created_at,
+          updated_at: doc.updated_at,
         },
       })
     } catch (error: any) {
@@ -113,7 +113,7 @@ export const GET = [
  * - access_level: New access level (optional)
  */
 export const PUT = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   requireTenantContext(),
   async (req: MedusaRequest, res: MedusaResponse) => {
     try {
@@ -126,7 +126,7 @@ export const PUT = [
       const body = req.body || {}
 
       // First retrieve to check tenant isolation
-      const existingDocument = await complianceService.getDocumentById(id)
+      const existingDocument = (await complianceService.getDocumentById(id)) as any
       
       // ENFORCE tenant isolation
       if (!existingDocument || existingDocument.business_id !== tenantContext.business_id) {
@@ -170,32 +170,32 @@ export const PUT = [
       const userId = (req as any).auth_context?.actor_id || "unknown"
       const userType = (req as any).auth_context?.actor_type || "business_user"
       
-      const document = await complianceService.updateDocumentMetadata(
+      const doc = (await complianceService.updateDocumentMetadata(
         id,
         updates,
         userId,
         userType
-      )
+      )) as any
 
       res.json({
         document: {
-          id: document.id,
-          business_id: document.business_id,
-          patient_id: document.patient_id,
-          consultation_id: document.consultation_id,
-          order_id: document.order_id,
-          type: document.type,
-          title: document.title,
-          description: document.description,
-          file_name: document.file_name,
-          file_size: document.file_size,
-          mime_type: document.mime_type,
-          access_level: document.access_level,
-          is_encrypted: document.is_encrypted,
-          download_count: document.download_count,
-          expires_at: document.expires_at,
-          created_at: document.created_at,
-          updated_at: document.updated_at,
+          id: doc.id,
+          business_id: doc.business_id,
+          patient_id: doc.patient_id,
+          consultation_id: doc.consultation_id,
+          order_id: doc.order_id,
+          type: doc.type,
+          title: doc.title,
+          description: doc.description,
+          file_name: doc.file_name,
+          file_size: doc.file_size,
+          mime_type: doc.mime_type,
+          access_level: doc.access_level,
+          is_encrypted: doc.is_encrypted,
+          download_count: doc.download_count,
+          expires_at: doc.expires_at,
+          created_at: doc.created_at,
+          updated_at: doc.updated_at,
         },
       })
     } catch (error: any) {
@@ -228,7 +228,7 @@ export const PUT = [
  * Delete a document with tenant isolation
  */
 export const DELETE = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   requireTenantContext(),
   async (req: MedusaRequest, res: MedusaResponse) => {
     try {
@@ -240,7 +240,7 @@ export const DELETE = [
       const tenantContext = (req as any).tenant_context as TenantContext
 
       // First retrieve to check tenant isolation
-      const existingDocument = await complianceService.getDocumentById(id)
+      const existingDocument = (await complianceService.getDocumentById(id)) as any
       
       // ENFORCE tenant isolation
       if (!existingDocument || existingDocument.business_id !== tenantContext.business_id) {
@@ -267,7 +267,7 @@ export const DELETE = [
       const userType = (req as any).auth_context?.actor_type || "business_user"
 
       // Delete document
-      await complianceService.deleteDocument(id, userId, userType)
+      await complianceService.removeDocument(id, userId, userType)
 
       res.status(204).send()
     } catch (error: any) {

@@ -28,7 +28,7 @@ export const Payout = model.define("payout", {
   failure_reason: model.text().nullable(),
   
   // Linked earning entries (stored as JSON array of IDs)
-  earning_entries: model.json().default([]),
+  earning_entries: model.json().default([] as any),
   
   // Metadata
   metadata: model.json().default({}),

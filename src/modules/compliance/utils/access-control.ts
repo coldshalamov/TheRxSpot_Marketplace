@@ -6,8 +6,6 @@
  * and the document's access level settings.
  */
 
-import { Document } from "../models/document"
-
 type UserType = "patient" | "clinician" | "business_staff" | "platform_admin"
 
 /**
@@ -54,7 +52,7 @@ const ACCESS_HIERARCHY: DocumentAccessLevel[] = [
  * @returns True if access is allowed
  */
 export function canAccessDocument(
-  document: Document,
+  document: any,
   userId: string,
   userType: UserType,
   isOwner: boolean = false
@@ -96,7 +94,7 @@ export function canAccessDocument(
  * Includes additional checks beyond basic access
  */
 export function canDownloadDocument(
-  document: Document,
+  document: any,
   userId: string,
   userType: UserType,
   isOwner: boolean = false
@@ -118,7 +116,7 @@ export function canDownloadDocument(
  * Check if a user can modify a document
  */
 export function canModifyDocument(
-  document: Document,
+  document: any,
   userId: string,
   userType: UserType
 ): boolean {
@@ -144,7 +142,7 @@ export function canModifyDocument(
  * Check if a user can delete a document
  */
 export function canDeleteDocument(
-  document: Document,
+  document: any,
   userId: string,
   userType: UserType
 ): boolean {
@@ -170,7 +168,7 @@ export function canDeleteDocument(
  * Check if a user can change document access level
  */
 export function canChangeAccessLevel(
-  document: Document,
+  document: any,
   userId: string,
   userType: UserType,
   newAccessLevel: DocumentAccessLevel
@@ -249,10 +247,10 @@ export function isValidAccessLevel(level: string): level is DocumentAccessLevel 
  * Removes sensitive fields for lower access levels
  */
 export function filterDocumentFields(
-  document: Document,
+  document: Record<string, any>,
   userType: UserType
-): Partial<Document> {
-  const baseFields: (keyof Document)[] = [
+): Record<string, any> {
+  const baseFields: string[] = [
     "id",
     "business_id",
     "patient_id",
@@ -273,7 +271,7 @@ export function filterDocumentFields(
   ]
 
   // Admin fields - include storage details
-  const adminFields: (keyof Document)[] = [
+  const adminFields: string[] = [
     ...baseFields,
     "storage_provider",
     "storage_bucket",
@@ -300,11 +298,8 @@ export function filterDocumentFields(
 /**
  * Pick specific fields from an object
  */
-function pickFields<T extends Record<string, any>>(
-  obj: T,
-  keys: (keyof T)[]
-): Partial<T> {
-  const result: Partial<T> = {}
+function pickFields(obj: Record<string, any>, keys: string[]): Record<string, any> {
+  const result: Record<string, any> = {}
   for (const key of keys) {
     result[key] = obj[key]
   }
@@ -323,7 +318,7 @@ export interface AccessCheckResult {
  * Detailed access check with reason
  */
 export function checkDocumentAccess(
-  document: Document,
+  document: any,
   userId: string,
   userType: UserType,
   action: "read" | "download" | "modify" | "delete" = "read"

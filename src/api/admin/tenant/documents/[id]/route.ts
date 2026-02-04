@@ -37,7 +37,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     }
 
     // Get document
-    const document = await complianceService.getDocument(id, userId, userType)
+    const document = (await complianceService.getDocument(id, userId, userType)) as any
 
     // Verify document belongs to tenant's business
     if (document.business_id !== businessId) {
@@ -118,7 +118,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     }
 
     // First get the document to verify ownership
-    const existingDoc = await complianceService.getDocument(id, userId, userType)
+    const existingDoc = (await complianceService.getDocument(id, userId, userType)) as any
     
     if (existingDoc.business_id !== businessId) {
       return res.status(403).json({
@@ -145,12 +145,12 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     }
 
     // Update document
-    const document = await complianceService.updateDocumentMetadata(
+    const document = (await complianceService.updateDocumentMetadata(
       id,
       updates,
       userId,
       userType
-    )
+    )) as any
 
     res.json({
       document: {
@@ -216,7 +216,7 @@ export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
     }
 
     // First get the document to verify ownership
-    const existingDoc = await complianceService.getDocument(id, userId, userType)
+    const existingDoc = (await complianceService.getDocument(id, userId, userType)) as any
     
     if (existingDoc.business_id !== businessId) {
       return res.status(403).json({
@@ -226,7 +226,7 @@ export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
     }
 
     // Delete document
-    await complianceService.deleteDocument(id, userId, userType)
+    await complianceService.removeDocument(id, userId, userType)
 
     res.status(204).send()
   } catch (error) {

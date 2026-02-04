@@ -1,6 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
-import { orderStatusTransitionWorkflow } from "../../../../../workflows/order-lifecycle"
+import { orderStatusTransitionWorkflow } from "../../../../../../workflows/order-lifecycle"
 
 interface StatusUpdateBody {
   status: string
@@ -86,7 +86,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const changedBy = (req as any).auth_context?.auth_identity_id ?? null
 
     // Execute workflow
-    const result = await orderStatusTransitionWorkflow(req.scope).run({
+    const result = (await orderStatusTransitionWorkflow(req.scope).run({
       input: {
         orderId: id,
         fromStatus: currentStatus,
@@ -94,7 +94,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         changedBy,
         reason,
       },
-    })
+    })) as any
 
     res.json({
       success: result.success,

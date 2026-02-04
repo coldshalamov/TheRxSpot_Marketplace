@@ -1,5 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { BUSINESS_MODULE } from "../../../../../modules/business"
+import { BUSINESS_MODULE } from "../../../../../../modules/business"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
@@ -13,10 +13,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
   const { locationId } = req.params
+  const body = (req.body ?? {}) as Record<string, any>
   
   const location = await businessModuleService.updateLocations({
     selector: { id: locationId },
-    data: req.body,
+    data: body,
   })
   
   res.json({ location: location[0] })

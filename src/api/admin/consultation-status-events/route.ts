@@ -3,7 +3,7 @@ import { authenticate } from "@medusajs/framework"
 import { CONSULTATION_MODULE } from "../../../modules/consultation"
 
 export const GET = [
-  authenticate(),
+  authenticate("user", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
 

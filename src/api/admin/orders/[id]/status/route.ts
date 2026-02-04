@@ -56,7 +56,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const changedBy = (req as any).auth_context?.auth_identity_id ?? "admin"
 
     // Execute workflow
-    const result = await orderStatusTransitionWorkflow(req.scope).run({
+    const result = (await orderStatusTransitionWorkflow(req.scope).run({
       input: {
         orderId: id,
         fromStatus: currentStatus,
@@ -64,7 +64,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         changedBy,
         reason,
       },
-    })
+    })) as any
 
     res.json({
       success: result.success,

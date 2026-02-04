@@ -1,6 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { authenticate } from "@medusajs/framework"
-import { CONSULTATION_MODULE } from "../../../../modules/consultation"
+import { CONSULTATION_MODULE } from "../../../modules/consultation"
 
 /**
  * GET /store/consultations
@@ -89,6 +89,7 @@ export const POST = [
   authenticate("customer", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+    const body = (req.body ?? {}) as Record<string, any>
 
     // Get customer ID from auth context
     const customerId = (req as any).auth_context?.actor_id
@@ -114,14 +115,14 @@ export const POST = [
         patient = await consultationService.createPatient({
           business_id: business.id,
           customer_id: customerId,
-          first_name: req.body.patient_first_name || "",
-          last_name: req.body.patient_last_name || "",
+          first_name: body.patient_first_name || "",
+          last_name: body.patient_last_name || "",
           email: (req as any).auth_context?.actor_email || "",
-          phone: req.body.patient_phone || null,
-          date_of_birth: req.body.patient_date_of_birth
-            ? new Date(req.body.patient_date_of_birth)
+          phone: body.patient_phone || null,
+          date_of_birth: body.patient_date_of_birth
+            ? new Date(body.patient_date_of_birth)
             : null,
-          gender: req.body.patient_gender || null,
+          gender: body.patient_gender || null,
         })
       }
 
@@ -129,11 +130,11 @@ export const POST = [
       const consultation = await consultationService.createConsultation({
         business_id: business.id,
         patient_id: patient.id,
-        mode: req.body.mode || "async_form",
+        mode: body.mode || "async_form",
         status: "draft",
-        chief_complaint: req.body.chief_complaint || null,
-        medical_history: req.body.medical_history || null,
-        originating_submission_id: req.body.submission_id || null,
+        chief_complaint: body.chief_complaint || null,
+        medical_history: body.medical_history || null,
+        originating_submission_id: body.submission_id || null,
       })
 
       res.status(201).json({
