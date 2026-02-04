@@ -96,7 +96,7 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
   - [ ] Consultations by status (pie chart)
   - [ ] Orders by business (bar chart, top 10)
   - [ ] Add real-time updates with polling (30s interval)
-- [ ] Users Management Page (10h)
+- [x] Users Management Page (10h)
   - [ ] Create src/admin/routes/users/page.tsx
   - [ ] Table Columns:
   - [ ] Avatar (initials if no image)
