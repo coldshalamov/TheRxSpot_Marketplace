@@ -23,21 +23,21 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
   - [x] Add rollback scripts for each migration
   - [x] Document migration order dependencies
 - [ ] API Completeness
-  - [ ] Consultation Approval Endpoint (2h)
-  - [ ] GET /store/consultations/approvals?product_id={id}
-  - [ ] Check customer has approved consultation within 90 days
-  - [ ] Return approval status, consultation_id, expiry
-  - [ ] Add to src/api/store/consultations/approvals/route.ts
-  - [ ] Consultation Assignment Endpoint (1h)
-  - [ ] POST /admin/consultations/{id}/assign
-  - [ ] Assign clinician to consultation
-  - [ ] Send notification to clinician
-  - [ ] Update consultation status
-  - [ ] Consultation Status Update (1h)
-  - [ ] POST /admin/consultations/{id}/status
-  - [ ] Support transitions: pending â†’ scheduled â†’ completed â†’ approved/rejected
-  - [ ] Validate state machine transitions
-  - [ ] Log status changes in audit log
+  - [x] Consultation Approval Endpoint (2h)
+  - [x] GET /store/consultations/approvals?product_id={id}
+  - [x] Check customer has approved consultation within 90 days
+  - [x] Return approval status, consultation_id, expiry
+  - [x] Add to src/api/store/consultations/approvals/route.ts
+  - [x] Consultation Assignment Endpoint (1h)
+  - [x] POST /admin/consultations/{id}/assign
+  - [x] Assign clinician to consultation
+  - [x] Send notification to clinician
+  - [x] Update consultation status
+  - [x] Consultation Status Update (1h)
+  - [x] POST /admin/consultations/{id}/status
+  - [x] Support transitions: pending â†’ scheduled â†’ completed â†’ approved/rejected
+  - [x] Validate state machine transitions
+  - [x] Log status changes in audit log
   - [ ] Document Upload/Download (3h)
   - [ ] POST /admin/consultations/{id}/documents
   - [ ] GET /admin/documents?consultation_id={id}

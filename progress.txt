@@ -298,3 +298,653 @@ RESULT: PASS
 
 [2026-02-04 06:15:15] COMMAND: Set-Location d:\GitHub\TheRxSpot_Marketplace; Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 RESULT: PASS
+
+[2026-02-04 06:18:09] COMMAND: rg -n "api/(admin|store)/consultations" -S src || true
+RESULT: FAIL
+ERROR: 
+
+[2026-02-04 06:18:23] COMMAND: Get-ChildItem src/api -Recurse -Depth 3 | Select-Object FullName
+RESULT: PASS
+
+[2026-02-04 06:18:47] COMMAND: Get-Content src/api/store/consultations/route.ts -TotalCount 220
+RESULT: FAIL
+ERROR: import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { authenticate } from "@medusajs/framework"
+import { CONSULTATION_MODULE } from "../../../modules/consultation"
+
+/**
+ * GET /store/consultations
+ * List current customer's consultations
+ * Requires authentication
+ */
+export const GET = [
+  authenticate("customer", ["session", "bearer"]),
+  async (req: MedusaRequest, res: MedusaResponse) => {
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+
+    // Get customer ID from auth context
+    const customerId = (req as any).auth_context?.actor_id
+    if (!customerId) {
+      return res.status(401).json({ message: "Not authenticated" })
+    }
+
+    // Parse query parameters
+    const { status, limit = "20", offset = "0" } = req.query as Record<
+      string,
+      string | undefined
+    >
+
+    // Build filters
+    const filters: Record<string, any> = {
+      patient_id: customerId, // Assuming patient_id maps to customer_id
+    }
+
+    if (status) {
+      filters.status = status
+    }
+
+    // Pagination
+    const take = parseInt(limit, 10)
+    const skip = parseInt(offset, 10)
+
+    try {
+      // Get patient by customer_id first
+      const patients = await consultationService.listPatients(
+        { customer_id: customerId },
+        { take: 1 }
+      )
+
+      if (!patients[0].length) {
+        return res.json({ consultations: [], count: 0, limit: take, offset: skip })
+      }
+
+      const patientId = patients[0][0].id
+      filters.patient_id = patientId
+
+      const [consultations, count] = await consultationService.listConsultations(
+        filters,
+        {
+          skip,
+          take,
+          order: { created_at: "DESC" },
+        }
+      )
+
+      // Sanitize consultation data for patient view (remove sensitive fields)
+      const sanitizedConsultations = consultations.map((c) =>
+        sanitizeConsultationForPatient(c)
+      )
+
+      res.json({
+        consultations: sanitizedConsultations,
+        count,
+        limit: take,
+        offset: skip,
+      })
+    } catch (error) {
+      res.status(500).json({
+        message: "Failed to list consultations",
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    }
+  },
+]
+
+/**
+ * POST /store/consultations
+ * Create a new consultation from form submission
+ * Requires authentication
+ */
+export const POST = [
+  authenticate("customer", ["session", "bearer"]),
+  async (req: MedusaRequest, res: MedusaResponse) => {
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+    const body = (req.body ?? {}) as Record<string, any>
+
+    // Get customer ID from auth context
+    const customerId = (req as any).auth_context?.actor_id
+    if (!customerId) {
+      return res.status(401).json({ message: "Not authenticated" })
+    }
+
+    // Get business from tenant context
+    const business = (req as any).context?.business
+    if (!business) {
+      return res.status(400).json({ message: "Business context not found" })
+    }
+
+    try {
+      // Get or create patient record for this customer
+      let patient = await consultationService.getPatientByEmail(
+        business.id,
+        (req as any).auth_context?.actor_email || ""
+      )
+
+      if (!patient) {
+        // Create patient record from customer data
+        patient = await consultationService.createPatient({
+          business_id: business.id,
+          customer_id: customerId,
+          first_name: body.patient_first_name || "",
+          last_name: body.patient_last_name || "",
+          email: (req as any).auth_context?.actor_email || "",
+          phone: body.patient_phone || null,
+          date_of_birth: body.patient_date_of_birth
+            ? new Date(body.patient_date_of_birth)
+            : null,
+          gender: body.patient_gender || null,
+        })
+      }
+
+      // Create consultation
+      const consultation = await consultationService.createConsultation({
+        business_id: business.id,
+        patient_id: patient.id,
+        mode: body.mode || "async_form",
+        status: "draft",
+        chief_complaint: body.chief_complaint || null,
+        medical_history: body.medical_history || null,
+        originating_submission_id: body.submission_id || null,
+      })
+
+      res.status(201).json({
+        consultation: sanitizeConsultationForPatient(consultation),
+      })
+    } catch (error) {
+      res.status(400).json({
+        message: "Failed to create consultation",
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    }
+  },
+]
+
+/**
+ * Sanitize consultation data for patient view
+ * Remove internal fields that patients shouldn't see
+ */
+function sanitizeConsultationForPatient(consultation: any): any {
+  return {
+    id: consultation.id,
+    status: consultation.status,
+    mode: consultation.mode,
+    scheduled_at: consultation.scheduled_at,
+    started_at: consultation.started_at,
+    ended_at: consultation.ended_at,
+    duration_minutes: consultation.duration_minutes,
+    chief_complaint: consultation.chief_complaint,
+    outcome: consultation.outcome,
+    // Include limited clinician info
+    clinician_id: consultation.clinician_id,
+    // Exclude internal notes, full medical history, etc.
+    created_at: consultation.created_at,
+    updated_at: consultation.updated_at,
+  }
+}
+
+
+[2026-02-04 06:18:48] COMMAND: Get-Content src/api/admin/consultations/[id]/assign/route.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:18:49] COMMAND: Get-Content src/api/admin/consultations/[id]/status/route.ts -TotalCount 320
+RESULT: PASS
+
+[2026-02-04 06:19:09] COMMAND: Get-Content -LiteralPath src/api/admin/consultations/[id]/assign/route.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:19:10] COMMAND: Get-Content -LiteralPath src/api/admin/consultations/[id]/status/route.ts -TotalCount 340
+RESULT: PASS
+
+[2026-02-04 06:19:11] COMMAND: Get-Content -LiteralPath src/api/admin/consultations/[id]/complete/route.ts -TotalCount 340
+RESULT: PASS
+
+[2026-02-04 06:19:25] COMMAND: Get-Content src/api/middlewares/consult-gating.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:19:34] COMMAND: Get-Content src/api/middlewares/consult-gating.ts | Select-Object -Skip 240 -First 260
+RESULT: PASS
+
+[2026-02-04 06:19:49] COMMAND: rg -n "Consultation Approval Endpoint|consultations/approvals|approvals\?product_id" PLAN.txt
+RESULT: PASS
+
+[2026-02-04 06:19:56] COMMAND: Get-Content PLAN.txt | Select-Object -Skip 50 -First 40
+RESULT: PASS
+
+[2026-02-04 06:20:14] COMMAND: Get-Content src/modules/consultation/service.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:20:27] COMMAND: Get-Content src/modules/consultation/service.ts | Select-Object -Skip 260 -First 260
+RESULT: PASS
+
+[2026-02-04 06:20:43] COMMAND: Get-Content src/modules/consultation/models/consultation.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:21:04] COMMAND: Get-Content src/modules/consultation/models/consultation-status-event.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:21:16] COMMAND: Get-Content src/modules/compliance/models/audit-log.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:21:26] COMMAND: Get-Content src/api/middlewares/audit-logging.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:21:35] COMMAND: Get-Content src/api/middlewares/audit-logging.ts | Select-Object -Skip 260 -First 220
+RESULT: PASS
+
+[2026-02-04 06:21:52] COMMAND: Get-Content src/api/middlewares/tenant-resolution.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:21:53] COMMAND: Get-Content src/api/middlewares/tenant-isolation.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:22:08] COMMAND: rg -n "listConsultApprovals" -S src/modules/business
+RESULT: PASS (no matches)
+
+[2026-02-04 06:22:20] COMMAND: Get-ChildItem src/modules/business/models | Select-Object Name
+RESULT: PASS
+
+[2026-02-04 06:22:30] COMMAND: Get-Content src/modules/business/models/consult-approval.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:22:46] COMMAND: rg -n "consult_approval|ConsultApproval|createConsultApprovals|updateConsultApprovals|consultation_id" src/modules -S
+RESULT: PASS
+
+[2026-02-04 06:22:54] COMMAND: Get-Content src/modules/business/service.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:23:04] COMMAND: Get-Content src/modules/business/models/consult-submission.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:23:17] COMMAND: Get-ChildItem -Name
+RESULT: PASS
+
+[2026-02-04 06:23:29] COMMAND: Get-Content jest.integration.config.js -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:23:30] COMMAND: Get-ChildItem integration-tests -Recurse -File | Select-Object FullName
+RESULT: PASS
+
+[2026-02-04 06:23:40] COMMAND: Get-Content package.json -TotalCount 200
+RESULT: PASS
+
+[2026-02-04 06:23:53] COMMAND: Get-ChildItem src/tests/integration -File | Select-Object Name
+RESULT: PASS
+
+[2026-02-04 06:24:03] COMMAND: Get-Content src/tests/integration/consultation-lifecycle.test.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:24:14] COMMAND: Get-Content src/tests/integration/consultation-lifecycle.test.ts | Select-Object -Skip 260 -First 260
+RESULT: PASS
+
+[2026-02-04 06:24:25] COMMAND: Get-Content src/tests/integration/audit-logging.test.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:24:37] COMMAND: Get-Content jest.config.js -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:24:48] COMMAND: Get-Content integration-tests/setup.js -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:25:03] COMMAND: Get-Content integration-tests/http/tenant-isolation.spec.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:25:22] COMMAND: Get-Content src/api/admin/consultations/route.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:25:34] COMMAND: Get-Content src/api/admin/patients/route.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:25:42] COMMAND: Get-Content src/api/admin/clinicians/route.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:25:52] COMMAND: Get-Content integration-tests/http/provisioning.spec.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:26:05] COMMAND: Get-Content integration-tests/http/admin-tenant-scoping.spec.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:26:16] COMMAND: rg -n "authenticate\(\"customer\"|/store/.*(auth|login)|x-medusa|customer" integration-tests/http -S
+RESULT: FAIL
+ERROR: rg: regex parse error:\n    (?:authenticate\(\)\n    ^\nerror: unclosed group
+
+[2026-02-04 06:26:27] COMMAND: rg -n "store/auth|store/customers|authenticate\(\"customer\"" integration-tests/http -S
+RESULT: FAIL
+ERROR: rg: regex parse error:\n    (?:store/auth|store/customers|authenticate\(\)\n    ^\nerror: unclosed group
+RESULT: PASS (no matches)
+
+[2026-02-04 06:27:39] COMMAND: rg -n -F 'authenticate("customer"' integration-tests/http -S
+RESULT: PASS (no matches)
+
+[2026-02-04 06:27:56] COMMAND: rg -n "/auth/|auth/customer|customer/email|emailpass|bearer" integration-tests src/tests -S
+RESULT: PASS
+
+[2026-02-04 06:28:09] COMMAND: Get-Content src/tests/integration/consult-gating.test.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:28:38] COMMAND: Get-Content src/api/middlewares/tenant-admin-auth.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:28:59] COMMAND: Get-Content -LiteralPath src/api/admin/tenant/consultations/route.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:29:00] COMMAND: Get-Content -LiteralPath src/api/admin/tenant/consultations/[id]/route.ts -TotalCount 320
+RESULT: PASS
+
+[2026-02-04 06:29:32] COMMAND: rg -n "createConsultApprovals|ConsultApproval|consult_approval" src -S
+RESULT: PASS
+
+[2026-02-04 06:29:41] COMMAND: Get-Content subscribers/consultation-completed.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:29:50] COMMAND: Get-Content src/subscribers/consultation-completed.ts -TotalCount 240
+RESULT: PASS
+
+[2026-02-04 06:30:21] COMMAND: rg -n "eventBusService|emit\(|Events\." src -S
+RESULT: PASS
+
+[2026-02-04 06:30:31] COMMAND: Get-Content src/subscribers/order-status-changed.ts -TotalCount 120
+RESULT: PASS
+
+[2026-02-04 06:30:57] COMMAND: rg -n eventBus src -S
+RESULT: PASS
+
+[2026-02-04 06:31:05] COMMAND: Get-Content src/api/health/route.ts -TotalCount 120
+RESULT: PASS
+
+[2026-02-04 06:31:19] COMMAND: rg -n "\.emit\(" src -S
+RESULT: PASS (no matches)
+
+[2026-02-04 06:31:44] COMMAND: rg -n -F event_bus src -S
+RESULT: PASS
+
+[2026-02-04 06:31:56] COMMAND: node -e "const { Modules } = require('@medusajs/framework/utils'); console.log(Object.keys(Modules));"
+RESULT: PASS
+
+[2026-02-04 06:32:10] COMMAND: rg -n "Modules\.EVENT_BUS" src -S
+RESULT: PASS (no matches)
+
+[2026-02-04 06:32:24] COMMAND: Test-Path docs/API.md
+RESULT: PASS
+
+[2026-02-04 06:32:34] COMMAND: Get-ChildItem docs -Name
+RESULT: PASS
+
+[2026-02-04 06:33:01] COMMAND: rg -n "listAuditLogsByEntity|logAuditEvent\(|createAuditLog\(" src/modules/compliance/service.ts
+RESULT: PASS
+
+[2026-02-04 06:33:10] COMMAND: Get-Content src/modules/compliance/service.ts | Select-Object -Skip 480 -First 260
+RESULT: PASS
+
+[2026-02-04 06:33:27] COMMAND: rg -n "function createTestBusiness" -n src/tests/utils/factories.ts
+RESULT: PASS
+
+[2026-02-04 06:33:40] COMMAND: Get-Content src/tests/utils/factories.ts | Select-Object -Skip 1 -First 120
+RESULT: PASS
+
+[2026-02-04 06:33:56] COMMAND: rg -n "createTestConsultApproval" -n src/tests/utils/factories.ts
+RESULT: PASS
+
+[2026-02-04 06:34:08] COMMAND: Get-Content src/tests/utils/factories.ts | Select-Object -Skip 300 -First 80
+RESULT: PASS
+
+[2026-02-04 06:35:15] COMMAND: NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR: 'jest' is not recognized as an internal or external command,\noperable program or batch file.
+
+[2026-02-04 06:35:33] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR:       at medusaIntegrationTestRunner (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:372:10)\n      at Object.<anonymous> (src/tests/integration/consultation-apis.test.ts:61:40)\nSystem.Management.Automation.RemoteException\n  ? Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    TypeError: testSuite is not a function\nSystem.Management.Automation.RemoteException\n      59 |\n      60 |     it("returns has_valid_approval=false when approval is older than 90 days", async () => {\n    > 61 |       await medusaIntegrationTestRunner({\n         |                                        ^\n      62 |         test: async ({ api, container }) => {\n      63 |           const business = await createTestBusiness(container)\n      64 |           const customer = await createTestCustomer(container)\nSystem.Management.Automation.RemoteException\n      at node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:417:5\n      at medusaIntegrationTestRunner (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:372:10)\n      at Object.<anonymous> (src/tests/integration/consultation-apis.test.ts:61:40)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        6.547 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 06:36:01] COMMAND: Get-Content node_modules/@medusajs/test-utils/src/medusa-test-runner.ts | Select-Object -Skip 340 -First 120
+RESULT: PASS
+
+[2026-02-04 06:36:14] COMMAND: Get-ChildItem node_modules/@medusajs/test-utils -Recurse -File -Filter *test-runner* | Select-Object -First 10 FullName
+RESULT: PASS
+
+[2026-02-04 06:36:23] COMMAND: Get-Content node_modules/@medusajs/test-utils/dist/medusa-test-runner.d.ts -TotalCount 120
+RESULT: PASS
+
+[2026-02-04 06:37:26] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR: System.Management.Automation.RemoteException\n  ?  › Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string\nSystem.Management.Automation.RemoteException\n      at Object.continueSession (node_modules/pg/lib/crypto/sasl.js:36:11)\n      at Client._handleAuthSASLContinue (node_modules/pg/lib/client.js:316:18)\n      at node_modules/pg/lib/connection.js:115:12\n      at Parser.parse (node_modules/pg-protocol/src/parser.ts:106:9)\n      at Socket.<anonymous> (node_modules/pg-protocol/src/index.ts:7:48)\nSystem.Management.Automation.RemoteException\n  ?  › Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    TypeError: Cannot read properties of null (reading 'resolve')\nSystem.Management.Automation.RemoteException\n      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)\n      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)\n      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        7.367 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 06:37:53] COMMAND: Get-Content .env.test -TotalCount 80
+RESULT: PASS
+
+[2026-02-04 06:38:08] COMMAND: Get-Content medusa-config.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:38:23] COMMAND: Get-Content src/utils/env-validator.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:38:50] COMMAND: Get-Content .env.template -TotalCount 120
+RESULT: PASS
+
+[2026-02-04 06:39:17] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR: System.Management.Automation.RemoteException\n  ?  › Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    SASL: SCRAM-SERVER-FIRST-MESSAGE: client password must be a string\nSystem.Management.Automation.RemoteException\n      at Object.continueSession (node_modules/pg/lib/crypto/sasl.js:36:11)\n      at Client._handleAuthSASLContinue (node_modules/pg/lib/client.js:316:18)\n      at node_modules/pg/lib/connection.js:115:12\n      at Parser.parse (node_modules/pg-protocol/src/parser.ts:106:9)\n      at Socket.<anonymous> (node_modules/pg-protocol/src/index.ts:7:48)\nSystem.Management.Automation.RemoteException\n  ?  › Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    TypeError: Cannot read properties of null (reading 'resolve')\nSystem.Management.Automation.RemoteException\n      at waitWorkflowExecutions (node_modules/@medusajs/test-utils/src/medusa-test-runner-utils/wait-workflow-executions.ts:11:25)\n      at MedusaTestRunner.afterEach (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:302:35)\n      at Object.<anonymous> (node_modules/@medusajs/test-utils/src/medusa-test-runner.ts:385:20)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        7.157 s, estimated 8 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 06:39:45] COMMAND: rg -n "DATABASE_URL|client password|password" node_modules/@medusajs/test-utils/dist/medusa-test-runner.js
+RESULT: FAIL
+
+[2026-02-04 06:39:56] COMMAND: rg -n "DATABASE_URL" node_modules/@medusajs/test-utils/dist -S
+RESULT: PASS (no matches)
+
+[2026-02-04 06:40:15] COMMAND: node -e "const { loadEnv } = require('@medusajs/utils'); loadEnv('test', process.cwd()); console.log({ DATABASE_URL: process.env.DATABASE_URL, REDIS_URL: process.env.REDIS_URL, JWT_SECRET_LEN: (process.env.JWT_SECRET||'').length });"
+RESULT: PASS
+
+[2026-02-04 06:40:36] COMMAND: node -e "const { Client } = require('pg'); const c=new Client({ connectionString: process.env.DATABASE_URL || 'postgres://medusa:medusa@localhost:5432/postgres' }); c.connect().then(()=>c.query('select 1 as ok')).then(r=>{console.log(r.rows); return c.end();}).catch(e=>{console.error('PG_CONNECT_FAIL', e.message); process.exit(1);});" 
+RESULT: PASS
+
+[2026-02-04 06:40:51] COMMAND: rg -n "Creating database" node_modules/@medusajs/test-utils/dist/medusa-test-runner.js
+RESULT: PASS
+
+[2026-02-04 06:41:04] COMMAND: Get-Content node_modules/@medusajs/test-utils/dist/medusa-test-runner.js | Select-Object -Skip 40 -First 120
+RESULT: PASS
+
+[2026-02-04 06:41:18] COMMAND: rg -n "function initDb|initDb\(" node_modules/@medusajs/test-utils/dist -S
+RESULT: PASS
+
+[2026-02-04 06:41:28] COMMAND: Get-Content node_modules/@medusajs/test-utils/dist/medusa-test-runner-utils/use-db.js -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:41:41] COMMAND: rg -n "function configLoaderOverride|configLoaderOverride" node_modules/@medusajs/test-utils/dist/medusa-test-runner-utils -S
+RESULT: PASS
+
+[2026-02-04 06:41:51] COMMAND: Get-Content node_modules/@medusajs/test-utils/dist/medusa-test-runner-utils/config.js -TotalCount 200
+RESULT: PASS
+
+[2026-02-04 06:42:06] COMMAND: rg -n "clientUrl" node_modules/@medusajs/test-utils/dist/medusa-test-runner.js
+RESULT: PASS
+
+[2026-02-04 06:42:17] COMMAND: Get-Content node_modules/@medusajs/test-utils/dist/medusa-test-runner.js | Select-Object -Skip 1 -First 60
+RESULT: PASS
+
+[2026-02-04 06:42:29] COMMAND: Get-Content node_modules/@medusajs/test-utils/dist/database.js -TotalCount 200
+RESULT: PASS
+
+[2026-02-04 06:43:04] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR:   ?  › Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    AwilixResolutionError: Could not resolve 'business'.\nSystem.Management.Automation.RemoteException\n    Resolution path: business\nSystem.Management.Automation.RemoteException\n      68 |     \n      69 |     // Custom modules\n    > 70 |     business: container.resolve(BUSINESS_MODULE),\n         |                         ^\n      71 |     compliance: container.resolve(COMPLIANCE_MODULE),\n      72 |     consultation: container.resolve(CONSULTATION_MODULE),\n      73 |     financials: container.resolve(FINANCIALS_MODULE),\nSystem.Management.Automation.RemoteException\n      at Object.resolve (node_modules/awilix/src/container.ts:497:15)\n      at resolve (src/tests/utils/test-server.ts:70:25)\n      at createTestBusiness (src/tests/utils/factories.ts:32:35)\n      at Object.<anonymous> (src/tests/integration/consultation-apis.test.ts:61:52)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        29.853 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 06:43:59] COMMAND: Get-Content src/tests/utils/test-server.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:44:18] COMMAND: Get-Content src/modules/business/index.ts -TotalCount 80
+RESULT: PASS
+
+[2026-02-04 06:45:19] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR:       at PostgreSqlDriver.nativeInsertMany (node_modules/@mikro-orm/knex/AbstractSqlDriver.js:470:21)\n      at ChangeSetPersister.persistNewEntity (node_modules/@mikro-orm/core/unit-of-work/ChangeSetPersister.js:97:21)\n      at ChangeSetPersister.executeInserts (node_modules/@mikro-orm/core/unit-of-work/ChangeSetPersister.js:40:13)\n      at ChangeSetPersister.runForEachSchema (node_modules/@mikro-orm/core/unit-of-work/ChangeSetPersister.js:80:13)\n      at UnitOfWork.commitCreateChangeSets (node_modules/@mikro-orm/core/unit-of-work/UnitOfWork.js:791:9)\n      at UnitOfWork.persistToDatabase (node_modules/@mikro-orm/core/unit-of-work/UnitOfWork.js:758:13)\n      at UnitOfWork.doCommit (node_modules/@mikro-orm/core/unit-of-work/UnitOfWork.js:320:17)\n      at UnitOfWork.commit (node_modules/@mikro-orm/core/unit-of-work/UnitOfWork.js:287:13)\n      at SqlEntityManager.flush (node_modules/@mikro-orm/core/EntityManager.js:1339:9)\n      at fork.getConnection.transactional (node_modules/@mikro-orm/core/EntityManager.js:981:17)\n      at PostgreSqlConnection.transactional (node_modules/@mikro-orm/knex/AbstractSqlConnection.js:58:25)\n      at transactionWrapper (node_modules/@medusajs/utils/src/dal/utils.ts:30:10)\n      at MikroOrmAbstractBaseRepository_.transaction (node_modules/@medusajs/utils/src/dal/mikro-orm/mikro-orm-repository.ts:70:12)\n      at AbstractService_.descriptor.value (node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-transaction-manager.ts:31:14)\n      at BusinessModuleService.methodImplementation (node_modules/@medusajs/utils/src/modules-sdk/medusa-service.ts:194:27)\n      at BusinessModuleService.descriptor.value (node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-into-context.ts:27:14)\n      at BusinessModuleService.descriptor.value (node_modules/@medusajs/utils/src/modules-sdk/decorators/emit-events.ts:26:22)\n      at createTestBusiness (src/tests/utils/factories.ts:38:10)\n      at Object.<anonymous> (src/tests/integration/consultation-apis.test.ts:61:28)\n      at parseErrorMessage (node_modules/pg-protocol/src/parser.ts:394:9)\n      at Parser.handlePacket (node_modules/pg-protocol/src/parser.ts:212:19)\n      at Parser.parse (node_modules/pg-protocol/src/parser.ts:105:30)\n      at Socket.<anonymous> (node_modules/pg-protocol/src/index.ts:7:48)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        28.899 s, estimated 30 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 06:46:24] COMMAND: Get-Content src/modules/business/migrations/Migration20250203000003.ts -TotalCount 200
+RESULT: PASS
+
+[2026-02-04 06:46:40] COMMAND: Get-Content src/modules/business/models/business.ts -TotalCount 240
+RESULT: PASS
+
+[2026-02-04 06:47:08] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations -c "SELECT to_regclass('public.business') as business;"
+RESULT: PASS
+
+[2026-02-04 06:47:33] COMMAND: docker compose exec -T postgres psql -U medusa -d medusa_clean_migrations -c "SELECT to_regclass('public.consult_approval') as consult_approval, to_regclass('public.consult_submission') as consult_submission, to_regclass('public.business_user') as business_user;"
+RESULT: PASS
+
+[2026-02-04 06:48:31] COMMAND: Get-Content src/modules/business/models/location.ts -TotalCount 200
+RESULT: PASS
+
+[2026-02-04 06:48:56] COMMAND: Get-Content src/modules/business/models/product-category.ts -TotalCount 200
+RESULT: PASS
+
+[2026-02-04 06:49:09] COMMAND: Get-Content src/modules/business/models/business-domain.ts -TotalCount 200
+RESULT: PASS
+
+[2026-02-04 06:49:21] COMMAND: Get-Content src/modules/business/models/business-user.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 06:49:40] COMMAND: Get-Content src/modules/consultation/models/clinician.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:49:53] COMMAND: Get-Content src/modules/consultation/models/patient.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 06:51:04] COMMAND: rg -n "createTestClinician\(" src/tests/utils/factories.ts
+RESULT: PASS
+
+[2026-02-04 06:51:18] COMMAND: Get-Content src/tests/utils/factories.ts | Select-Object -Skip 120 -First 120
+RESULT: PASS
+
+[2026-02-04 06:52:28] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR: System.Management.Automation.RemoteException\n      108 |   const title = overrides.title || `Test Product ${id}`\n      109 |   \n    > 110 |   return await product.createProducts({\n          |          ^\n      111 |     id,\n      112 |     title,\n      113 |     handle: overrides.handle || `test-product-${id}`,\nSystem.Management.Automation.RemoteException\n      at ProductModuleService.validateProductPayload (node_modules/@medusajs/product/src/services/product-module-service.ts:1886:13)\n      at ProductModuleService.validateProductCreatePayload (node_modules/@medusajs/product/src/services/product-module-service.ts:1896:10)\n      at ProductModuleService.createProducts_ (node_modules/@medusajs/product/src/services/product-module-service.ts:1645:12)\n      at transaction.manager (node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-transaction-manager.ts:59:18)\n      at fork.getConnection.transactional (node_modules/@mikro-orm/core/EntityManager.js:980:29)\n      at PostgreSqlConnection.transactional (node_modules/@mikro-orm/knex/AbstractSqlConnection.js:58:25)\n      at transactionWrapper (node_modules/@medusajs/utils/src/dal/utils.ts:30:10)\n      at MikroOrmBaseRepository.transaction (node_modules/@medusajs/utils/src/dal/mikro-orm/mikro-orm-repository.ts:70:12)\n      at ProductModuleService.descriptor.value (node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-transaction-manager.ts:31:14)\n      at ProductModuleService.createProducts (node_modules/@medusajs/product/src/services/product-module-service.ts:1535:22)\n      at ProductModuleService.descriptor.value (node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-into-context.ts:27:14)\n      at ProductModuleService.descriptor.value (node_modules/@medusajs/utils/src/modules-sdk/decorators/emit-events.ts:26:22)\n      at createTestProduct (src/tests/utils/factories.ts:110:10)\n      at Object.<anonymous> (src/tests/integration/consultation-apis.test.ts:63:27)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        29.534 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 06:53:52] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR:          |                              ^\n      52 |           expect(res.data).toMatchObject({\n      53 |             has_valid_approval: true,\n      54 |             consultation_id: "consult_test_001",\nSystem.Management.Automation.RemoteException\n      at Object.toBe (src/tests/integration/consultation-apis.test.ts:51:30)\nSystem.Management.Automation.RemoteException\n  ?  › Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    expect(received).toBe(expected) // Object.is equality\nSystem.Management.Automation.RemoteException\n    Expected: 200\n    Received: 400\nSystem.Management.Automation.RemoteException\n      83 |             .catch((e: any) => e.response)\n      84 |\n    > 85 |           expect(res.status).toBe(200)\n         |                              ^\n      86 |           expect(res.data).toMatchObject({\n      87 |             has_valid_approval: false,\n      88 |             consultation_id: null,\nSystem.Management.Automation.RemoteException\n      at Object.toBe (src/tests/integration/consultation-apis.test.ts:85:30)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        30.056 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 06:55:13] COMMAND: rg -n "class .*ApiKey|createApiKeys|createPublishableApiKey" node_modules/@medusajs/api-key -S
+RESULT: PASS
+
+[2026-02-04 06:55:26] COMMAND: Get-Content node_modules/@medusajs/api-key/dist/services/api-key-module-service.d.ts -TotalCount 80
+RESULT: PASS
+
+[2026-02-04 06:55:46] COMMAND: rg -n "export interface ApiKeyDTO" node_modules/@medusajs/api-key/dist -S
+RESULT: FAIL
+
+[2026-02-04 06:56:08] COMMAND: Get-Content node_modules/@medusajs/api-key/dist/services/api-key-module-service.js | Select-Object -Skip 40 -First 120
+RESULT: PASS
+
+[2026-02-04 06:56:50] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR: System.Management.Automation.RemoteException\n      at Function.propertyRequired (node_modules/@mikro-orm/core/errors.js:69:16)\n      at EntityValidator.validateRequired (node_modules/@mikro-orm/core/entity/EntityValidator.js:53:48)\n      at ChangeSetPersister.processProperties (node_modules/@mikro-orm/core/unit-of-work/ChangeSetPersister.js:89:28)\n      at node_modules/@mikro-orm/core/unit-of-work/ChangeSetPersister.js:35:46\n          at Array.forEach (<anonymous>)\n      at ChangeSetPersister.executeInserts (node_modules/@mikro-orm/core/unit-of-work/ChangeSetPersister.js:35:20)\n      at ChangeSetPersister.runForEachSchema (node_modules/@mikro-orm/core/unit-of-work/ChangeSetPersister.js:80:31)\n      at ChangeSetPersister.executeInserts (node_modules/@mikro-orm/core/unit-of-work/ChangeSetPersister.js:32:25)\n      at UnitOfWork.commitCreateChangeSets (node_modules/@mikro-orm/core/unit-of-work/UnitOfWork.js:791:39)\n      at UnitOfWork.persistToDatabase (node_modules/@mikro-orm/core/unit-of-work/UnitOfWork.js:758:13)\n      at UnitOfWork.doCommit (node_modules/@mikro-orm/core/unit-of-work/UnitOfWork.js:320:17)\n      at UnitOfWork.commit (node_modules/@mikro-orm/core/unit-of-work/UnitOfWork.js:287:13)\n      at SqlEntityManager.flush (node_modules/@mikro-orm/core/EntityManager.js:1339:9)\n      at fork.getConnection.transactional (node_modules/@mikro-orm/core/EntityManager.js:981:17)\n      at PostgreSqlConnection.transactional (node_modules/@mikro-orm/knex/AbstractSqlConnection.js:58:25)\n      at transactionWrapper (node_modules/@medusajs/utils/src/dal/utils.ts:30:10)\n      at MikroOrmBaseRepository.transaction (node_modules/@medusajs/utils/src/dal/mikro-orm/mikro-orm-repository.ts:70:12)\n      at ApiKeyModuleService.descriptor.value (node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-transaction-manager.ts:31:14)\n      at ApiKeyModuleService.createApiKeys (node_modules/@medusajs/api-key/src/services/api-key-module-service.ts:130:47)\n      at ApiKeyModuleService.descriptor.value (node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-into-context.ts:27:14)\n      at ApiKeyModuleService.descriptor.value (node_modules/@medusajs/utils/src/modules-sdk/decorators/emit-events.ts:26:22)\n      at Object.<anonymous> (src/tests/integration/consultation-apis.test.ts:30:21)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        25.745 s, estimated 30 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 06:58:11] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR:          |                              ^\n      68 |           expect(res.data).toMatchObject({\n      69 |             has_valid_approval: true,\n      70 |             consultation_id: "consult_test_001",\nSystem.Management.Automation.RemoteException\n      at Object.toBe (src/tests/integration/consultation-apis.test.ts:67:30)\nSystem.Management.Automation.RemoteException\n  ?  › Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    expect(received).toBe(expected) // Object.is equality\nSystem.Management.Automation.RemoteException\n    Expected: 200\n    Received: 400\nSystem.Management.Automation.RemoteException\n      100 |             .catch((e: any) => e.response)\n      101 |\n    > 102 |           expect(res.status).toBe(200)\n          |                              ^\n      103 |           expect(res.data).toMatchObject({\n      104 |             has_valid_approval: false,\n      105 |             consultation_id: null,\nSystem.Management.Automation.RemoteException\n      at Object.toBe (src/tests/integration/consultation-apis.test.ts:102:30)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        29.743 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 06:59:29] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR:          |                              ^\n      68 |           expect(res.data).toMatchObject({\n      69 |             has_valid_approval: true,\n      70 |             consultation_id: "consult_test_001",\nSystem.Management.Automation.RemoteException\n      at Object.toBe (src/tests/integration/consultation-apis.test.ts:67:30)\nSystem.Management.Automation.RemoteException\n  ?  › Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    expect(received).toBe(expected) // Object.is equality\nSystem.Management.Automation.RemoteException\n    Expected: 200\n    Received: 404\nSystem.Management.Automation.RemoteException\n      100 |             .catch((e: any) => e.response)\n      101 |\n    > 102 |           expect(res.status).toBe(200)\n          |                              ^\n      103 |           expect(res.data).toMatchObject({\n      104 |             has_valid_approval: false,\n      105 |             consultation_id: null,\nSystem.Management.Automation.RemoteException\n      at Object.toBe (src/tests/integration/consultation-apis.test.ts:102:30)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        29.657 s, estimated 30 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 07:00:36] COMMAND: Get-Content src/api/middlewares.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 07:01:00] COMMAND: rg -n "No middleware configuration found" node_modules/@medusajs -S
+RESULT: PASS
+
+[2026-02-04 07:01:17] COMMAND: Get-Content node_modules/@medusajs/framework/dist/http/middleware-file-loader.js | Select-Object -Skip 80 -First 80
+RESULT: PASS
+
+[2026-02-04 07:01:41] COMMAND: rg -n "function defineMiddlewares|defineMiddlewares\(" node_modules/@medusajs/framework -S
+RESULT: PASS
+
+[2026-02-04 07:01:57] COMMAND: Get-Content node_modules/@medusajs/framework/dist/http/utils/define-middlewares.d.ts -TotalCount 80
+RESULT: PASS
+
+[2026-02-04 07:03:10] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR:          |                              ^\n      68 |           expect(res.data).toMatchObject({\n      69 |             has_valid_approval: true,\n      70 |             consultation_id: "consult_test_001",\nSystem.Management.Automation.RemoteException\n      at Object.toBe (src/tests/integration/consultation-apis.test.ts:67:30)\nSystem.Management.Automation.RemoteException\n  ?  › Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    expect(received).toBe(expected) // Object.is equality\nSystem.Management.Automation.RemoteException\n    Expected: 200\n    Received: 400\nSystem.Management.Automation.RemoteException\n      100 |             .catch((e: any) => e.response)\n      101 |\n    > 102 |           expect(res.status).toBe(200)\n          |                              ^\n      103 |           expect(res.data).toMatchObject({\n      104 |             has_valid_approval: false,\n      105 |             consultation_id: null,\nSystem.Management.Automation.RemoteException\n      at Object.toBe (src/tests/integration/consultation-apis.test.ts:102:30)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        29.699 s, estimated 30 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 07:05:06] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR:          |                              ^\n      68 |           expect(res.data).toMatchObject({\n      69 |             has_valid_approval: true,\n      70 |             consultation_id: "consult_test_001",\nSystem.Management.Automation.RemoteException\n      at Object.toBe (src/tests/integration/consultation-apis.test.ts:67:30)\nSystem.Management.Automation.RemoteException\n  ?  › Consultation APIs › GET /store/consultations/approvals › returns has_valid_approval=false when approval is older than 90 days\nSystem.Management.Automation.RemoteException\n    expect(received).toBe(expected) // Object.is equality\nSystem.Management.Automation.RemoteException\n    Expected: 200\n    Received: 404\nSystem.Management.Automation.RemoteException\n      100 |             .catch((e: any) => e.response)\n      101 |\n    > 102 |           expect(res.status).toBe(200)\n          |                              ^\n      103 |           expect(res.data).toMatchObject({\n      104 |             has_valid_approval: false,\n      105 |             consultation_id: null,\nSystem.Management.Automation.RemoteException\n      at Object.toBe (src/tests/integration/consultation-apis.test.ts:102:30)\nSystem.Management.Automation.RemoteException\nTest Suites: 1 failed, 1 total\nTests:       2 failed, 2 total\nSnapshots:   0 total\nTime:        29.023 s, estimated 30 s\nRan all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.\nForce exiting Jest: Have you considered using `--detectOpenHandles` to detect async operations that kept running after all tests finished?
+
+[2026-02-04 07:06:14] COMMAND: Get-ChildItem src/api/store/consultations -Recurse -File | Select-Object FullName
+RESULT: PASS
+
+[2026-02-04 07:06:54] COMMAND: Get-Content src/api/README.md -TotalCount 200
+RESULT: PASS
+
+[2026-02-04 07:07:23] COMMAND: Get-Content -LiteralPath src/api/store/consultations/[id]/route.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 07:10:02] COMMAND: cd /d d:\GitHub\TheRxSpot_Marketplace && ls
+RESULT: FAIL
+ERROR: The token '&&' is not a valid statement separator in this version.
+
+[2026-02-04 07:10:08] COMMAND: cd d:\GitHub\TheRxSpot_Marketplace; Get-ChildItem
+RESULT: PASS
+
+[2026-02-04 07:10:22] COMMAND: cd d:\GitHub\TheRxSpot_Marketplace; Get-Content progress.txt -Tail 40
+RESULT: PASS
+
+[2026-02-04 07:10:43] COMMAND: cd d:\GitHub\TheRxSpot_Marketplace; rg -n "consultations/approvals|/admin/consultations/\\{id\\}/assign|/admin/consultations/\\{id\\}/status|Consultation" PLAN.txt
+RESULT: PASS
+
+[2026-02-04 07:10:53] COMMAND: cd d:\GitHub\TheRxSpot_Marketplace; (Get-Content PLAN.txt | Select-Object -Skip 50 -First 40) -join "`n"
+RESULT: PASS
+
+[2026-02-04 07:11:02] COMMAND: cd d:\GitHub\TheRxSpot_Marketplace; git status --porcelain=v1
+RESULT: PASS
+
+[2026-02-04 07:11:20] COMMAND: $env:NODE_OPTIONS=--experimental-vm-modules; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR: Expected: 200 / Received: 404 (GET /store/consultations/approvals)
+
+[2026-02-04 07:12:00] COMMAND: Get-Content -LiteralPath src/api/store/consultations/[id]/route.ts -TotalCount 260
+RESULT: PASS
+
+[2026-02-04 07:12:10] COMMAND: Get-Content -LiteralPath src/api/store/consultations/approvals/route.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 07:12:22] COMMAND: rg -n "context\\.business" src/api -S
+RESULT: PASS
+
+[2026-02-04 07:12:35] COMMAND: Get-Content -LiteralPath src/tests/integration/consultation-apis.test.ts -TotalCount 220
+RESULT: PASS
+
+[2026-02-04 07:12:49] COMMAND: Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+RESULT: PASS
+[2026-02-04 08:31:11] COMMAND: cd d:\GitHub\TheRxSpot_Marketplace; ls
+RESULT: PASS
+
+[2026-02-04 08:31:11] COMMAND: python -c "from pathlib import Path; t=Path('PLAN.txt').read_text(encoding='utf-8', errors='replace'); print('PLAN chars:', len(t)); print('PLAN head:', t[:800])"
+RESULT: FAIL
+ERROR: UnicodeEncodeError: 'charmap' codec can't encode character (console encoding)
+
+[2026-02-04 08:31:11] COMMAND: python -c "from pathlib import Path; t=Path('PLAN.txt').read_text(encoding='utf-8', errors='replace'); head=t[:800].encode('ascii','backslashreplace').decode('ascii'); print('PLAN chars:', len(t)); print('PLAN head:', head)"
+RESULT: PASS
+
+[2026-02-04 08:31:11] COMMAND: rg -n "consultations/approvals|/admin/consultations/\{id\}/assign|/admin/consultations/\{id\}/status|pending\\s*\\u2192\\s*scheduled|state machine" PLAN.txt
+RESULT: PASS
+
+[2026-02-04 08:31:11] COMMAND: Get-Content -Encoding utf8 PLAN.txt | Select-Object -Index (50..90)
+RESULT: PASS
+
+[2026-02-04 08:31:11] COMMAND: git status --porcelain=v1
+RESULT: PASS
+
+[2026-02-04 08:31:11] COMMAND: ='--experimental-vm-modules'; npx jest src/tests/integration/consultation-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: PASS
+DETAIL: 1 suite, 5 tests passed
+
+[2026-02-04 08:31:11] NOTE: Added integration tests: src/tests/integration/consultation-apis.test.ts
+
+[2026-02-04 08:31:11] CURL SNIPPETS:
+# GET /store/consultations/approvals?product_id={id}
+curl -sS -X GET "http://localhost:9000/store/consultations/approvals?product_id=prod_123" -H "x-publishable-api-key: pk_..." -H "x-business-slug: acme" -H "Authorization: Bearer <customer_jwt>"
+
+# POST /admin/consultations/{id}/assign
+curl -sS -X POST "http://localhost:9000/admin/consultations/consult_123/assign" -H "Content-Type: application/json" -H "Authorization: Bearer <admin_user_jwt>" -d '{ "clinician_id": "clin_123" }'
+
+# POST /admin/consultations/{id}/status
+curl -sS -X POST "http://localhost:9000/admin/consultations/consult_123/status" -H "Content-Type: application/json" -H "Authorization: Bearer <admin_user_jwt>" -d '{ "status": "completed" }'
