@@ -16558,3 +16558,197 @@ OUTPUT:
 ?? src/types/
 
 
+[2026-02-04T15:14:38] CMD: git add progress.txt
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add progress.txt
++ ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+
+[2026-02-04T15:14:45] CMD: git commit -m "Update progress with consultations validation + passing integration test (node --experimental-vm-modules .\\node_modules\\jest\\bin\\jest.js --config=jest.integration.config.js src/tests/integration/consultations-management.test.ts)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 656c42b] Update progress with consultations validation + passing integration test (node --experimental-vm-modules .\\node_modules\\jest\\bin\\jest.js --config=jest.integration.config.js src/tests/integration/consultations-management.test.ts)
+ 1 file changed, 317 insertions(+)
+
+
+[2026-02-04T15:15:10] CMD: ls src/tests/integration
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\tests\integration
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          2/3/2026   6:30 PM          22326 audit-logging.test.ts                                                
+-a----          2/3/2026   6:25 PM          14503 consult-gating.test.ts                                               
+-a----          2/4/2026   8:32 AM          14723 consultation-apis.test.ts                                            
+-a----          2/4/2026   5:40 AM          18339 consultation-lifecycle.test.ts                                       
+-a----          2/4/2026   1:52 PM          13296 consultations-management.test.ts                                     
+-a----          2/4/2026  12:07 PM           4629 dashboard-home.test.ts                                               
+-a----          2/4/2026   8:59 AM          10316 document-admin-apis.test.ts                                          
+-a----          2/3/2026   6:29 PM          22556 documents.test.ts                                                    
+-a----          2/3/2026   6:27 PM          26233 earnings.test.ts                                                     
+-a----          2/4/2026   9:33 AM           8258 financial-apis.test.ts                                               
+-a----          2/4/2026   5:40 AM          13712 order-workflow.test.ts                                               
+-a----          2/3/2026   6:32 PM          10376 rate-limiting.test.ts                                                
+-a----          2/4/2026  11:25 AM           9341 soft-delete-restore.test.ts                                          
+-a----          2/4/2026   1:06 PM          12935 users-management.test.ts                                             
+
+
+
+
+[2026-02-04T15:15:20] CMD: node --experimental-vm-modules .\node_modules\jest\bin\jest.js --config=jest.integration.config.js src/tests/integration/document-admin-apis.test.ts --runInBand --silent=false
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:10300) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules .\node_modules\jest\bin\jest.js --conf ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:10300) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.warn
+    [Virus Scanner] ClamAV not available, falling back to file-type validation. For production, install ClamAV and set CLAMAV_HOST/CLAMAV_PORT environment variables.
+
+      162 |   } catch (error) {
+      163 |     clamscanAvailable = false
+    > 164 |     console.warn(
+          |             ^
+      165 |       "[Virus Scanner] ClamAV not available, falling back to file-type validation. " +
+      166 |       "For production, install ClamAV and set CLAMAV_HOST/CLAMAV_PORT environment variables."
+      167 |     )
+
+      at warn (src/api/middlewares/document-upload.ts:164:13)
+      at scanFileForViruses (src/api/middlewares/document-upload.ts:242:5)
+      at virusScanMiddleware (src/api/middlewares/document-upload.ts:313:26)
+      at src/api/admin/consultations/[id]/documents/route.ts:113:5
+
+  console.warn
+    [HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.
+
+      108 |     if (query.patient_id || query.consultation_id) {
+      109 |       // Log security warning
+    > 110 |       console.warn("[HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.")
+          |               ^
+      111 |       
+      112 |       // Log audit event for potential security issue
+      113 |       try {
+
+      at warn (src/api/admin/documents/route.ts:110:15)
+      at GET (node_modules/@medusajs/framework/src/http/utils/wrap-handler.ts:27:14)
+
+  console.warn
+    [HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.
+
+      108 |     if (query.patient_id || query.consultation_id) {
+      109 |       // Log security warning
+    > 110 |       console.warn("[HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.")
+          |               ^
+      111 |       
+      112 |       // Log audit event for potential security issue
+      113 |       try {
+
+      at warn (src/api/admin/documents/route.ts:110:15)
+      at GET (node_modules/@medusajs/framework/src/http/utils/wrap-handler.ts:27:14)
+
+  console.warn
+    [HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.
+
+      108 |     if (query.patient_id || query.consultation_id) {
+      109 |       // Log security warning
+    > 110 |       console.warn("[HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.")
+          |               ^
+      111 |       
+      112 |       // Log audit event for potential security issue
+      113 |       try {
+
+      at warn (src/api/admin/documents/route.ts:110:15)
+      at GET (node_modules/@medusajs/framework/src/http/utils/wrap-handler.ts:27:14)
+
+  console.log
+    ? Test suite completed
+...(truncated)
+
+[2026-02-04T15:16:18] CMD: node --experimental-vm-modules .\node_modules\jest\bin\jest.js --config=jest.integration.config.js src/tests/integration/consultation-apis.test.ts --runInBand --silent=false
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:6768) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules .\node_modules\jest\bin\jest.js --conf ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:6768) Exp...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+PASS src/tests/integration/consultation-apis.test.ts (57.308 s)
+    Consultation APIs
+      GET /store/consultations/approvals
+        v returns has_valid_approval=true for an approved consult within 90 days (2916 ms)
+        v returns has_valid_approval=false when approval is older than 90 days (6670 ms)
+      POST /admin/consultations/:id/assign
+        v assigns clinician and writes an audit log (8466 ms)
+      POST /admin/consultations/:id/status
+        v enforces pending ? scheduled ? completed ? approved and updates consult approval (6900 ms)
+        v reject requires reason and invalid transitions are blocked (6716 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        57.459 s
+Ran all test suites matching /src\\tests\\integration\\consultation-apis.test.ts/i.
+
+
+[2026-02-04T15:17:31] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M progress.txt
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
