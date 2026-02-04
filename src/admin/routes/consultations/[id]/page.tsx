@@ -779,19 +779,20 @@ const ConsultationDetailPage = () => {
                     <Table.Row>
                       <Table.HeaderCell>File</Table.HeaderCell>
                       <Table.HeaderCell>Type</Table.HeaderCell>
+                      <Table.HeaderCell>Uploaded by</Table.HeaderCell>
                       <Table.HeaderCell>Size</Table.HeaderCell>
                     </Table.Row>
                   </Table.Header>
                   <Table.Body>
                     {docsLoading ? (
                       <Table.Row>
-                        <Table.Cell colSpan={3}>
+                        <Table.Cell colSpan={4}>
                           <div className="text-sm text-ui-fg-subtle">Loading…</div>
                         </Table.Cell>
                       </Table.Row>
                     ) : documents.length === 0 ? (
                       <Table.Row>
-                        <Table.Cell colSpan={3}>
+                        <Table.Cell colSpan={4}>
                           <div className="text-sm text-ui-fg-subtle">No documents uploaded.</div>
                         </Table.Cell>
                       </Table.Row>
@@ -813,6 +814,9 @@ const ConsultationDetailPage = () => {
                           <Table.Cell>
                             <div className="text-sm">{d.type}</div>
                             <div className="text-[11px] text-ui-fg-subtle truncate">{d.access_level}</div>
+                          </Table.Cell>
+                          <Table.Cell>
+                            <div className="text-sm">{d.uploaded_by ? String(d.uploaded_by) : "—"}</div>
                           </Table.Cell>
                           <Table.Cell>
                             <div className="text-sm">{formatBytes(d.file_size)}</div>

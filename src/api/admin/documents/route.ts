@@ -212,6 +212,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       patient_id: doc.patient_id,
       consultation_id: doc.consultation_id,
       order_id: doc.order_id,
+      uploaded_by: doc.uploaded_by,
       type: doc.type,
       title: doc.title,
       description: doc.description,

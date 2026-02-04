@@ -16040,3 +16040,145 @@ OUTPUT:
 ?? src/types/
 
 
+[2026-02-04T15:03:51] CMD: git add src/admin/routes/consultations progress.txt
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add src/admin/routes/consultations progress.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/admin/routes/consultations/[id]/page.tsx', LF will be replaced by CRLF the next 
+time Git touches it
+warning: in the working copy of 'src/admin/routes/consultations/page.tsx', LF will be replaced by CRLF the next time 
+Git touches it
+
+
+[2026-02-04T15:03:59] CMD: git commit -m "Implement admin consultations list + detail pages (npm run build)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 8d230c8] Implement admin consultations list + detail pages (npm run build)
+ 3 files changed, 4151 insertions(+)
+ create mode 100644 src/admin/routes/consultations/[id]/page.tsx
+ create mode 100644 src/admin/routes/consultations/page.tsx
+
+
+[2026-02-04T15:04:13] CMD: rg -n "rejected" src/admin/routes/consultations/page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+20:type PlanStatus = "pending" | "scheduled" | "completed" | "approved" | "rejected"
+572:                          updateStatus(r.id, "rejected", reason.trim())
+615:                  {(["pending", "scheduled", "completed", "approved", "rejected"] as PlanStatus[]).map((s) => {
+
+
+[2026-02-04T15:04:19] CMD: powershell -NoProfile -Command "Get-Content src/admin/routes/consultations/page.tsx | Select-Object -Skip 540 -First 60"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="secondary"
+                        onClick={async () => {
+                          setSelected(new Set([r.id]))
+                          setAssignOpen(true)
+                          setAssignClinicianId("")
+                          await loadClinicians(r.business_id)
+                        }}
+                      >
+                        Assign
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="secondary"
+                        disabled={!canApprove}
+                        onClick={() => updateStatus(r.id, "approved")}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="danger"
+                        disabled={!canReject}
+                        onClick={() => {
+                          const reason = window.prompt("Rejection reason (required):") || ""
+                          if (!reason.trim()) {
+                            toast.error("Rejection reason is required")
+                            return
+                          }
+                          updateStatus(r.id, "rejected", reason.trim())
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              )
+            })
+          )}
+        </Table.Body>
+      </Table>
+
+      <div className="flex items-center justify-between mt-4">
+        <div className="text-xs text-ui-fg-subtle">
+          Page {page + 1} / {totalPages}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" disabled={page <= 0} onClick={() => setPage((p) => Math.max(0, p - 1))}>
+            Previous
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={page + 1 >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+          >
+            Next
+          </Button>
+
+
+[2026-02-04T15:05:06] CMD: npm run build
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 build
+> medusa build
+
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from D:\GitHub\TheRxSpot_Marketplace\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa\server" folder
+[32minfo[39m:    Compiling frontend source...
+[32minfo[39m:    Backend build completed successfully (10.64s)
+[32minfo[39m:    Frontend build completed successfully (39.56s)
+
+
+[2026-02-04T15:06:04] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M progress.txt
+ M src/admin/routes/consultations/[id]/page.tsx
+ M src/api/admin/documents/route.ts
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
