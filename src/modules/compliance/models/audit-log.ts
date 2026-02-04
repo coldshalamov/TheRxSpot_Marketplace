@@ -17,5 +17,4 @@ export const AuditLog = model.define("audit_log", {
   metadata: model.json().nullable(),
   risk_level: model.enum(["low", "medium", "high", "critical"]).default("low"),
   flagged: model.boolean().default(false),
-  created_at: model.dateTime(),
 })

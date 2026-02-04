@@ -1,6 +1,6 @@
 import { model } from "@medusajs/framework/utils"
 
-export const ProductCategory = model.define("product_category", {
+export const ProductCategory = model.define("business_product_category", {
   id: model.id().primaryKey(),
   name: model.text(),
   description: model.text().nullable(),
