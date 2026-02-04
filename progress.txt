@@ -32042,3 +32042,770 @@ OUTPUT:
 ?? src/types/
 
 
+[2026-02-04T17:50:49] CMD: git add -A progress.txt src/api/middlewares/rate-limiter.ts src/tests/integration/consultation-apis.test.ts 'src/api/store/carts/[id]/consultation-fee/route.ts'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add -A progress.txt src/api/middlewares/rate-limiter.ts src/tests ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/api/middlewares/rate-limiter.ts', LF will be replaced by CRLF the next time Git 
+touches it
+warning: in the working copy of 'src/tests/integration/consultation-apis.test.ts', LF will be replaced by CRLF the 
+next time Git touches it
+warning: in the working copy of 'src/api/store/carts/[id]/consultation-fee/route.ts', LF will be replaced by CRLF the 
+next time Git touches it
+
+
+[2026-02-04T17:50:59] CMD: git commit -m 'feat(store): add consultation-fee cart item + tests (node --experimental-vm-modules node_modules/jest/bin/jest.js src/tests/integration/consultation-apis.test.ts)'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 641ae36] feat(store): add consultation-fee cart item + tests (node --experimental-vm-modules node_modules/jest/bin/jest.js src/tests/integration/consultation-apis.test.ts)
+ 4 files changed, 1970 insertions(+)
+ create mode 100644 src/api/store/carts/[id]/consultation-fee/route.ts
+
+
+[2026-02-04T17:52:29] CMD: rg -n 'getPatientConsultations|getConsultation\(' src
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: PASS (exit 0)
+OUTPUT:
+src\app\[countryCode]\(tenant)\consultations\page.tsx:1:import { getPatientConsultations } from "@/lib/data/consultations"  
+src\app\[countryCode]\(tenant)\consultations\page.tsx:6:  const consultations = await getPatientConsultations()  
+
+
+[2026-02-04T17:52:39] CMD: Get-Content -LiteralPath 'src/app/[countryCode]/(tenant)/consultations/page.tsx'
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: PASS (exit 0)
+OUTPUT:
+import { getPatientConsultations } from "@/lib/data/consultations"  
+  
+import { ConsultStatusBadge } from "@/components/consult-status-badge"  
+  
+export default async function ConsultationsPage() {  
+  const consultations = await getPatientConsultations()  
+  
+  return (  
+    <div className="container mx-auto py-8">  
+      <h1 className="text-3xl font-bold mb-6">Consultations</h1>  
+  
+      {consultations.length === 0 ? (  
+        <div className="text-center py-12">  
+          <p className="text-gray-500">No consultations yet</p>  
+        </div>  
+      ) : (  
+        <div className="space-y-4">  
+          {consultations.map((consult: any) => (  
+            <div key={consult.id} className="border rounded-lg p-4">  
+              <div className="flex justify-between items-start">  
+                <div>  
+                  <h3 className="font-semibold">{consult.product_name}</h3>  
+                  <p className="text-sm text-gray-600">  
+                    Submitted: {new Date(consult.created_at).toLocaleDateString()}  
+                  </p>  
+                  <p className="text-sm text-gray-600">  
+                    Status: <ConsultStatusBadge status={consult.status} />  
+                  </p>  
+                </div>  
+                <a  
+                  href={`/consultations/${consult.id}`}  
+                  className="text-blue-600 hover:text-blue-800"  
+                >  
+                  View Details  
+                </a>  
+              </div>  
+            </div>  
+          ))}  
+        </div>  
+      )}  
+    </div>  
+  )  
+} 
+
+
+[2026-02-04T17:52:47] CMD: ls -Force src\api\store\consultations
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\api\store\consultations
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/4/2026   8:32 AM                approvals                                                            
+d-----          2/3/2026   6:16 PM                available-slots                                                      
+d-----          2/4/2026   8:18 AM                [id]                                                                 
+-a----          2/4/2026   5:40 AM           5487 route.ts                                                             
+
+
+
+
+[2026-02-04T17:52:54] CMD: type src\api\store\consultations\route.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { authenticate } from "@medusajs/framework"
+import { CONSULTATION_MODULE } from "../../../modules/consultation"
+
+/**
+ * GET /store/consultations
+ * List current customer's consultations
+ * Requires authentication
+ */
+export const GET = [
+  authenticate("customer", ["session", "bearer"]),
+  async (req: MedusaRequest, res: MedusaResponse) => {
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+
+    // Get customer ID from auth context
+    const customerId = (req as any).auth_context?.actor_id
+    if (!customerId) {
+      return res.status(401).json({ message: "Not authenticated" })
+    }
+
+    // Parse query parameters
+    const { status, limit = "20", offset = "0" } = req.query as Record<
+      string,
+      string | undefined
+    >
+
+    // Build filters
+    const filters: Record<string, any> = {
+      patient_id: customerId, // Assuming patient_id maps to customer_id
+    }
+
+    if (status) {
+      filters.status = status
+    }
+
+    // Pagination
+    const take = parseInt(limit, 10)
+    const skip = parseInt(offset, 10)
+
+    try {
+      // Get patient by customer_id first
+      const patients = await consultationService.listPatients(
+        { customer_id: customerId },
+        { take: 1 }
+      )
+
+      if (!patients[0].length) {
+        return res.json({ consultations: [], count: 0, limit: take, offset: skip })
+      }
+
+      const patientId = patients[0][0].id
+      filters.patient_id = patientId
+
+      const [consultations, count] = await consultationService.listConsultations(
+        filters,
+        {
+          skip,
+          take,
+          order: { created_at: "DESC" },
+        }
+      )
+
+      // Sanitize consultation data for patient view (remove sensitive fields)
+      const sanitizedConsultations = consultations.map((c) =>
+        sanitizeConsultationForPatient(c)
+      )
+
+      res.json({
+        consultations: sanitizedConsultations,
+        count,
+        limit: take,
+        offset: skip,
+      })
+    } catch (error) {
+      res.status(500).json({
+        message: "Failed to list consultations",
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    }
+  },
+...(truncated)
+
+[2026-02-04T17:53:05] CMD: Get-Content -LiteralPath 'src/api/store/consultations/[id]/route.ts'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { authenticate } from "@medusajs/framework"
+import { CONSULTATION_MODULE } from "../../../../modules/consultation"
+
+/**
+ * GET /store/consultations/:id
+ * Get consultation detail (patient view - limited fields)
+ * Requires authentication
+ */
+export const GET = [
+  authenticate("customer", ["session", "bearer"]),
+  async (req: MedusaRequest, res: MedusaResponse) => {
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+    const { id } = req.params
+
+    // Get customer ID from auth context
+    const customerId = (req as any).auth_context?.actor_id
+    if (!customerId) {
+      return res.status(401).json({ message: "Not authenticated" })
+    }
+
+    try {
+      const consultation = await consultationService.getConsultationOrThrow(id)
+
+      // Get patient record to verify ownership
+      const patient = await consultationService.getPatientById(
+        consultation.patient_id
+      )
+
+      if (!patient || patient.customer_id !== customerId) {
+        return res.status(403).json({
+          message: "Access denied. This consultation does not belong to you.",
+        })
+      }
+
+      res.json({
+        consultation: sanitizeConsultationForPatient(consultation),
+      })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("not found")) {
+        return res.status(404).json({ message: error.message })
+      }
+      res.status(500).json({
+        message: "Failed to retrieve consultation",
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    }
+  },
+]
+
+/**
+ * Sanitize consultation data for patient view
+ * Remove internal fields that patients shouldn't see
+ */
+function sanitizeConsultationForPatient(consultation: any): any {
+  return {
+    id: consultation.id,
+    status: consultation.status,
+    mode: consultation.mode,
+    scheduled_at: consultation.scheduled_at,
+    started_at: consultation.started_at,
+    ended_at: consultation.ended_at,
+    duration_minutes: consultation.duration_minutes,
+    chief_complaint: consultation.chief_complaint,
+    outcome: consultation.outcome,
+    // Include limited clinician info
+    clinician_id: consultation.clinician_id,
+    // Exclude internal notes, full medical history, etc.
+    created_at: consultation.created_at,
+    updated_at: consultation.updated_at,
+  }
+}
+
+
+[2026-02-04T17:54:07] CMD: Get-Content -LiteralPath 'src/app/[countryCode]/(tenant)/consultations/[id]/page.tsx'
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: PASS (exit 0)
+OUTPUT:
+import { notFound } from "next/navigation"  
+  
+export default function ConsultationDetailPage({ params }: { params: { id: string } }) {  
+  return (  
+    <div className="container mx-auto py-8">  
+      <div className="max-w-2xl mx-auto">  
+        <h1 className="text-3xl font-bold mb-6">Consultation Details</h1>  
+        <p>Consultation ID: {params.id}</p>  
+      </div>  
+    </div>  
+  )  
+}  
+
+
+[2026-02-04T17:57:10] CMD: Get-Content -LiteralPath 'TheRxSpot_Marketplace-storefront/src/lib/data/cart.ts' -TotalCount 60
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+"use server"
+
+import { sdk } from "@lib/config"
+import medusaError from "@lib/util/medusa-error"
+import { HttpTypes } from "@medusajs/types"
+import { revalidateTag } from "next/cache"
+import { redirect } from "next/navigation"
+import {
+  getAuthHeaders,
+  getCacheOptions,
+  getCacheTag,
+  getCartId,
+  removeCartId,
+  setCartId,
+} from "./cookies"
+import { getRegion } from "./regions"
+import { getLocale } from "@lib/data/locale-actions"
+
+/**
+ * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
+ * @param cartId - optional - The ID of the cart to retrieve.
+ * @returns The cart object if found, or null if not found.
+ */
+export async function retrieveCart(cartId?: string, fields?: string) {
+  const id = cartId || (await getCartId())
+  fields ??=
+    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, +shipping_methods.name"
+
+  if (!id) {
+    return null
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  const next = {
+    ...(await getCacheOptions("carts")),
+  }
+
+  return await sdk.client
+    .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${id}`, {
+      method: "GET",
+      query: {
+        fields,
+      },
+      headers,
+      next,
+      cache: "force-cache",
+    })
+    .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+    .catch(() => null)
+}
+
+export async function getOrSetCart(countryCode: string) {
+  const region = await getRegion(countryCode)
+
+  if (!region) {
+    throw new Error(`Region not found for country code: ${countryCode}`)
+  }
+
+
+[2026-02-04T17:57:20] CMD: rg -n 'export async function addToCart' TheRxSpot_Marketplace-storefront/src/lib/data/cart.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+117:export async function addToCart({
+
+
+[2026-02-04T17:57:27] CMD: Get-Content -LiteralPath 'TheRxSpot_Marketplace-storefront/src/lib/data/cart.ts' | Select-Object -Skip 100 -First 90
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  }
+
+  return sdk.store.cart
+    .update(cartId, data, {}, headers)
+    .then(async ({ cart }: { cart: HttpTypes.StoreCart }) => {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+
+      const fulfillmentCacheTag = await getCacheTag("fulfillment")
+      revalidateTag(fulfillmentCacheTag)
+
+      return cart
+    })
+    .catch(medusaError)
+}
+
+export async function addToCart({
+  variantId,
+  quantity,
+  countryCode,
+}: {
+  variantId: string
+  quantity: number
+  countryCode: string
+}) {
+  if (!variantId) {
+    throw new Error("Missing variant ID when adding to cart")
+  }
+
+  const cart = await getOrSetCart(countryCode)
+
+  if (!cart) {
+    throw new Error("Error retrieving or creating cart")
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+  await sdk.store.cart
+    .createLineItem(
+      cart.id,
+      {
+        variant_id: variantId,
+        quantity,
+      },
+      {},
+      headers
+    )
+    .then(async () => {
+      const cartCacheTag = await getCacheTag("carts")
+      revalidateTag(cartCacheTag)
+
+      const fulfillmentCacheTag = await getCacheTag("fulfillment")
+      revalidateTag(fulfillmentCacheTag)
+    })
+    .catch(medusaError)
+}
+
+export async function updateLineItem({
+  lineId,
+  quantity,
+}: {
+  lineId: string
+  quantity: number
+}) {
+  if (!lineId) {
+    throw new Error("Missing lineItem ID when updating line item")
+  }
+
+  const cartId = await getCartId()
+
+  if (!cartId) {
+    throw new Error("Missing cart ID when updating line item")
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+  }
+
+...(truncated)
+
+[2026-02-04T17:58:15] CMD: npm run build
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: FAIL (exit 1)
+OUTPUT:
+
+> medusa-next@1.0.3 build
+> next build
+
+   ? Next.js 15.3.9
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+node.exe : Failed to compile.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed to compile.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+./src/lib/data/consultations.ts
+Error:   [31mx[0m 'import', and 'export' cannot be used outside of module code
+     
+,-[[36;1;4mD:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront\src\lib\data\consultations.ts[0m:98:1]
+ [2m 95[0m |     return { ok: false, code: "INVALID_INPUT", message: "product_id is required" }
+ [2m 96[0m | }
+ [2m 97[0m | 
+ [2m 98[0m | export async function getPatientConsultations(): Promise<any[]> {
+     : [35;1m^^^^^^[0m
+ [2m 99[0m |   const headers = {
+ [2m100[0m |     ...(await getAuthHeaders()),
+ [2m101[0m |     ...(await getTenantHeaders()),
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/data/consultations.ts
+./src/modules/products/components/product-actions/index.tsx
+
+./src/lib/data/consultations.ts
+Error:   [31mx[0m 'import', and 'export' cannot be used outside of module code
+     
+,-[[36;1;4mD:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront\src\lib\data\consultations.ts[0m:98:1]
+ [2m 95[0m |     return { ok: false, code: "INVALID_INPUT", message: "product_id is required" }
+ [2m 96[0m | }
+ [2m 97[0m | 
+ [2m 98[0m | export async function getPatientConsultations(): Promise<any[]> {
+     : [35;1m^^^^^^[0m
+ [2m 99[0m |   const headers = {
+ [2m100[0m |     ...(await getAuthHeaders()),
+ [2m101[0m |     ...(await getTenantHeaders()),
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./src/lib/data/consultations.ts
+./src/app/[countryCode]/(tenant)/consultations/page.tsx
+
+
+> Build failed because of webpack errors
+
+
+[2026-02-04T17:58:48] CMD: Get-Content -LiteralPath 'TheRxSpot_Marketplace-storefront/src/lib/data/consultations.ts' -TotalCount 130
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+"use server"
+
+import { sdk } from "@/lib/config"
+import { getAuthHeaders } from "@lib/data/cookies"
+import { cookies } from "next/headers"
+import { getTenantConfigFromCookie } from "@lib/tenant"
+
+const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+
+export type ConsultApprovalResult =
+  | {
+      ok: true
+      has_valid_approval: boolean
+      consultation_id: string | null
+      expires_at: string | null
+    }
+  | { ok: false; code: "UNAUTHORIZED" | "BUSINESS_CONTEXT_REQUIRED" | "INVALID_INPUT" | "INTERNAL_ERROR"; message: string }
+
+async function getTenantHeaders(): Promise<Record<string, string>> {
+  const cookieStore = await cookies()
+  const tenantCookie = cookieStore.get("_tenant_config")?.value
+  const tenant = getTenantConfigFromCookie(tenantCookie)
+
+  const headers: Record<string, string> = {}
+  if (tenant?.business?.slug) headers["x-business-slug"] = tenant.business.slug
+  if (tenant?.publishable_api_key) headers["x-publishable-api-key"] = tenant.publishable_api_key
+  return headers
+}
+
+export async function checkConsultApproval(productId: string): Promise<ConsultApprovalResult> {
+  const id = (productId || "").trim()
+  if (!id) {
+    return { ok: false, code: "INVALID_INPUT", message: "productId is required" }
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+    ...(await getTenantHeaders()),
+  }
+
+  try {
+    const res = await sdk.client.fetch<any>(`/store/consultations/approvals`, {
+      method: "GET",
+      query: { product_id: id },
+      headers,
+      cache: "no-store",
+    })
+
+    return {
+      ok: true,
+      has_valid_approval: !!res?.has_valid_approval,
+      consultation_id: res?.consultation_id ?? null,
+      expires_at: res?.expires_at ?? null,
+    }
+  } catch (e: any) {
+    const status = e?.status || e?.response?.status
+    const code = e?.response?.data?.code || e?.code
+    const message = e?.response?.data?.message || e?.message || "Failed to check consultation approval"
+
+    if (status === 401 || code === "UNAUTHORIZED") {
+      return { ok: false, code: "UNAUTHORIZED", message }
+    }
+
+    if (code === "BUSINESS_CONTEXT_REQUIRED") {
+      return { ok: false, code: "BUSINESS_CONTEXT_REQUIRED", message }
+    }
+
+    return { ok: false, code: "INTERNAL_ERROR", message }
+  }
+}
+
+export type ConsultRequestInput = {
+  product_id: string
+  customer_email: string
+  customer_first_name: string
+  customer_last_name: string
+  customer_phone?: string | null
+  customer_dob?: string | null
+  eligibility_answers?: Record<string, any>
+...(truncated)
+
+[2026-02-04T17:58:59] CMD: Get-Content -LiteralPath 'TheRxSpot_Marketplace-storefront/src/lib/data/consultations.ts'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+"use server"
+
+import { sdk } from "@/lib/config"
+import { getAuthHeaders } from "@lib/data/cookies"
+import { cookies } from "next/headers"
+import { getTenantConfigFromCookie } from "@lib/tenant"
+
+const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+
+export type ConsultApprovalResult =
+  | {
+      ok: true
+      has_valid_approval: boolean
+      consultation_id: string | null
+      expires_at: string | null
+    }
+  | { ok: false; code: "UNAUTHORIZED" | "BUSINESS_CONTEXT_REQUIRED" | "INVALID_INPUT" | "INTERNAL_ERROR"; message: string }
+
+async function getTenantHeaders(): Promise<Record<string, string>> {
+  const cookieStore = await cookies()
+  const tenantCookie = cookieStore.get("_tenant_config")?.value
+  const tenant = getTenantConfigFromCookie(tenantCookie)
+
+  const headers: Record<string, string> = {}
+  if (tenant?.business?.slug) headers["x-business-slug"] = tenant.business.slug
+  if (tenant?.publishable_api_key) headers["x-publishable-api-key"] = tenant.publishable_api_key
+  return headers
+}
+
+export async function checkConsultApproval(productId: string): Promise<ConsultApprovalResult> {
+  const id = (productId || "").trim()
+  if (!id) {
+    return { ok: false, code: "INVALID_INPUT", message: "productId is required" }
+  }
+
+  const headers = {
+    ...(await getAuthHeaders()),
+    ...(await getTenantHeaders()),
+  }
+
+  try {
+    const res = await sdk.client.fetch<any>(`/store/consultations/approvals`, {
+      method: "GET",
+      query: { product_id: id },
+      headers,
+      cache: "no-store",
+    })
+
+    return {
+      ok: true,
+      has_valid_approval: !!res?.has_valid_approval,
+      consultation_id: res?.consultation_id ?? null,
+      expires_at: res?.expires_at ?? null,
+    }
+  } catch (e: any) {
+    const status = e?.status || e?.response?.status
+    const code = e?.response?.data?.code || e?.code
+    const message = e?.response?.data?.message || e?.message || "Failed to check consultation approval"
+
+    if (status === 401 || code === "UNAUTHORIZED") {
+      return { ok: false, code: "UNAUTHORIZED", message }
+    }
+
+    if (code === "BUSINESS_CONTEXT_REQUIRED") {
+      return { ok: false, code: "BUSINESS_CONTEXT_REQUIRED", message }
+    }
+
+    return { ok: false, code: "INTERNAL_ERROR", message }
+  }
+}
+
+export type ConsultRequestInput = {
+  product_id: string
+  customer_email: string
+  customer_first_name: string
+  customer_last_name: string
+  customer_phone?: string | null
+  customer_dob?: string | null
+  eligibility_answers?: Record<string, any>
+...(truncated)
+
+[2026-02-04T17:59:58] CMD: npm run build
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: PASS (exit 0)
+OUTPUT:
+
+> medusa-next@1.0.3 build
+> next build
+
+   ? Next.js 15.3.9
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ? Compiled successfully in 17.0s
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+   Generating static pages (0/5) ...
+   Generating static pages (1/5) 
+   Generating static pages (2/5) 
+   Generating static pages (3/5) 
+ ? Generating static pages (5/5)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
++ ƒ /_not-found                            143 B         102 kB
++ ƒ /[countryCode]                         616 B         357 kB
++ ƒ /[countryCode]/checkout              27.1 kB         418 kB
++ ƒ /[countryCode]/consultations           173 B         105 kB
++ ƒ /[countryCode]/consultations/[id]      143 B         102 kB
++ ƒ /[countryCode]/products/[handle]     18.4 kB         393 kB
++ ? /opengraph-image.jpg                     0 B            0 B
++ ? /twitter-image.jpg                       0 B            0 B
++ First Load JS shared by all             102 kB
+  + chunks/4bd1b696-1248763718f1c864.js  53.2 kB
+  + chunks/684-46b7d319baf0c9b8.js       46.6 kB
+  + other shared chunks (total)          2.06 kB
+
+
+ƒ Middleware                               33 kB
+
+?  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+
+[2026-02-04T18:00:55] CMD: git status -sb
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+## main...origin/main [ahead 45]
+ M TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/consultations/page.tsx
+ M TheRxSpot_Marketplace-storefront/src/app/layout.tsx
+ M TheRxSpot_Marketplace-storefront/src/components/consult-form.tsx
+ M TheRxSpot_Marketplace-storefront/src/lib/data/cart.ts
+ M TheRxSpot_Marketplace-storefront/src/lib/data/consultations.ts
+ M TheRxSpot_Marketplace-storefront/src/modules/products/components/product-actions/index.tsx
+ M progress.txt
+?? TheRxSpot_Marketplace-storefront/src/components/global-toaster.tsx
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
+[2026-02-04T18:01:08] CMD: git add -A progress.txt TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/consultations/page.tsx TheRxSpot_Marketplace-storefront/src/app/layout.tsx TheRxSpot_Marketplace-storefront/src/components/consult-form.tsx TheRxSpot_Marketplace-storefront/src/components/global-toaster.tsx TheRxSpot_Marketplace-storefront/src/lib/data/cart.ts TheRxSpot_Marketplace-storefront/src/lib/data/consultations.ts TheRxSpot_Marketplace-storefront/src/modules/products/components/product-actions/index.tsx
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+System.Management.Automation.CommandNotFoundException: The term 'tenant' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)
+   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.Interpreter.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.LightLambda.RunVoid1[T0](T0 arg0)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipeImpl(ScriptBlockClauseToInvoke clauseToInvoke, Boolean createLocalScope, Dictionary`2 functionsToDefine, List`1 variablesToDefine, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Object[] args)
+   at System.Management.Automation.ScriptBlock.<>c__DisplayClass57_0.<InvokeWithPipe>b__0()
+   at System.Management.Automation.Runspaces.RunspaceBase.RunActionIfNoRunningPipelinesWithThreadCheck(Action action)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipe(Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Boolean propagateAllExceptionsToTop, List`1 variablesToDefine, Dictionary`2 functionsToDefine, Object[] args)
+   at System.Management.Automation.ScriptBlock.InvokeUsingCmdlet(Cmdlet contextCmdlet, Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Object[] args)
+   at Microsoft.PowerShell.Commands.InvokeExpressionCommand.ProcessRecord()
+   at System.Management.Automation.CommandProcessor.ProcessRecord()
+

@@ -5,6 +5,8 @@ import medusaError from "@lib/util/medusa-error"
 import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
+import { getTenantConfigFromCookie } from "@lib/tenant"
 import {
   getAuthHeaders,
   getCacheOptions,
@@ -15,6 +17,40 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "@lib/data/locale-actions"
+
+const MEDUSA_BACKEND_URL = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+
+async function getTenantHeaders(): Promise<Record<string, string>> {
+  const cookieStore = await cookies()
+  const tenantCookie = cookieStore.get("_tenant_config")?.value
+  const tenant = getTenantConfigFromCookie(tenantCookie)
+
+  const headers: Record<string, string> = {}
+  if (tenant?.business?.slug) headers["x-business-slug"] = tenant.business.slug
+  if (tenant?.publishable_api_key) headers["x-publishable-api-key"] = tenant.publishable_api_key
+  return headers
+}
+
+async function addConsultationFeeLineItem(cartId: string, consultationId: string) {
+  const headers = {
+    "Content-Type": "application/json",
+    ...(await getAuthHeaders()),
+    ...(await getTenantHeaders()),
+  }
+
+  const res = await fetch(`${MEDUSA_BACKEND_URL}/store/carts/${encodeURIComponent(cartId)}/consultation-fee`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ consultation_id: consultationId }),
+    cache: "no-store",
+  })
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}))
+    const message = json?.message || `Failed to add consultation fee (${res.status})`
+    throw new Error(message)
+  }
+}
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
@@ -118,10 +154,12 @@ export async function addToCart({
   variantId,
   quantity,
   countryCode,
+  consultationId,
 }: {
   variantId: string
   quantity: number
   countryCode: string
+  consultationId?: string
 }) {
   if (!variantId) {
     throw new Error("Missing variant ID when adding to cart")
@@ -137,8 +175,8 @@ export async function addToCart({
     ...(await getAuthHeaders()),
   }
 
-  await sdk.store.cart
-    .createLineItem(
+  try {
+    await sdk.store.cart.createLineItem(
       cart.id,
       {
         variant_id: variantId,
@@ -147,14 +185,19 @@ export async function addToCart({
       {},
       headers
     )
-    .then(async () => {
-      const cartCacheTag = await getCacheTag("carts")
-      revalidateTag(cartCacheTag)
 
-      const fulfillmentCacheTag = await getCacheTag("fulfillment")
-      revalidateTag(fulfillmentCacheTag)
-    })
-    .catch(medusaError)
+    if (consultationId) {
+      await addConsultationFeeLineItem(cart.id, consultationId)
+    }
+
+    const cartCacheTag = await getCacheTag("carts")
+    revalidateTag(cartCacheTag)
+
+    const fulfillmentCacheTag = await getCacheTag("fulfillment")
+    revalidateTag(fulfillmentCacheTag)
+  } catch (e) {
+    throw medusaError(e)
+  }
 }
 
 export async function updateLineItem({

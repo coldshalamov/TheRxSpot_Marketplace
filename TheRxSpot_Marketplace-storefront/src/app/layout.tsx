@@ -3,6 +3,7 @@ import { Metadata } from "next"
 import "styles/globals.css"
 import { cookies } from "next/headers"
 import { getTenantConfigFromCookie } from "@lib/tenant"
+import GlobalToaster from "@/components/global-toaster"
 
 export const metadata: Metadata = {
   metadataBase: new URL(getBaseURL()),
@@ -30,6 +31,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
       <head>{cssVars && <style dangerouslySetInnerHTML={{ __html: cssVars }} />}</head>
       <body>
         <main className="relative">{props.children}</main>
+        <GlobalToaster />
       </body>
     </html>
   )
