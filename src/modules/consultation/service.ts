@@ -46,6 +46,23 @@ const ConsultationBaseService = MedusaService({
 }) as any
 
 class ConsultationModuleService extends ConsultationBaseService {
+  private normalizeListArgs(filters: Record<string, any> = {}, options: Record<string, any> = {}) {
+    const includeDeleted = !!(filters as any)?.include_deleted
+    const normalizedFilters = { ...(filters || {}) } as Record<string, any>
+    delete (normalizedFilters as any).include_deleted
+
+    if (!includeDeleted && normalizedFilters.deleted_at === undefined) {
+      normalizedFilters.deleted_at = null
+    }
+
+    const normalizedOptions = { ...(options || {}) } as Record<string, any>
+    if (includeDeleted) {
+      normalizedOptions.withDeleted = true
+    }
+
+    return { filters: normalizedFilters, options: normalizedOptions }
+  }
+
   private static readonly PATIENT_PHI_FIELDS = [
     "first_name",
     "last_name",
@@ -76,18 +93,17 @@ class ConsultationModuleService extends ConsultationBaseService {
     } = {}
   ) {
     const { skip, take, order } = options
-    return await this.listConsultationsWithCount(filters, {
+    const { filters: f, options: o } = this.normalizeListArgs(filters, {
       skip,
       take,
       order: order || { created_at: "DESC" },
     })
+    return await this.listAndCountConsultations(f, o)
   }
 
   async getConsultationOrThrow(id: string, relations: string[] = []) {
-    const consultations = await this.listConsultationsWithCount(
-      { id },
-      { take: 1, relations }
-    )
+    const { filters: f, options: o } = this.normalizeListArgs({ id }, { take: 1, relations })
+    const consultations = await this.listAndCountConsultations(f, o)
     if (!consultations[0].length) {
       throw new Error(`Consultation not found: ${id}`)
     }
@@ -103,7 +119,7 @@ class ConsultationModuleService extends ConsultationBaseService {
   }
 
   async deleteConsultation(id: string) {
-    await this.deleteConsultations(id)
+    await (this as any).softDeleteConsultations(id)
   }
 
   async getConsultationById(consultationId: string) {
@@ -294,11 +310,12 @@ class ConsultationModuleService extends ConsultationBaseService {
     } = {}
   ) {
     const { skip, take, order } = options
-    return await this.listCliniciansWithCount(filters, {
+    const { filters: f, options: o } = this.normalizeListArgs(filters, {
       skip,
       take,
       order: order || { created_at: "DESC" },
     })
+    return await this.listAndCountClinicians(f, o)
   }
 
   async getClinicianOrThrow(id: string) {
@@ -318,7 +335,7 @@ class ConsultationModuleService extends ConsultationBaseService {
   }
 
   async deleteClinician(id: string) {
-    await this.deleteClinicians(id)
+    await (this as any).softDeleteClinicians(id)
   }
 
   async getClinicianById(clinicianId: string) {
@@ -414,11 +431,15 @@ class ConsultationModuleService extends ConsultationBaseService {
     } = {}
   ) {
     const { skip, take, order } = options
-    const [patients, count] = await this.listPatientsWithCount(filters, {
+    const { filters: f, options: o } = this.normalizeListArgs(filters, {
       skip,
       take,
       order: order || { created_at: "DESC" },
     })
+    const [patients, count] = await this.listAndCountPatients(
+      f,
+      o
+    )
 
     if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
       return [patients, count] as any
@@ -432,10 +453,8 @@ class ConsultationModuleService extends ConsultationBaseService {
   }
 
   async getPatientOrThrow(id: string, relations: string[] = []) {
-    const patients = await this.listPatientsWithCount(
-      { id },
-      { take: 1, relations }
-    )
+    const { filters: f, options: o } = this.normalizeListArgs({ id }, { take: 1, relations })
+    const patients = await this.listAndCountPatients(f, o)
     if (!patients[0].length) {
       throw new Error(`Patient not found: ${id}`)
     }
@@ -475,7 +494,7 @@ class ConsultationModuleService extends ConsultationBaseService {
   }
 
   async deletePatient(id: string) {
-    await this.deletePatients(id)
+    await (this as any).softDeletePatients(id)
   }
 
   async getPatientById(patientId: string) {
@@ -533,11 +552,12 @@ class ConsultationModuleService extends ConsultationBaseService {
     } = {}
   ) {
     const { skip, take, order } = options
-    return await this.listConsultationStatusEventsWithCount(filters, {
+    const { filters: f, options: o } = this.normalizeListArgs(filters, {
       skip,
       take,
       order: order || { created_at: "ASC" },
     })
+    return await this.listAndCountConsultationStatusEvents(f, o)
   }
 
   async listStatusEventsByConsultation(consultationId: string) {
@@ -581,11 +601,12 @@ class ConsultationModuleService extends ConsultationBaseService {
     } = {}
   ) {
     const { skip, take, order } = options
-    return await this.listClinicianSchedulesWithCount(filters, {
+    const { filters: f, options: o } = this.normalizeListArgs(filters, {
       skip,
       take,
       order: order || { day_of_week: "ASC" },
     })
+    return await this.listAndCountClinicianSchedules(f, o)
   }
 
   async getClinicianSchedules(clinicianId: string) {
@@ -604,7 +625,7 @@ class ConsultationModuleService extends ConsultationBaseService {
   }
 
   async deleteClinicianSchedule(id: string) {
-    await this.deleteClinicianSchedules(id)
+    await (this as any).softDeleteClinicianSchedules(id)
   }
 
   // ==========================================
@@ -620,11 +641,12 @@ class ConsultationModuleService extends ConsultationBaseService {
     } = {}
   ) {
     const { skip, take, order } = options
-    return await this.listClinicianAvailabilityExceptionsWithCount(filters, {
+    const { filters: f, options: o } = this.normalizeListArgs(filters, {
       skip,
       take,
       order: order || { date: "ASC" },
     })
+    return await this.listAndCountClinicianAvailabilityExceptions(f, o)
   }
 
   async getClinicianAvailabilityExceptions(clinicianId: string, startDate?: Date, endDate?: Date) {
@@ -666,7 +688,7 @@ class ConsultationModuleService extends ConsultationBaseService {
   }
 
   async deleteClinicianAvailabilityException(id: string) {
-    await this.deleteClinicianAvailabilityExceptions(id)
+    await (this as any).softDeleteClinicianAvailabilityExceptions(id)
   }
 }
 

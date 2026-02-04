@@ -55,6 +55,55 @@ const FinancialsBaseService = MedusaService({
 }) as any
 
 class FinancialsService extends FinancialsBaseService {
+  private normalizeListArgs(filters: Record<string, any> = {}, config: any = {}) {
+    const includeDeleted = !!(filters as any)?.include_deleted || !!(config as any)?.withDeleted
+    const normalizedFilters = { ...(filters || {}) } as Record<string, any>
+    delete (normalizedFilters as any).include_deleted
+
+    if (!includeDeleted && normalizedFilters.deleted_at === undefined) {
+      normalizedFilters.deleted_at = null
+    }
+
+    const normalizedConfig = { ...(config || {}) } as any
+    if (includeDeleted) {
+      normalizedConfig.withDeleted = true
+    }
+
+    return { filters: normalizedFilters, config: normalizedConfig }
+  }
+
+  // Ensure soft-deleted records are filtered out by default.
+  async listEarningEntries(filters: Record<string, any> = {}, config: any = {}) {
+    const { filters: f, config: c } = this.normalizeListArgs(filters, config)
+    return await super.listEarningEntries(f, c)
+  }
+  async listAndCountEarningEntries(filters: Record<string, any> = {}, config: any = {}) {
+    const { filters: f, config: c } = this.normalizeListArgs(filters, config)
+    return await super.listAndCountEarningEntries(f, c)
+  }
+  async listPayouts(filters: Record<string, any> = {}, config: any = {}) {
+    const { filters: f, config: c } = this.normalizeListArgs(filters, config)
+    return await super.listPayouts(f, c)
+  }
+  async listAndCountPayouts(filters: Record<string, any> = {}, config: any = {}) {
+    const { filters: f, config: c } = this.normalizeListArgs(filters, config)
+    return await super.listAndCountPayouts(f, c)
+  }
+
+  // Soft delete (restore sets deleted_at back to null).
+  async deleteEarningEntries(ids: string | string[]) {
+    const list = Array.isArray(ids) ? ids : [ids]
+    for (const id of list) {
+      await (this as any).softDeleteEarningEntries(id)
+    }
+  }
+  async deletePayouts(ids: string | string[]) {
+    const list = Array.isArray(ids) ? ids : [ids]
+    for (const id of list) {
+      await (this as any).softDeletePayouts(id)
+    }
+  }
+
   /**
    * Calculate earnings for an order
    * Creates earning entries for each line item and shipping
