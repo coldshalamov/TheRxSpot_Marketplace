@@ -10,6 +10,7 @@ yarn-error.log
 .idea
 
 coverage
+reports
 
 !src/**
 
