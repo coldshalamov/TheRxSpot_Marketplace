@@ -79,6 +79,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const modes = parseCommaList(query.mode) as PlanMode[]
       const type = (typeof query.type === "string" ? query.type.trim() : "") as PlanType | ""
       const state = typeof query.state === "string" ? query.state.trim().toUpperCase() : ""
+      const clinicianId = typeof query.clinician_id === "string" ? query.clinician_id.trim() : ""
 
       const businessIdRaw = typeof query.business_id === "string" ? query.business_id.trim() : ""
 
@@ -137,6 +138,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       const filters: any = {}
       if (effectiveBusinessId) {
         filters.business_id = effectiveBusinessId
+      }
+      if (clinicianId) {
+        filters.clinician_id = clinicianId
       }
       if (dateFrom || dateTo) {
         filters.scheduled_at = {}

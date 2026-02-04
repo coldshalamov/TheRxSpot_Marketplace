@@ -169,6 +169,16 @@ medusaIntegrationTestRunner({
         expect(filterTypeInitial.status).toBe(200)
         expect(filterTypeInitial.data.consultations.some((c: any) => c.id === consultPending.id)).toBe(true)
         expect(filterTypeInitial.data.consultations.some((c: any) => c.id === consultScheduled.id)).toBe(false)
+
+        const filterClinician = await api
+          .get(`/admin/custom/consultations?clinician_id=${encodeURIComponent(clinician.id)}&status=scheduled&limit=25&offset=0`, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .catch((e: any) => e.response)
+
+        expect(filterClinician.status).toBe(200)
+        expect(filterClinician.data.consultations.some((c: any) => c.id === consultScheduled.id)).toBe(true)
+        expect(filterClinician.data.consultations.some((c: any) => c.id === consultPending.id)).toBe(false)
       })
 
       it("returns consultation detail payload", async () => {
