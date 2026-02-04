@@ -993,3 +993,85 @@ RESULT: PASS
 
 [2026-02-04 09:07:56] COMMAND: git commit -m "docs: document APIs + checklist/progress (passes: NODE_OPTIONS=--experimental-vm-modules npx jest src/tests/integration/document-admin-apis.test.ts --runInBand --forceExit)"
 RESULT: PASS
+[2026-02-04 09:23:19] COMMAND: ='--experimental-vm-modules'; npx jest src/tests/integration/financial-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: FAIL
+ERROR: /admin/earnings/summary returned 500; /admin/payouts returned 400 (route expects earning_entry_ids)
+
+[2026-02-04 09:42:53] BACKFILL (this session):
+COMMAND: cd d:\GitHub\TheRxSpot_Marketplace && ls
+RESULT: FAIL
+ERROR: The token '&&' is not a valid statement separator in this version.
+
+COMMAND: cd d:\GitHub\TheRxSpot_Marketplace; dir
+RESULT: PASS
+
+COMMAND:  = Get-Content -Raw -LiteralPath .\\PLAN.txt
+RESULT: PASS
+
+COMMAND: rg -n \"GET /admin/earnings/summary|POST /admin/payouts|paid_out\" PLAN.txt
+RESULT: PASS
+
+COMMAND: git status --porcelain=v1
+RESULT: PASS
+
+COMMAND: ='--experimental-vm-modules'; npx jest src/tests/integration/financial-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: PASS
+DETAIL: 1 suite, 3 tests passed
+
+[2026-02-04 09:43:09] COMMAND: dir .claude
+RESULT: PASS
+
+COMMAND: git diff --stat
+RESULT: PASS
+
+COMMAND: Get-Content -LiteralPath .\\progress.txt -Tail 60
+RESULT: PASS
+
+COMMAND: Test-Path .\\docs\\API.md; Get-Content .\\docs\\API.md -TotalCount 80
+RESULT: PASS
+
+COMMAND: rg -n \"Earnings Summary|earnings/summary|Payout Request|/admin/payouts\" PRD_CHECKLIST.md
+RESULT: PASS
+
+COMMAND: Get-Content PRD_CHECKLIST.md (slice)
+RESULT: PASS
+
+COMMAND: Get-Content src\\api\\admin\\earnings\\summary\\route.ts -TotalCount 220
+RESULT: PASS
+
+COMMAND: rg -n \"export async function POST|return res\\.json\\(|return res\\.status\\(\" src\\api\\admin\\payouts\\route.ts
+RESULT: PASS
+
+COMMAND: Get-Content src\\api\\admin\\payouts\\route.ts -TotalCount 220
+RESULT: PASS
+
+COMMAND: Get-Content src\\api\\admin\\payouts\\route.ts -Tail 140
+RESULT: PASS
+
+[2026-02-04 09:45:03] NOTE: Added integration tests: src/tests/integration/financial-apis.test.ts
+
+[2026-02-04 09:45:03] COMMAND: rg -n \"GET /admin/earnings/summary|POST /admin/payouts|Idempotency-Key\" docs/API.md
+RESULT: PASS
+
+[2026-02-04 09:45:03] NOTE: Updated docs: docs/API.md (earnings summary + payouts) and PRD_CHECKLIST.md (checked audit logging for payouts).
+
+[2026-02-04 09:45:03] CURL SNIPPETS:
+# GET /admin/earnings/summary
+curl -sS -X GET "http://localhost:9000/admin/earnings/summary?business_id=bus_123&date_from=2026-02-01T00:00:00.000Z&date_to=2026-02-04T23:59:59.000Z" -H "Authorization: Bearer <admin_user_jwt>"
+
+# POST /admin/payouts (amount-based payout; cents)
+curl -sS -X POST "http://localhost:9000/admin/payouts" -H "Content-Type: application/json" -H "Authorization: Bearer <admin_user_jwt>" -H "Idempotency-Key: payout_bus_123_20260204_0001" -d '{ "business_id": "bus_123", "amount": 25000, "method": "stripe_connect" }'
+
+# POST /admin/payouts (idempotent replay)
+curl -sS -X POST "http://localhost:9000/admin/payouts" -H "Content-Type: application/json" -H "Authorization: Bearer <admin_user_jwt>" -H "Idempotency-Key: payout_bus_123_20260204_0001" -d '{ "business_id": "bus_123", "amount": 25000, "method": "stripe_connect" }'
+
+[2026-02-04 09:45:45] COMMAND: rg -n '[x] Log all earnings/payout operations' PRD_CHECKLIST.md
+RESULT: PASS
+
+[2026-02-04 09:45:57] COMMAND: (attempted) Add-Content progress entry with escaped pattern
+RESULT: FAIL
+ERROR: Add-Content : A positional parameter cannot be found that accepts argument '\\[x\\]'.
+
+[2026-02-04 09:48:29] COMMAND: ='--experimental-vm-modules'; npx jest src/tests/integration/financial-apis.test.ts --silent=false --runInBand --forceExit
+RESULT: PASS
+DETAIL: (pre-commit docs) 1 suite, 3 tests passed

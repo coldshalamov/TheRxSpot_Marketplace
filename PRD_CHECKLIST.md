@@ -45,17 +45,17 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
   - [x] Support PDF, JPG, PNG (prescriptions, medical records)
   - [x] Virus scanning with ClamAV
   - [ ] S3 storage integration
-  - [ ] Earnings Summary Endpoint (2h)
-  - [ ] GET /admin/earnings/summary
-  - [ ] Calculate: pending payout, total earnings, commission balance
-  - [ ] Filter by business_id, date range
-  - [ ] Return breakdown by type (commission, consultation fee, service fee)
-  - [ ] Payout Request Endpoint (2h)
-  - [ ] POST /admin/payouts
-  - [ ] Create payout request from available balance
-  - [ ] Support Stripe Connect, ACH, wire transfer
+  - [x] Earnings Summary Endpoint (2h)
+  - [x] GET /admin/earnings/summary
+  - [x] Calculate: pending payout, total earnings, commission balance
+  - [x] Filter by business_id, date range
+  - [x] Return breakdown by type (commission, consultation fee, service fee)
+  - [x] Payout Request Endpoint (2h)
+  - [x] POST /admin/payouts
+  - [x] Create payout request from available balance
+  - [x] Support Stripe Connect, ACH, wire transfer
   - [ ] Email confirmation to business owner
-  - [ ] Update earnings status to 'paid_out'
+  - [x] Update earnings status to 'paid_out'
 - [ ] Data Model Enhancements
   - [ ] Add indexes for performance
   - [ ] consultations.patient_id, consultations.status, consultations.scheduled_at
@@ -68,7 +68,7 @@ Source: PLAN.txt section "100% COMPLETION (Weeks 1-10)"
   - [ ] Add restore endpoints for accidental deletions
   - [ ] Add audit logging to sensitive operations
   - [ ] Log all consultation status changes
-  - [ ] Log all earnings/payout operations
+  - [x] Log all earnings/payout operations
   - [ ] Log business provisioning/deactivation
   - [ ] Store IP address, user agent, timestamp
 

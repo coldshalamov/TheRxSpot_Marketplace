@@ -219,3 +219,125 @@ curl -sS -L \
   -H "Authorization: Bearer <admin_user_jwt>" \
   -o downloaded.pdf
 ```
+
+---
+
+## Admin: Earnings Summary (PLAN)
+
+### `GET /admin/earnings/summary`
+
+Returns integer-cent totals for a business over an optional date range.
+
+**Headers**
+- `Authorization: Bearer <admin_user_jwt>`
+
+**Query params**
+- `business_id` (required): the business to summarize
+- `date_from` (optional, ISO date): filter `created_at >= date_from`
+- `date_to` (optional, ISO date): filter `created_at <= date_to`
+
+**Response 200**
+```json
+{
+  "business_id": "bus_123",
+  "date_from": "2026-02-01T00:00:00.000Z",
+  "date_to": "2026-02-04T23:59:59.000Z",
+  "pending_payout": 12000,
+  "total_earnings": 45000,
+  "commission_balance": 33000,
+  "available_payout": 33000,
+  "breakdown": {
+    "commission": 15000,
+    "consultation_fee": 20000,
+    "service_fee": 10000
+  }
+}
+```
+
+**Response 400**
+```json
+{
+  "code": "INVALID_INPUT",
+  "message": "business_id is required"
+}
+```
+
+**Example**
+```bash
+curl -sS -X GET \
+  "http://localhost:9000/admin/earnings/summary?business_id=bus_123&date_from=2026-02-01T00:00:00.000Z&date_to=2026-02-04T23:59:59.000Z" \
+  -H "Authorization: Bearer <admin_user_jwt>"
+```
+
+---
+
+## Admin: Payout Requests (PLAN)
+
+### `POST /admin/payouts`
+
+Creates a payout request from the business's **available** earnings balance.
+
+- Amounts are integer **cents**.
+- Uses basic idempotency via `Idempotency-Key` (header) or `idempotency_key` (body).
+- Marks selected earnings as `paid_out` and links them to the created payout.
+- Writes a compliance audit log entry and emits a best-effort `payout.requested` event (email infra is not wired yet).
+
+**Headers**
+- `Authorization: Bearer <admin_user_jwt>`
+- `Idempotency-Key: <unique_key>` (optional but recommended)
+
+**Body (amount-based payout)**
+```json
+{
+  "business_id": "bus_123",
+  "amount": 25000,
+  "method": "stripe_connect"
+}
+```
+
+**Body (explicit selection)**
+```json
+{
+  "business_id": "bus_123",
+  "earning_entry_ids": ["earn_123", "earn_456"],
+  "amount": 12000,
+  "method": "ach",
+  "destination_account": "acct_ach_123"
+}
+```
+
+**Response 201**
+```json
+{
+  "payout": {
+    "id": "payout_123",
+    "business_id": "bus_123",
+    "status": "pending",
+    "method": "stripe_connect",
+    "net_amount": 25000
+  }
+}
+```
+
+**Response 200 (idempotent re-play)**
+```json
+{
+  "payout": { "id": "payout_123" },
+  "idempotent": true
+}
+```
+
+**Error codes (examples)**
+- `NO_AVAILABLE_BALANCE` (no earnings available)
+- `AMOUNT_EXCEEDS_AVAILABLE` (amount is greater than available balance)
+- `AMOUNT_MISMATCH` (when `earning_entry_ids` is provided, `amount` must match sum)
+
+**Example**
+```bash
+curl -sS -X POST \
+  "http://localhost:9000/admin/payouts" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin_user_jwt>" \
+  -H "Idempotency-Key: payout_bus_123_20260204_0001" \
+  -d '{ "business_id": "bus_123", "amount": 25000, "method": "stripe_connect" }'
+```
