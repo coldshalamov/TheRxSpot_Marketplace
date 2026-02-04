@@ -32809,3 +32809,272 @@ System.Management.Automation.CommandNotFoundException: The term 'tenant' is not 
    at Microsoft.PowerShell.Commands.InvokeExpressionCommand.ProcessRecord()
    at System.Management.Automation.CommandProcessor.ProcessRecord()
 
+[2026-02-04T18:01:20] CMD: git add -A -- progress.txt 'TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/consultations/page.tsx' 'TheRxSpot_Marketplace-storefront/src/app/layout.tsx' 'TheRxSpot_Marketplace-storefront/src/components/consult-form.tsx' 'TheRxSpot_Marketplace-storefront/src/components/global-toaster.tsx' 'TheRxSpot_Marketplace-storefront/src/lib/data/cart.ts' 'TheRxSpot_Marketplace-storefront/src/lib/data/consultations.ts' 'TheRxSpot_Marketplace-storefront/src/modules/products/components/product-actions/index.tsx'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 
+'TheRxSpot_Marketplace-storefront/src/app/[countryCode]/(tenant)/consultations/page.tsx', LF will be replaced by CRLF 
+the next time Git touches it
+At line:1 char:1
++ git add -A -- progress.txt 'TheRxSpot_Marketplace-storefront/src/app/ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'TheRxSpot_Marketplace-storefront/src/app/layout.tsx', LF will be replaced by CRLF the 
+next time Git touches it
+warning: in the working copy of 'TheRxSpot_Marketplace-storefront/src/components/consult-form.tsx', LF will be 
+replaced by CRLF the next time Git touches it
+warning: in the working copy of 'TheRxSpot_Marketplace-storefront/src/lib/data/cart.ts', LF will be replaced by CRLF 
+the next time Git touches it
+warning: in the working copy of 'TheRxSpot_Marketplace-storefront/src/lib/data/consultations.ts', LF will be replaced 
+by CRLF the next time Git touches it
+warning: in the working copy of 
+'TheRxSpot_Marketplace-storefront/src/modules/products/components/product-actions/index.tsx', LF will be replaced by 
+CRLF the next time Git touches it
+warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'TheRxSpot_Marketplace-storefront/src/components/global-toaster.tsx', LF will be 
+replaced by CRLF the next time Git touches it
+
+
+[2026-02-04T18:01:29] CMD: git commit -m 'feat(storefront): consult gating + consult fee add-to-cart (cd TheRxSpot_Marketplace-storefront && npm run build)'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main a8d2f38] feat(storefront): consult gating + consult fee add-to-cart (cd TheRxSpot_Marketplace-storefront && npm run build)
+ 8 files changed, 1321 insertions(+), 84 deletions(-)
+ create mode 100644 TheRxSpot_Marketplace-storefront/src/components/global-toaster.tsx
+
+
+[2026-02-04T18:01:45] CMD: ls -Force src/modules/cart
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront\src\modules\cart
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/2/2026  10:20 PM                components                                                           
+d-----          2/2/2026  10:20 PM                templates                                                            
+
+
+
+
+[2026-02-04T18:01:55] CMD: ls -Recurse -Force src/modules/cart/templates | Select-Object FullName
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: PASS (exit 0)
+OUTPUT:
+
+FullName                                                                                               
+--------                                                                                               
+D:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront\src\modules\cart\templates\index.tsx  
+D:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront\src\modules\cart\templates\items.tsx  
+D:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront\src\modules\cart\templates\preview.tsx
+D:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront\src\modules\cart\templates\summary.tsx
+
+
+
+
+[2026-02-04T18:02:05] CMD: Get-Content -LiteralPath 'TheRxSpot_Marketplace-storefront/src/modules/cart/templates/summary.tsx'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+"use client"
+
+import { Button, Heading } from "@medusajs/ui"
+
+import CartTotals from "@modules/common/components/cart-totals"
+import Divider from "@modules/common/components/divider"
+import DiscountCode from "@modules/checkout/components/discount-code"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import { HttpTypes } from "@medusajs/types"
+
+type SummaryProps = {
+  cart: HttpTypes.StoreCart & {
+    promotions: HttpTypes.StorePromotion[]
+  }
+}
+
+function getCheckoutStep(cart: HttpTypes.StoreCart) {
+  if (!cart?.shipping_address?.address_1 || !cart.email) {
+    return "address"
+  } else if (cart?.shipping_methods?.length === 0) {
+    return "delivery"
+  } else {
+    return "payment"
+  }
+}
+
+const Summary = ({ cart }: SummaryProps) => {
+  const step = getCheckoutStep(cart)
+
+  return (
+    <div className="flex flex-col gap-y-4">
+      <Heading level="h2" className="text-[2rem] leading-[2.75rem]">
+        Summary
+      </Heading>
+      <DiscountCode cart={cart} />
+      <Divider />
+      <CartTotals totals={cart} />
+      <LocalizedClientLink
+        href={"/checkout?step=" + step}
+        data-testid="checkout-button"
+      >
+        <Button className="w-full h-10">Go to checkout</Button>
+      </LocalizedClientLink>
+    </div>
+  )
+}
+
+export default Summary
+
+
+[2026-02-04T18:02:16] CMD: Get-Content -LiteralPath 'TheRxSpot_Marketplace-storefront/src/modules/common/components/cart-totals/index.tsx'
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+"use client"
+
+import { convertToLocale } from "@lib/util/money"
+import React from "react"
+
+type CartTotalsProps = {
+  totals: {
+    total?: number | null
+    subtotal?: number | null
+    tax_total?: number | null
+    currency_code: string
+    item_subtotal?: number | null
+    shipping_subtotal?: number | null
+    discount_subtotal?: number | null
+  }
+}
+
+const CartTotals: React.FC<CartTotalsProps> = ({ totals }) => {
+  const {
+    currency_code,
+    total,
+    tax_total,
+    item_subtotal,
+    shipping_subtotal,
+    discount_subtotal,
+  } = totals
+
+  return (
+    <div>
+      <div className="flex flex-col gap-y-2 txt-medium text-ui-fg-subtle ">
+        <div className="flex items-center justify-between">
+          <span>Subtotal (excl. shipping and taxes)</span>
+          <span data-testid="cart-subtotal" data-value={item_subtotal || 0}>
+            {convertToLocale({ amount: item_subtotal ?? 0, currency_code })}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span>Shipping</span>
+          <span data-testid="cart-shipping" data-value={shipping_subtotal || 0}>
+            {convertToLocale({ amount: shipping_subtotal ?? 0, currency_code })}
+          </span>
+        </div>
+        {!!discount_subtotal && (
+          <div className="flex items-center justify-between">
+            <span>Discount</span>
+            <span
+              className="text-ui-fg-interactive"
+              data-testid="cart-discount"
+              data-value={discount_subtotal || 0}
+            >
+              -{" "}
+              {convertToLocale({
+                amount: discount_subtotal ?? 0,
+                currency_code,
+              })}
+            </span>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span className="flex gap-x-1 items-center ">Taxes</span>
+          <span data-testid="cart-taxes" data-value={tax_total || 0}>
+            {convertToLocale({ amount: tax_total ?? 0, currency_code })}
+          </span>
+        </div>
+      </div>
+      <div className="h-px w-full border-b border-gray-200 my-4" />
+      <div className="flex items-center justify-between text-ui-fg-base mb-2 txt-medium ">
+        <span>Total</span>
+        <span
+          className="txt-xlarge-plus"
+          data-testid="cart-total"
+          data-value={total || 0}
+        >
+          {convertToLocale({ amount: total ?? 0, currency_code })}
+        </span>
+      </div>
+      <div className="h-px w-full border-b border-gray-200 mt-4" />
+    </div>
+  )
+}
+...(truncated)
+
+[2026-02-04T18:02:51] CMD: npm run build
+CWD: TheRxSpot_Marketplace-storefront
+RESULT: PASS (exit 0)
+OUTPUT:
+
+> medusa-next@1.0.3 build
+> next build
+
+   ? Next.js 15.3.9
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ? Compiled successfully in 13.0s
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+   Generating static pages (0/5) ...
+   Generating static pages (1/5) 
+   Generating static pages (2/5) 
+   Generating static pages (3/5) 
+ ? Generating static pages (5/5)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
++ ƒ /_not-found                            143 B         102 kB
++ ƒ /[countryCode]                         616 B         357 kB
++ ƒ /[countryCode]/checkout              27.1 kB         418 kB
++ ƒ /[countryCode]/consultations           173 B         105 kB
++ ƒ /[countryCode]/consultations/[id]      143 B         102 kB
++ ƒ /[countryCode]/products/[handle]     18.4 kB         393 kB
++ ? /opengraph-image.jpg                     0 B            0 B
++ ? /twitter-image.jpg                       0 B            0 B
++ First Load JS shared by all             102 kB
+  + chunks/4bd1b696-1248763718f1c864.js  53.2 kB
+  + chunks/684-46b7d319baf0c9b8.js       46.6 kB
+  + other shared chunks (total)          2.06 kB
+
+
+ƒ Middleware                               33 kB
+
+?  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+
+[2026-02-04T18:03:39] CMD: git status -sb
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+## main...origin/main [ahead 46]
+ M TheRxSpot_Marketplace-storefront/src/modules/cart/templates/summary.tsx
+ M progress.txt
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+
