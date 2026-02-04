@@ -37143,3 +37143,427 @@ OUTPUT:
 ?? src/types/
 
 
+[2026-02-04T18:37:50] CMD: git add progress.txt src/api/admin/custom/consultations/route.ts src/tests/integration/consultations-management.test.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add progress.txt src/api/admin/custom/consultations/route.ts src/ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/api/admin/custom/consultations/route.ts', LF will be replaced by CRLF the next 
+time Git touches it
+warning: in the working copy of 'src/tests/integration/consultations-management.test.ts', LF will be replaced by CRLF 
+the next time Git touches it
+
+
+[2026-02-04T18:37:56] CMD: git commit -m "feat(admin): add clinician_id filter for consultations list (node --experimental-vm-modules jest consultations-management.test.ts)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 848d717] feat(admin): add clinician_id filter for consultations list (node --experimental-vm-modules jest consultations-management.test.ts)
+ 3 files changed, 716 insertions(+)
+
+
+[2026-02-04T18:39:35] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\[id]\page.tsx -TotalCount 90
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import {
+  Avatar,
+  Badge,
+  Button,
+  Container,
+  Copy,
+  Drawer,
+  Heading,
+  Input,
+  Select,
+  Table,
+  Textarea,
+  Toaster,
+  toast,
+} from "@medusajs/ui"
+import { format, formatDistanceToNowStrict } from "date-fns"
+import { DragEvent, useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
+
+type PlanStatus = "pending" | "scheduled" | "completed" | "approved" | "rejected"
+
+type ConsultationDetail = {
+  id: string
+  business_id: string
+  plan_status: PlanStatus
+  scheduled_at: string | null
+  updated_at: string | null
+  chief_complaint: string | null
+  medical_history: any | null
+  rejection_reason: string | null
+  notes: string | null
+  admin_notes: string | null
+  clinician_id: string | null
+  state: string | null
+  patient: any | null
+  clinician: any | null
+  submission: any | null
+  product: any | null
+  mode: string
+  type: string
+}
+
+type DocumentRow = {
+  id: string
+  type: string
+  title: string
+  file_name: string
+  file_size: number
+  mime_type: string
+  created_at: string
+  access_level: string
+  uploaded_by?: string | null
+}
+
+function stableDisplayNumber(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  }
+  const num = hash % 1000000
+  return String(num).padStart(6, "0")
+}
+
+function consultationDisplayId(id: string): string {
+  return `CO-${stableDisplayNumber(id)}`
+}
+
+function statusBadge(status: PlanStatus): { color: "grey" | "blue" | "green" | "orange" | "red"; label: string } {
+  if (status === "pending") return { color: "orange", label: "Pending" }
+  if (status === "scheduled") return { color: "blue", label: "Scheduled" }
+  if (status === "completed") return { color: "grey", label: "Completed" }
+  if (status === "approved") return { color: "green", label: "Approved" }
+  return { color: "red", label: "Rejected" }
+}
+
+function formatDateTime(value?: string | null): string {
+  if (!value) return "-"
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+...(truncated)
+
+[2026-02-04T18:40:08] CMD: rg -n "const \[assignOpen|const \[cliniciansLoading" -n .\src\admin\routes\consultations\[id]\page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+151:  const [assignOpen, setAssignOpen] = useState(false)
+154:  const [cliniciansLoading, setCliniciansLoading] = useState(false)
+
+
+[2026-02-04T18:40:14] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\[id]\page.tsx | Select-Object -Skip 130 -First 40
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age -= 1
+  if (age < 0 || age > 125) return ""
+  return `${age}`
+}
+
+const ConsultationDetailPage = () => {
+  const navigate = useNavigate()
+  const params = useParams()
+  const id = params.id as string
+
+  const [consultation, setConsultation] = useState<ConsultationDetail | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const [documents, setDocuments] = useState<DocumentRow[]>([])
+  const [docsLoading, setDocsLoading] = useState(true)
+  const [activeDoc, setActiveDoc] = useState<DocumentRow | null>(null)
+
+  const [auditLogs, setAuditLogs] = useState<any[]>([])
+  const [auditLoading, setAuditLoading] = useState(true)
+
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignClinicianId, setAssignClinicianId] = useState("")
+  const [clinicians, setClinicians] = useState<any[]>([])
+  const [cliniciansLoading, setCliniciansLoading] = useState(false)
+
+  const [notes, setNotes] = useState("")
+  const [adminNotes, setAdminNotes] = useState("")
+  const [saveState, setSaveState] = useState<"idle" | "dirty" | "saving" | "saved" | "error">("idle")
+  const lastSaved = useRef<{ notes: string; admin_notes: string }>({ notes: "", admin_notes: "" })
+  const saveTimer = useRef<number | null>(null)
+  const saveAbort = useRef<AbortController | null>(null)
+
+  const [statusUpdating, setStatusUpdating] = useState(false)
+  const [rejectOpen, setRejectOpen] = useState(false)
+  const [rejectReason, setRejectReason] = useState("")
+
+  const [uploadOpen, setUploadOpen] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadType, setUploadType] = useState("medical_record")
+
+
+[2026-02-04T18:40:31] CMD: rg -n "const fetchAuditLogs" .\src\admin\routes\consultations\[id]\page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+226:  const fetchAuditLogs = async () => {
+
+
+[2026-02-04T18:40:37] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\[id]\page.tsx | Select-Object -Skip 210 -First 90
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+      const json = await res.json()
+      setDocuments((json.documents || []) as DocumentRow[])
+    } catch (e) {
+      toast.error("Failed to load documents", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+      setDocuments([])
+    } finally {
+      setDocsLoading(false)
+    }
+  }
+
+  const fetchAuditLogs = async () => {
+    setAuditLoading(true)
+    try {
+      const qs = new URLSearchParams()
+      qs.set("consultation_id", id)
+      qs.set("limit", "20")
+      qs.set("offset", "0")
+      const res = await fetch(`/admin/audit-logs?${qs.toString()}`, {
+        credentials: "include",
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+      const json = await res.json()
+      setAuditLogs(json.logs || [])
+    } catch (e) {
+      toast.error("Failed to load history", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+      setAuditLogs([])
+    } finally {
+      setAuditLoading(false)
+    }
+  }
+
+  const loadClinicians = async (businessId: string | null) => {
+    setCliniciansLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (businessId) params.set("business_id", businessId)
+      params.set("status", "active")
+      params.set("limit", "100")
+      params.set("offset", "0")
+
+      const res = await fetch(`/admin/clinicians?${params.toString()}`, { credentials: "include" })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+      const json = await res.json()
+      setClinicians(json.clinicians || [])
+    } catch (e) {
+      toast.error("Failed to load clinicians", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+      setClinicians([])
+    } finally {
+      setCliniciansLoading(false)
+    }
+  }
+
+  const openAssignDrawer = async () => {
+    if (!consultation) return
+    setAssignClinicianId(consultation.clinician_id || "")
+    setAssignOpen(true)
+    await loadClinicians(consultation.business_id || null)
+  }
+
+  const assignClinician = async () => {
+    if (!consultation) return
+    const clinicianId = assignClinicianId.trim()
+    if (!clinicianId) {
+      toast.error("Choose a clinician to assign")
+      return
+...(truncated)
+
+[2026-02-04T18:41:00] CMD: rg -n "useEffect\(\(\) => \{\s*if \(!id\) return" .\src\admin\routes\consultations\[id]\page.tsx
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T18:41:06] CMD: rg -n "fetchConsultation\(\)" .\src\admin\routes\consultations\[id]\page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+362:      await fetchConsultation()
+386:      await fetchConsultation()
+498:    fetchConsultation()
+
+
+[2026-02-04T18:41:12] CMD: Get-Content -LiteralPath .\src\admin\routes\consultations\[id]\page.tsx | Select-Object -Skip 470 -First 80
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+      const res = await fetch(`/admin/custom/consultations/${encodeURIComponent(id)}/notes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        signal: controller.signal,
+        body: JSON.stringify(next),
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+
+      lastSaved.current = next
+      setSaveState("saved")
+      await fetchAuditLogs()
+      window.setTimeout(() => setSaveState("idle"), 1000)
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return
+      setSaveState("error")
+      toast.error("Failed to save notes", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (!id) return
+    fetchConsultation()
+    fetchDocuments()
+    fetchAuditLogs()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  useEffect(() => {
+    if (!activeDoc && documents.length) {
+      setActiveDoc(documents[0]!)
+    }
+  }, [activeDoc, documents])
+
+  useEffect(() => {
+    if (!consultation) return
+    const serverNotes = consultation.notes ?? ""
+    const serverAdminNotes = consultation.admin_notes ?? ""
+
+    const unchanged =
+      notes === lastSaved.current.notes && adminNotes === lastSaved.current.admin_notes
+
+    if (unchanged) {
+      setNotes(serverNotes)
+      setAdminNotes(serverAdminNotes)
+      lastSaved.current = { notes: serverNotes, admin_notes: serverAdminNotes }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consultation?.id, consultation?.updated_at])
+
+  useEffect(() => {
+    if (!consultation) return
+
+    if (notes === lastSaved.current.notes && adminNotes === lastSaved.current.admin_notes) {
+      if (saveState === "dirty") setSaveState("idle")
+      return
+    }
+
+    setSaveState("dirty")
+    if (saveTimer.current) window.clearTimeout(saveTimer.current)
+    saveTimer.current = window.setTimeout(() => {
+      void saveNotesNow()
+    }, 5000)
+
+    return () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notes, adminNotes])
+
+  useEffect(() => {
+    return () => {
+      if (saveTimer.current) window.clearTimeout(saveTimer.current)
+      saveAbort.current?.abort()
+    }
+...(truncated)
+
+[2026-02-04T18:41:43] CMD: rg -n "<Badge color=\"grey\">\{modeLabel\}" .\src\admin\routes\consultations\[id]\page.tsx
+CWD: .
+RESULT: FAIL (exit 2)
+OUTPUT:
+rg : rg: regex parse error:
+At line:1 char:1
++ rg -n "<Badge color=\"grey\">\{modeLabel\}" .\src\admin\routes\consul ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (rg: regex parse error::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    (?:<Badge color=" grey\>\{modeLabel\} .\src\admin\routes\consultations\[id]\page.tsx)
+                                                            ^^
+error: unrecognized escape sequence
+
+
+[2026-02-04T18:41:50] CMD: rg -n -F "<Badge color=\"grey\">{modeLabel}" .\src\admin\routes\consultations\[id]\page.tsx
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T18:41:59] CMD: rg -n -F "{modeLabel}" .\src\admin\routes\consultations\[id]\page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+749:                <Badge color="grey">{modeLabel}</Badge>
+
+
+[2026-02-04T18:42:15] CMD: npm run build
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 build
+> medusa build
+
+[32minfo[39m:    Generating types...
+[32minfo[39m:    No link to load from D:\GitHub\TheRxSpot_Marketplace\node_modules\@medusajs\draft-order\.medusa\server\src\links. skipped.
+[32minfo[39m:    Types generated successfully
+[32minfo[39m:    Starting build...
+[32minfo[39m:    Compiling backend source...
+[32minfo[39m:    Removing existing ".medusa\server" folder
+[32minfo[39m:    Compiling frontend source...
+[32minfo[39m:    Backend build completed successfully (10.06s)
+[32minfo[39m:    Frontend build completed successfully (39.89s)
+
+
+[2026-02-04T18:43:10] CMD: git status --porcelain
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ M progress.txt
+ M src/admin/routes/consultations/[id]/page.tsx
+ M src/admin/routes/consultations/page.tsx
+?? packages/
+?? render.yaml
+?? src/store/
+?? src/types/
+
+

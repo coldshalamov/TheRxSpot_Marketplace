@@ -92,6 +92,34 @@ function modeBadge(mode: PlanMode): { color: "grey" | "blue" | "orange"; label: 
   return { color: "grey", label: "Form" }
 }
 
+function ModeIcon({ mode }: { mode: PlanMode }) {
+  const cls = "h-3.5 w-3.5 shrink-0"
+
+  if (mode === "video") {
+    return (
+      <svg className={cls} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h6A2.5 2.5 0 0 1 14 6.5v7A2.5 2.5 0 0 1 11.5 16h-6A2.5 2.5 0 0 1 3 13.5v-7Z" />
+        <path d="M14.5 8.1 18 6.3v7.4l-3.5-1.8V8.1Z" />
+      </svg>
+    )
+  }
+
+  if (mode === "audio") {
+    return (
+      <svg className={cls} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 2.5a3.5 3.5 0 0 0-3.5 3.5v4a3.5 3.5 0 1 0 7 0V6A3.5 3.5 0 0 0 10 2.5Z" />
+        <path d="M4.5 9.5a.75.75 0 0 1 .75.75 4.75 4.75 0 1 0 9.5 0 .75.75 0 0 1 1.5 0 6.25 6.25 0 0 1-5.5 6.2v1.05h2a.75.75 0 0 1 0 1.5h-5.5a.75.75 0 0 1 0-1.5h2V16.45a6.25 6.25 0 0 1-5.5-6.2.75.75 0 0 1 .75-.75Z" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg className={cls} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path d="M6 2.5A1.5 1.5 0 0 0 4.5 4v12A1.5 1.5 0 0 0 6 17.5h8A1.5 1.5 0 0 0 15.5 16V4A1.5 1.5 0 0 0 14 2.5H6Zm1.5 4.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1-.75-.75Zm0 3a.75.75 0 0 1 .75-.75h5.5a.75.75 0 0 1 0 1.5h-5.5a.75.75 0 0 1-.75-.75Zm0 3a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Z" />
+    </svg>
+  )
+}
+
 function formatDateTime(value?: string | null): string {
   if (!value) return "-"
   const date = new Date(value)
@@ -519,7 +547,12 @@ const ConsultationsPage = () => {
                     <Badge color={st.color}>{st.label}</Badge>
                   </Table.Cell>
                   <Table.Cell>
-                    <Badge color={md.color}>{md.label}</Badge>
+                    <Badge color={md.color}>
+                      <span className="inline-flex items-center gap-1">
+                        <ModeIcon mode={r.mode} />
+                        {md.label}
+                      </span>
+                    </Badge>
                   </Table.Cell>
                   <Table.Cell>
                     {r.product?.id ? (
@@ -647,6 +680,9 @@ const ConsultationsPage = () => {
                       >
                         <span className="inline-flex items-center gap-2">
                           <Badge color={b.color}>{b.label}</Badge>
+                          <span className="text-ui-fg-subtle">
+                            <ModeIcon mode={m} />
+                          </span>
                           {active ? "Included" : "Excluded"}
                         </span>
                       </button>
@@ -735,4 +771,3 @@ export const config = defineRouteConfig({
 })
 
 export default ConsultationsPage
-

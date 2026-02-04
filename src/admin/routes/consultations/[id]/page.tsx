@@ -53,6 +53,34 @@ type DocumentRow = {
   uploaded_by?: string | null
 }
 
+function ModeIcon({ mode }: { mode: "video" | "audio" | "form" }) {
+  const cls = "h-3.5 w-3.5 shrink-0"
+
+  if (mode === "video") {
+    return (
+      <svg className={cls} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h6A2.5 2.5 0 0 1 14 6.5v7A2.5 2.5 0 0 1 11.5 16h-6A2.5 2.5 0 0 1 3 13.5v-7Z" />
+        <path d="M14.5 8.1 18 6.3v7.4l-3.5-1.8V8.1Z" />
+      </svg>
+    )
+  }
+
+  if (mode === "audio") {
+    return (
+      <svg className={cls} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+        <path d="M10 2.5a3.5 3.5 0 0 0-3.5 3.5v4a3.5 3.5 0 1 0 7 0V6A3.5 3.5 0 0 0 10 2.5Z" />
+        <path d="M4.5 9.5a.75.75 0 0 1 .75.75 4.75 4.75 0 1 0 9.5 0 .75.75 0 0 1 1.5 0 6.25 6.25 0 0 1-5.5 6.2v1.05h2a.75.75 0 0 1 0 1.5h-5.5a.75.75 0 0 1 0-1.5h2V16.45a6.25 6.25 0 0 1-5.5-6.2.75.75 0 0 1 .75-.75Z" />
+      </svg>
+    )
+  }
+
+  return (
+    <svg className={cls} viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path d="M6 2.5A1.5 1.5 0 0 0 4.5 4v12A1.5 1.5 0 0 0 6 17.5h8A1.5 1.5 0 0 0 15.5 16V4A1.5 1.5 0 0 0 14 2.5H6Zm1.5 4.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 0 1.5h-3.5a.75.75 0 0 1-.75-.75Zm0 3a.75.75 0 0 1 .75-.75h5.5a.75.75 0 0 1 0 1.5h-5.5a.75.75 0 0 1-.75-.75Zm0 3a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Z" />
+    </svg>
+  )
+}
+
 function stableDisplayNumber(id: string): string {
   let hash = 0
   for (let i = 0; i < id.length; i++) {
@@ -124,6 +152,10 @@ const ConsultationDetailPage = () => {
   const [assignClinicianId, setAssignClinicianId] = useState("")
   const [clinicians, setClinicians] = useState<any[]>([])
   const [cliniciansLoading, setCliniciansLoading] = useState(false)
+
+  const [availability, setAvailability] = useState<"available" | "busy" | "unknown">("unknown")
+  const [availabilityLoading, setAvailabilityLoading] = useState(false)
+  const availabilityAbort = useRef<AbortController | null>(null)
 
   const [notes, setNotes] = useState("")
   const [adminNotes, setAdminNotes] = useState("")
@@ -214,6 +246,61 @@ const ConsultationDetailPage = () => {
       setAuditLogs([])
     } finally {
       setAuditLoading(false)
+    }
+  }
+
+  const fetchAvailability = async () => {
+    const clinicianId = consultation?.clinician?.id ? String(consultation.clinician.id) : ""
+
+    if (!clinicianId) {
+      availabilityAbort.current?.abort()
+      setAvailability("unknown")
+      setAvailabilityLoading(false)
+      return
+    }
+
+    availabilityAbort.current?.abort()
+    const controller = new AbortController()
+    availabilityAbort.current = controller
+
+    setAvailabilityLoading(true)
+    try {
+      const clinicianStatus = `${consultation?.clinician?.status || ""}`.trim().toLowerCase()
+      if (clinicianStatus && clinicianStatus !== "active") {
+        setAvailability("busy")
+        return
+      }
+
+      const now = new Date()
+      const inTwoHours = new Date(Date.now() + 2 * 60 * 60 * 1000)
+
+      const qs = new URLSearchParams()
+      qs.set("clinician_id", clinicianId)
+      qs.set("status", "scheduled")
+      qs.set("date_from", now.toISOString())
+      qs.set("date_to", inTwoHours.toISOString())
+      qs.set("limit", "25")
+      qs.set("offset", "0")
+
+      const res = await fetch(`/admin/custom/consultations?${qs.toString()}`, {
+        credentials: "include",
+        signal: controller.signal,
+      })
+      if (!res.ok) {
+        const text = await res.text().catch(() => "")
+        throw new Error(text || `HTTP ${res.status}`)
+      }
+
+      const json = (await res.json()) as { consultations?: any[] }
+      const scheduled = Array.isArray(json.consultations) ? json.consultations : []
+
+      const hasOtherScheduled = scheduled.some((c) => c?.id && c.id !== consultation?.id)
+      setAvailability(hasOtherScheduled ? "busy" : "available")
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") return
+      setAvailability("unknown")
+    } finally {
+      setAvailabilityLoading(false)
     }
   }
 
@@ -438,6 +525,15 @@ const ConsultationDetailPage = () => {
 
   useEffect(() => {
     if (!consultation) return
+    void fetchAvailability()
+    return () => {
+      availabilityAbort.current?.abort()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [consultation?.id, consultation?.clinician?.id, consultation?.updated_at])
+
+  useEffect(() => {
+    if (!consultation) return
 
     if (notes === lastSaved.current.notes && adminNotes === lastSaved.current.admin_notes) {
       if (saveState === "dirty") setSaveState("idle")
@@ -650,7 +746,20 @@ const ConsultationDetailPage = () => {
             <div className="flex items-start justify-between gap-3">
               <div className="text-sm font-medium">Consultation details</div>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge color="grey">{modeLabel}</Badge>
+                <Badge color="grey">
+                  <span className="inline-flex items-center gap-1">
+                    <ModeIcon
+                      mode={
+                        consultation.mode === "video"
+                          ? "video"
+                          : consultation.mode === "audio"
+                            ? "audio"
+                            : "form"
+                      }
+                    />
+                    {modeLabel}
+                  </span>
+                </Badge>
                 <Badge color="grey">{typeLabel}</Badge>
               </div>
             </div>
@@ -922,6 +1031,18 @@ const ConsultationDetailPage = () => {
                 <div className="font-medium truncate">{clinicianName}</div>
                 <div className="text-xs text-ui-fg-subtle truncate">
                   {clinician?.status ? `Status: ${clinician.status}` : "Status: —"}
+                </div>
+                <div className="text-xs text-ui-fg-subtle truncate">
+                  Availability:{" "}
+                  {availabilityLoading ? (
+                    "Checking…"
+                  ) : availability === "available" ? (
+                    <span className="text-green-700">Available</span>
+                  ) : availability === "busy" ? (
+                    <span className="text-orange-700">Busy</span>
+                  ) : (
+                    "—"
+                  )}
                 </div>
               </div>
             </div>
