@@ -73,13 +73,17 @@ jest.mock("@sendgrid/mail", () => ({
 }))
 
 // Mock Twilio / SMS services
-jest.mock("twilio", () => {
-  return jest.fn().mockImplementation(() => ({
-    messages: {
-      create: jest.fn().mockResolvedValue({ sid: "SM_test_123" }),
-    },
-  }))
-})
+jest.mock(
+  "twilio",
+  () => {
+    return jest.fn().mockImplementation(() => ({
+      messages: {
+        create: jest.fn().mockResolvedValue({ sid: "SM_test_123" }),
+      },
+    }))
+  },
+  { virtual: true }
+)
 
 // Mock HTTP requests
 jest.mock("axios", () => ({
