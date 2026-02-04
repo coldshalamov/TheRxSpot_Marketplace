@@ -8588,3 +8588,4096 @@ At line:1 char:1
 warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
 
 
+[2026-02-04T13:23:05] CMD: Get-ChildItem -Path src/api/admin/consultations -Recurse -File | Select-Object FullName
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+FullName                                                                           
+--------                                                                           
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\consultations\route.ts               
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\consultations\[id]\route.ts          
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\consultations\[id]\assign\route.ts   
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\consultations\[id]\complete\route.ts 
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\consultations\[id]\documents\route.ts
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\consultations\[id]\restore\route.ts  
+D:\GitHub\TheRxSpot_Marketplace\src\api\admin\consultations\[id]\status\route.ts   
+
+
+
+
+[2026-02-04T??:??:??] CMD: cd d:\GitHub\TheRxSpot_Marketplace && ls
+CWD: (initial)
+RESULT: FAIL (PowerShell parser error)
+OUTPUT:
+The token '&&' is not a valid statement separator in this version.
+
+[2026-02-04T13:24:35] NOTE: Prior entry used placeholder timestamp; command failed due to PowerShell '&&' not supported in this environment.
+
+[2026-02-04T13:24:42] CMD: rg --version
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ripgrep 15.1.0 (rev af60c2de9d)
+
+features:+pcre2
+simd(compile):+SSE2,-SSSE3,-AVX2
+simd(runtime):+SSE2,+SSSE3,+AVX2
+
+PCRE2 10.45 is available (JIT is available)
+
+
+[2026-02-04T13:24:59] CMD: rg -n "Consultations Management" PLAN.txt
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+160:Consultations Management Page (16h)
+
+
+[2026-02-04T13:25:08] CMD: (Get-Content PLAN.txt | Select-Object -Skip 150 -First 120) -join [Environment]::NewLine
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+ Select all checkbox
+ Bulk deactivate
+ Bulk export to CSV
+ User Detail Modal:
+ Personal info (editable)
+ Order history (linked to orders page)
+ Consultation history (linked to consultations page)
+ Activity log (last 50 actions)
+ Deactivation reason (if inactive)
+Consultations Management Page (16h)
+ Create src/admin/routes/consultations/page.tsx (list view)
+ Table Columns:
+ ID (CO-{number}, clickable)
+ Client Name (linked to user profile)
+ Provider (clinician name or "Unassigned")
+ Business (business name with logo)
+ Scheduled Date/Time (with timezone)
+ State (patient state, e.g. "FL")
+ Status (badge: Pending/Scheduled/Completed/Approved/Rejected)
+ Mode (icon: video/audio/form)
+ Product (linked medication)
+ Type (Initial/Follow-up)
+ Actions (View, Assign, Approve, Reject)
+ Search & Filters:
+ Search by client name, clinician name, order ID
+ Filter by status (multi-select)
+ Filter by mode (video/audio/form)
+ Filter by type (initial/follow-up)
+ Filter by business (dropdown)
+ Date range filter (scheduled between X and Y)
+ Filter by state (for compliance review)
+ Bulk Actions:
+ Bulk assign to clinician
+ Bulk export to PDF report
+ Create src/admin/routes/consultations/[id]/page.tsx (detail view)
+ Detail Layout:
+Header Section:
+ Consultation ID (large, copyable)
+ Status badge (with last updated timestamp)
+ [Print] and [Export PDF] buttons
+Patient Information Card:
+ Full name, DOB, age
+ Phone (formatted, click-to-call if web calling enabled)
+ Email (click-to-email)
+ Address (full, with map link)
+ State (highlighted for compliance)
+Consultation Details Card:
+ Linked product (name, dosage, image)
+ Mode (video/audio/form with icon)
+ Type (initial/follow-up)
+ Scheduled date/time (with timezone, countdown if upcoming)
+ Chief complaint (patient's primary concern)
+ Medical history (formatted, expandable)
+ Current medications (list)
+ Allergies (highlighted in red if any)
+Clinician Assignment Section:
+ Current clinician (avatar + name)
+ [Reassign] button â†’ modal with clinician dropdown
+ Clinician availability indicator (available/busy)
+Status Management Section:
+ Status timeline (visual stepper: Pending â†’ Scheduled â†’ Completed â†’ Approved)
+ Status action buttons:
+ [Schedule] (if pending)
+ [Mark Complete] (if scheduled)
+ [Approve] (if completed)
+ [Reject] (if completed) â†’ requires rejection reason
+ Rejection reason field (if rejected)
+Documents Section:
+ Uploaded documents list (filename, type, size, uploaded by, timestamp)
+ [Download] button per document
+ [Upload New Document] button â†’ file picker
+ Document preview (PDFs render inline, images show thumbnail)
+ Support drag-and-drop upload
+Notes Section:
+ Clinician notes (rich text editor)
+ Admin notes (internal, not visible to patient)
+ Auto-save every 5 seconds
+Status History Timeline:
+ Visual timeline showing all status changes
+ User who made change, timestamp, old status â†’ new status
+...(truncated)
+
+[2026-02-04T13:25:17] CMD: rg -n \
+CWD: admin_notes\ -S src | head
+RESULT: FAIL (exit 1)
+OUTPUT:
+System.ArgumentException: Illegal characters in path.
+   at System.IO.Path.CheckInvalidPathChars(String path, Boolean checkAdditional)
+   at System.IO.Path.GetFileName(String path)
+   at System.Management.Automation.Utils.IsReservedDeviceName(String destinationPath)
+   at System.Management.Automation.Utils.NativeItemExists(String path, Boolean& isDirectory, Exception& exception)
+   at Microsoft.PowerShell.Commands.FileSystemProvider.ItemExists(String path, ErrorRecord& error)
+
+[2026-02-04T13:25:26] CMD: rg -n -S -m 10 "admin_notes" src
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T13:25:34] CMD: rg -n -S -m 20 "clinician" src/modules/consultation src/api src/admin
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src/modules/consultation\service.ts:3:import { Clinician } from "./models/clinician"
+src/modules/consultation\service.ts:6:import { ClinicianSchedule } from "./models/clinician-schedule"
+src/modules/consultation\service.ts:7:import { ClinicianAvailabilityException } from "./models/clinician-availability-exception"
+src/modules/consultation\service.ts:41:  Clinician,
+src/modules/consultation\service.ts:44:  ClinicianSchedule,
+src/modules/consultation\service.ts:45:  ClinicianAvailabilityException,
+src/modules/consultation\service.ts:147:  async listConsultationsByClinician(clinicianId: string) {
+src/modules/consultation\service.ts:149:      { clinician_id: clinicianId },
+src/modules/consultation\service.ts:214:   * Assign a clinician to a consultation
+src/modules/consultation\service.ts:216:  async assignClinician(consultationId: string, clinicianId: string) {
+src/modules/consultation\service.ts:222:    const clinician = await this.getClinicianById(clinicianId)
+src/modules/consultation\service.ts:223:    if (!clinician) {
+src/modules/consultation\service.ts:224:      throw new Error(`Clinician not found: ${clinicianId}`)
+src/modules/consultation\service.ts:228:      clinician_id: clinicianId,
+src/modules/consultation\service.ts:301:  // CLINICIAN METHODS
+src/modules/consultation\service.ts:304:  async listClinicians(
+src/modules/consultation\service.ts:318:    return await this.listAndCountClinicians(f, o)
+src/modules/consultation\service.ts:321:  async getClinicianOrThrow(id: string) {
+src/modules/consultation\service.ts:322:    const clinicians = await this.listClinicians({ id }, { take: 1 })
+src/modules/consultation\service.ts:323:    if (!clinicians[0].length) {
+src/admin\routes\users\page.tsx:21:type UserRole = "customer" | "admin" | "clinician"
+src/admin\routes\users\page.tsx:88:  if (role === "clinician") return { color: "orange", label: "Clinician" }
+src/admin\routes\users\page.tsx:393:                <Select.Item value="clinician">Clinician</Select.Item>
+src/modules/consultation\models\index.ts:2:import { Clinician } from "./clinician"
+src/modules/consultation\models\index.ts:5:import { ClinicianSchedule } from "./clinician-schedule"
+src/modules/consultation\models\index.ts:6:import { ClinicianAvailabilityException } from "./clinician-availability-exception"
+src/modules/consultation\models\index.ts:8:export { Consultation, Clinician, Patient, ConsultationStatusEvent, ClinicianSchedule, ClinicianAvailabilityException }
+src/modules/consultation\models\index.ts:9:export default [Consultation, Clinician, Patient, ConsultationStatusEvent, ClinicianSchedule, ClinicianAvailabilityException]
+src/modules/consultation\models\consultation.ts:7:  clinician_id: model.text().nullable(),
+src/api\store\consultations\[id]\route.ts:66:    // Include limited clinician info
+src/api\store\consultations\[id]\route.ts:67:    clinician_id: consultation.clinician_id,
+src/modules/consultation\models\clinician.ts:3:export const Clinician = model.define("clinician", {
+src/modules/consultation\models\clinician.ts:20:  is_platform_clinician: model.boolean().default(false),
+src/modules/consultation\models\clinician-schedule.ts:3:export const ClinicianSchedule = model.define("clinician_schedule", {
+src/modules/consultation\models\clinician-schedule.ts:5:  clinician_id: model.text(),
+src/modules/consultation\models\clinician-availability-exception.ts:3:export const ClinicianAvailabilityException = model.define("clinician_availability_exception", {
+src/modules/consultation\models\clinician-availability-exception.ts:5:  clinician_id: model.text(),
+src/api\store\consultations\[id]\cancel\route.ts:86:    clinician_id: consultation.clinician_id,
+src/api\store\consultations\route.ts:167:    // Include limited clinician info
+src/api\store\consultations\route.ts:168:    clinician_id: consultation.clinician_id,
+src/modules/consultation\migrations\Migration20260204000013.ts:9:    this.addSql(`ALTER TABLE "clinician" ADD COLUMN IF NOT EXISTS "date_of_birth" text NULL`)
+src/modules/consultation\migrations\Migration20260204000013.ts:10:    this.addSql(`ALTER TABLE "clinician" ADD COLUMN IF NOT EXISTS "deactivation_reason" text NULL`)
+src/modules/consultation\migrations\Migration20260204000013.ts:14:    this.addSql(`ALTER TABLE "clinician" DROP COLUMN IF EXISTS "deactivation_reason"`)
+src/modules/consultation\migrations\Migration20260204000013.ts:15:    this.addSql(`ALTER TABLE "clinician" DROP COLUMN IF EXISTS "date_of_birth"`)
+src/modules/consultation\migrations\Migration20260204000010.ts:13:      `ALTER TABLE "clinician_schedule" ADD COLUMN IF NOT EXISTS "deleted_at" TIMESTAMPTZ NULL`
+src/modules/consultation\migrations\Migration20260204000010.ts:16:      `ALTER TABLE "clinician_availability_exception" ADD COLUMN IF NOT EXISTS "deleted_at" TIMESTAMPTZ NULL`
+src/modules/consultation\migrations\Migration20260204000010.ts:30:      `CREATE INDEX IF NOT EXISTS "IDX_clinician_deleted_at" ON "clinician" ("deleted_at")`
+src/modules/consultation\migrations\Migration20260204000010.ts:36:      `CREATE INDEX IF NOT EXISTS "IDX_clinician_schedule_deleted_at" ON "clinician_schedule" ("deleted_at")`
+src/modules/consultation\migrations\Migration20260204000010.ts:39:      `CREATE INDEX IF NOT EXISTS "IDX_clinician_availability_exception_deleted_at" ON "clinician_availability_exception" ("deleted_at")`
+src/modules/consultation\migrations\Migration20260204000010.ts:47:    this.addSql(`DROP INDEX IF EXISTS "IDX_clinician_deleted_at"`)
+src/modules/consultation\migrations\Migration20260204000010.ts:49:    this.addSql(`DROP INDEX IF EXISTS "IDX_clinician_schedule_deleted_at"`)
+src/modules/consultation\migrations\Migration20260204000010.ts:50:    this.addSql(`DROP INDEX IF EXISTS "IDX_clinician_availability_exception_deleted_at"`)
+src/modules/consultation\migrations\Migration20260204000010.ts:52:    this.addSql(`ALTER TABLE "clinician_schedule" DROP COLUMN IF EXISTS "deleted_at"`)
+src/modules/consultation\migrations\Migration20260204000010.ts:53:    this.addSql(`ALTER TABLE "clinician_availability_exception" DROP COLUMN IF EXISTS "deleted_at"`)
+src/modules/consultation\migrations\Migration20260204000002.ts:8: * `consultation`, `patient`, `clinician`, and `consultation_status_event`.
+src/modules/consultation\migrations\Migration20260204000002.ts:12:    // `clinician`
+src/modules/consultation\migrations\Migration20260204000002.ts:14:      CREATE TABLE IF NOT EXISTS "clinician" (
+src/modules/consultation\migrations\Migration20260204000002.ts:29:        "is_platform_clinician" BOOLEAN NOT NULL DEFAULT FALSE,
+src/modules/consultation\migrations\Migration20260204000002.ts:36:    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_clinician_business_id" ON "clinician" ("business_id")`)
+src/modules/consultation\migrations\Migration20260204000002.ts:37:    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_clinician_email" ON "clinician" ("email")`)
+src/modules/consultation\migrations\Migration20260204000002.ts:70:        "clinician_id" TEXT NULL,
+src/modules/consultation\migrations\Migration20260204000002.ts:94:    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_consultation_clinician_id" ON "consultation" ("clinician_id")`)
+src/modules/consultation\migrations\Migration20260204000002.ts:124:    this.addSql(`DROP TABLE IF EXISTS "clinician" CASCADE`)
+src/modules/consultation\migrations\Migration20250203000004.ts:6:    // Create clinician_schedule table
+src/modules/consultation\migrations\Migration20250203000004.ts:8:      CREATE TABLE IF NOT EXISTS "clinician_schedule" (
+src/modules/consultation\migrations\Migration20250203000004.ts:10:        "clinician_id" TEXT NOT NULL,
+src/modules/consultation\migrations\Migration20250203000004.ts:22:    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_clinician_schedule_clinician_id" ON "clinician_schedule" ("clinician_id")`);
+src/modules/consultation\migrations\Migration20250203000004.ts:23:    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_clinician_schedule_day_of_week" ON "clinician_schedule" ("day_of_week")`);
+src/modules/consultation\migrations\Migration20250203000004.ts:24:    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_clinician_schedule_effective" ON "clinician_schedule" ("effective_from", "effective_to")`);
+src/modules/consultation\migrations\Migration20250203000004.ts:26:    // Create clinician_availability_exception table
+src/modules/consultation\migrations\Migration20250203000004.ts:28:      CREATE TABLE IF NOT EXISTS "clinician_availability_exception" (
+src/modules/consultation\migrations\Migration20250203000004.ts:30:        "clinician_id" TEXT NOT NULL,
+src/modules/consultation\migrations\Migration20250203000004.ts:39:    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_clinician_availability_exception_clinician_id" ON "clinician_availability_exception" ("clinician_id")`);
+src/modules/consultation\migrations\Migration20250203000004.ts:40:    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_clinician_availability_exception_date" ON "clinician_availability_exception" ("date")`);
+src/modules/consultation\migrations\Migration20250203000004.ts:44:    this.addSql(`DROP TABLE IF EXISTS "clinician_schedule"`);
+src/modules/consultation\migrations\Migration20250203000004.ts:45:    this.addSql(`DROP TABLE IF EXISTS "clinician_availability_exception"`);
+src/api\store\consultations\available-slots\route.ts:13:    clinician_id,
+src/api\store\consultations\available-slots\route.ts:46:      clinician_id?: string
+src/api\store\consultations\available-slots\route.ts:49:    if (clinician_id) {
+src/api\store\consultations\available-slots\route.ts:50:      // Get slots for specific clinician
+...(truncated)
+
+[2026-02-04T13:25:40] CMD: Get-Content src\modules\consultation\models\consultation.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { model } from "@medusajs/framework/utils"
+
+export const Consultation = model.define("consultation", {
+  id: model.id().primaryKey(),
+  business_id: model.text(),
+  patient_id: model.text(),
+  clinician_id: model.text().nullable(),
+  mode: model.enum(["async_form", "video", "phone", "chat"]),
+  status: model.enum(["draft", "scheduled", "in_progress", "completed", "incomplete", "no_show", "cancelled"]),
+  scheduled_at: model.dateTime().nullable(),
+  started_at: model.dateTime().nullable(),
+  ended_at: model.dateTime().nullable(),
+  duration_minutes: model.number().nullable(),
+  chief_complaint: model.text().nullable(),
+  medical_history: model.json().nullable(),
+  assessment: model.text().nullable(),
+  plan: model.text().nullable(),
+  notes: model.text().nullable(),
+  outcome: model.enum(["approved", "rejected", "pending", "requires_followup"]).nullable(),
+  rejection_reason: model.text().nullable(),
+  approved_medications: model.array().nullable(),
+  originating_submission_id: model.text().nullable(),
+  order_id: model.text().nullable(),
+})
+
+
+
+[2026-02-04T13:25:47] CMD: rg -n -S -m 20 "admin_notes" src/modules/consultation
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T13:25:58] CMD: rg -n -S -m 20 "Rich" src/admin | head -n 20
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+System.Management.Automation.CommandNotFoundException: The term 'head' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)
+   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.Interpreter.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.LightLambda.RunVoid1[T0](T0 arg0)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipeImpl(ScriptBlockClauseToInvoke clauseToInvoke, Boolean createLocalScope, Dictionary`2 functionsToDefine, List`1 variablesToDefine, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Object[] args)
+   at System.Management.Automation.ScriptBlock.<>c__DisplayClass57_0.<InvokeWithPipe>b__0()
+   at System.Management.Automation.Runspaces.RunspaceBase.RunActionIfNoRunningPipelinesWithThreadCheck(Action action)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipe(Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Boolean propagateAllExceptionsToTop, List`1 variablesToDefine, Dictionary`2 functionsToDefine, Object[] args)
+   at System.Management.Automation.ScriptBlock.InvokeUsingCmdlet(Cmdlet contextCmdlet, Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Object[] args)
+   at Microsoft.PowerShell.Commands.InvokeExpressionCommand.ProcessRecord()
+   at System.Management.Automation.CommandProcessor.ProcessRecord()
+
+[2026-02-04T13:26:03] CMD: rg -n -S -m 20 "RichText" src/admin
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T13:26:10] CMD: Get-Content package.json -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+{
+  "name": "TheRxSpot_Marketplace",
+  "version": "0.0.1",
+  "description": "A starter for Medusa projects.",
+  "author": "Medusa (https://medusajs.com)",
+  "license": "MIT",
+  "keywords": [
+    "sqlite",
+    "postgres",
+    "typescript",
+    "ecommerce",
+    "headless",
+    "medusa"
+  ],
+  "scripts": {
+    "postinstall": "node ./scripts/ensure-date-fns-locale.mjs",
+    "build": "medusa build",
+    "db:clean-migrate": "node ./scripts/db/clean-migrate.mjs",
+    "seed": "medusa exec ./src/scripts/seed.ts",
+    "start": "medusa start",
+    "dev": "medusa develop",
+    "test:integration:http": "TEST_TYPE=integration:http NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
+    "test:integration:modules": "TEST_TYPE=integration:modules NODE_OPTIONS=--experimental-vm-modules jest --silent=false --runInBand --forceExit",
+    "test:integration:custom": "NODE_OPTIONS=--experimental-vm-modules jest --config=jest.integration.config.js --silent=false --runInBand --forceExit",
+    "test:unit": "TEST_TYPE=unit NODE_OPTIONS=--experimental-vm-modules jest --silent --runInBand --forceExit",
+    "test:consult-gating": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/consult-gating.test.ts --silent=false --runInBand --forceExit",
+    "test:consultation": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/consultation-lifecycle.test.ts --silent=false --runInBand --forceExit",
+    "test:earnings": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/earnings.test.ts --silent=false --runInBand --forceExit",
+    "test:documents": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/documents.test.ts --silent=false --runInBand --forceExit",
+    "test:audit": "NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/audit-logging.test.ts --silent=false --runInBand --forceExit"
+  },
+  "dependencies": {
+    "@medusajs/admin-sdk": "2.13.1",
+    "@medusajs/cli": "2.13.1",
+    "@medusajs/framework": "2.13.1",
+    "@medusajs/medusa": "2.13.1",
+    "@types/qrcode": "^1.5.6",
+    "clamscan": "^1.4.2",
+    "date-fns": "^3.6.0",
+    "file-type": "^19.6.0",
+    "ioredis": "^5.3.2",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@medusajs/test-utils": "2.13.1",
+    "@swc/core": "^1.7.28",
+    "@swc/jest": "^0.2.36",
+    "@types/jest": "^29.5.13",
+    "@types/node": "^20.12.11",
+    "@types/react": "^18.3.2",
+    "@types/react-dom": "^18.2.25",
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "prop-types": "^15.8.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "vite": "^5.4.14",
+    "yalc": "^1.0.0-pre.53"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "npm@11.5.2"
+}
+
+
+
+[2026-02-04T13:26:20] CMD: Get-Content src\admin\routes\users\page.tsx -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { defineRouteConfig } from "@medusajs/admin-sdk"
+import {
+  Avatar,
+  Badge,
+  Button,
+  Container,
+  Copy,
+  Drawer,
+  Heading,
+  Input,
+  Select,
+  Table,
+  Toaster,
+  toast,
+  DatePicker,
+} from "@medusajs/ui"
+import { format, formatDistanceToNowStrict } from "date-fns"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { useNavigate } from "react-router-dom"
+
+type UserRole = "customer" | "admin" | "clinician"
+type UserStatus = "active" | "inactive"
+
+type UserRow = {
+  id: string
+  entity_id: string
+  role: UserRole
+  status: UserStatus
+  first_name: string | null
+  last_name: string | null
+  email: string | null
+  phone: string | null
+  date_of_birth: string | null
+  created_at: string
+  avatar_url?: string | null
+  deactivation_reason?: string | null
+}
+
+type UsersListResponse = {
+  users: UserRow[]
+  count: number
+  limit: number
+  offset: number
+}
+
+const LIMIT = 25
+
+function initials(firstName?: string | null, lastName?: string | null, email?: string | null): string {
+  const f = (firstName || "").trim()
+  const l = (lastName || "").trim()
+  if (f || l) {
+    return `${f.slice(0, 1)}${l.slice(0, 1)}`.toUpperCase()
+  }
+  const e = (email || "").trim()
+  if (!e) return "U"
+  return e.slice(0, 2).toUpperCase()
+}
+
+function formatPhone(value?: string | null): string {
+  if (!value) return "-"
+  const digits = value.replace(/[^\d]/g, "")
+  const ten = digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits
+  if (ten.length === 10) {
+    return `+1-${ten.slice(0, 3)}-${ten.slice(3, 6)}-${ten.slice(6)}`
+  }
+  return value
+}
+
+function formatDobAndAge(dob?: string | null): { label: string; ageLabel: string } {
+  if (!dob) return { label: "-", ageLabel: "" }
+  const date = new Date(dob)
+  if (Number.isNaN(date.getTime())) {
+    return { label: dob, ageLabel: "" }
+  }
+  const now = new Date()
+  let age = now.getFullYear() - date.getFullYear()
+  const m = now.getMonth() - date.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < date.getDate())) {
+    age -= 1
+  }
+...(truncated)
+
+[2026-02-04T13:26:30] CMD: ls src\admin\routes\consultations -ErrorAction SilentlyContinue
+CWD: .
+RESULT: PASS (exit 0)
+
+[2026-02-04T13:26:36] CMD: ls src\admin\routes
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\admin\routes
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/3/2026   2:22 PM                businesses                                                           
+d-----          2/4/2026  12:34 PM                home                                                                 
+d-----          2/3/2026   2:24 PM                orders-global                                                        
+d-----          2/4/2026   1:14 PM                users                                                                
+
+
+
+
+[2026-02-04T13:26:47] CMD: Get-Content src\api\admin\consultations\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { CONSULTATION_MODULE } from "../../../modules/consultation"
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+
+  // Parse query parameters
+  const {
+    business_id,
+    status,
+    clinician_id,
+    patient_id,
+    date_from,
+    date_to,
+    mode,
+    outcome,
+    limit = "50",
+    offset = "0",
+  } = req.query as Record<string, string | undefined>
+
+  // Build filters
+  const filters: Record<string, any> = {}
+
+  if (business_id) {
+    filters.business_id = business_id
+  }
+  if (status) {
+    filters.status = status
+  }
+  if (clinician_id) {
+    filters.clinician_id = clinician_id
+  }
+  if (patient_id) {
+    filters.patient_id = patient_id
+  }
+  if (mode) {
+    filters.mode = mode
+  }
+  if (outcome) {
+    filters.outcome = outcome
+  }
+
+  // Date range filtering on scheduled_at
+  if (date_from || date_to) {
+    filters.scheduled_at = {}
+    if (date_from) {
+      filters.scheduled_at.$gte = new Date(date_from)
+    }
+    if (date_to) {
+      filters.scheduled_at.$lte = new Date(date_to)
+    }
+  }
+
+  // Pagination
+  const take = parseInt(limit, 10)
+  const skip = parseInt(offset, 10)
+
+  try {
+    const [consultations, count] = await consultationService.listConsultations(filters, {
+      skip,
+      take,
+      order: { created_at: "DESC" },
+    })
+
+    res.json({
+      consultations,
+      count,
+      limit: take,
+      offset: skip,
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to list consultations",
+      error: error instanceof Error ? error.message : "Unknown error",
+    })
+  }
+}
+
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+...(truncated)
+
+[2026-02-04T13:27:01] CMD: Get-Content src\modules\consultation\service.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaService } from "@medusajs/framework/utils"
+import { Consultation } from "./models/consultation"
+import { Clinician } from "./models/clinician"
+import { Patient } from "./models/patient"
+import { ConsultationStatusEvent } from "./models/consultation-status-event"
+import { ClinicianSchedule } from "./models/clinician-schedule"
+import { ClinicianAvailabilityException } from "./models/clinician-availability-exception"
+import { decryptFields, encryptFields } from "../../utils/encryption"
+
+// Valid status transitions for consultations
+const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
+  draft: ["scheduled", "cancelled"],
+  scheduled: ["in_progress", "cancelled", "no_show"],
+  in_progress: ["completed", "incomplete", "cancelled"],
+  completed: [],
+  incomplete: [],
+  no_show: [],
+  cancelled: [],
+}
+
+// Type for availability slot
+export interface AvailabilitySlot {
+  day_of_week: number
+  start_time: string
+  end_time: string
+  is_available: boolean
+}
+
+// Type for complete consultation data
+export interface CompleteConsultationData {
+  outcome: "approved" | "rejected" | "requires_followup"
+  approved_medications?: string[]
+  notes?: string
+  assessment?: string
+  plan?: string
+  rejection_reason?: string
+}
+
+const ConsultationBaseService = MedusaService({
+  Consultation,
+  Clinician,
+  Patient,
+  ConsultationStatusEvent,
+  ClinicianSchedule,
+  ClinicianAvailabilityException,
+}) as any
+
+class ConsultationModuleService extends ConsultationBaseService {
+  private normalizeListArgs(filters: Record<string, any> = {}, options: Record<string, any> = {}) {
+    const includeDeleted = !!(filters as any)?.include_deleted
+    const normalizedFilters = { ...(filters || {}) } as Record<string, any>
+    delete (normalizedFilters as any).include_deleted
+
+    if (!includeDeleted && normalizedFilters.deleted_at === undefined) {
+      normalizedFilters.deleted_at = null
+    }
+
+    const normalizedOptions = { ...(options || {}) } as Record<string, any>
+    if (includeDeleted) {
+      normalizedOptions.withDeleted = true
+    }
+
+    return { filters: normalizedFilters, options: normalizedOptions }
+  }
+
+  private static readonly PATIENT_PHI_FIELDS = [
+    "first_name",
+    "last_name",
+    "email",
+    "phone",
+    "date_of_birth",
+    "medical_history",
+    "allergies",
+    "medications",
+    "emergency_contact_name",
+    "emergency_contact_phone",
+  ] as const
+
+  private static isPhiEncryptionEnabled(): boolean {
+    return (process.env.PHI_ENCRYPTION_ENABLED || "").toLowerCase() === "true"
+...(truncated)
+
+[2026-02-04T13:27:10] CMD: Get-Content src\api\admin\consultations\[id]\status\route.ts -Raw
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+System.Management.Automation.ParameterBindingException: A parameter cannot be found that matches parameter name 'Raw'.
+   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)
+   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.Interpreter.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.LightLambda.RunVoid1[T0](T0 arg0)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipeImpl(ScriptBlockClauseToInvoke clauseToInvoke, Boolean createLocalScope, Dictionary`2 functionsToDefine, List`1 variablesToDefine, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Object[] args)
+   at System.Management.Automation.ScriptBlock.<>c__DisplayClass57_0.<InvokeWithPipe>b__0()
+   at System.Management.Automation.Runspaces.RunspaceBase.RunActionIfNoRunningPipelinesWithThreadCheck(Action action)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipe(Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Boolean propagateAllExceptionsToTop, List`1 variablesToDefine, Dictionary`2 functionsToDefine, Object[] args)
+   at System.Management.Automation.ScriptBlock.InvokeUsingCmdlet(Cmdlet contextCmdlet, Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Object[] args)
+   at Microsoft.PowerShell.Commands.InvokeExpressionCommand.ProcessRecord()
+   at System.Management.Automation.CommandProcessor.ProcessRecord()
+
+[2026-02-04T13:27:23] CMD: Get-Content -LiteralPath 'src\\api\\admin\\consultations\\[id]\\status\\route.ts' -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import { BUSINESS_MODULE } from "../../../../../modules/business"
+
+type PlanStatus = "pending" | "scheduled" | "completed" | "approved" | "rejected"
+
+const ALLOWED_TRANSITIONS: Record<PlanStatus, PlanStatus[]> = {
+  pending: ["scheduled"],
+  scheduled: ["completed"],
+  completed: ["approved", "rejected"],
+  approved: [],
+  rejected: [],
+}
+
+function getOptionalTenantBusinessId(req: MedusaRequest): string | undefined {
+  const authContext = (req as any).auth_context as
+    | {
+        business_id?: string
+        metadata?: Record<string, any>
+        app_metadata?: Record<string, any>
+      }
+    | undefined
+
+  return (
+    authContext?.business_id ||
+    authContext?.metadata?.business_id ||
+    authContext?.app_metadata?.business_id
+  )
+}
+
+function getRequestIp(req: MedusaRequest): string | null {
+  return (
+    ((req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ??
+      (req as any).request_context?.ip_address ??
+      (req as any).ip ??
+      null)
+  )
+}
+
+function getPlanStatus(consultation: any): PlanStatus {
+  if (consultation.status === "draft") return "pending"
+  if (consultation.status === "scheduled") return "scheduled"
+  if (consultation.status === "completed") {
+    if (consultation.outcome === "approved") return "approved"
+    if (consultation.outcome === "rejected") return "rejected"
+    return "completed"
+  }
+  // For non-plan statuses, treat as pending to force explicit handling.
+  return "pending"
+}
+
+/**
+ * POST /admin/consultations/:id/status
+ *
+ * Body:
+ * - status: "pending" | "scheduled" | "completed" | "approved" | "rejected"
+ * - reason?: string (required when status="rejected")
+ */
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const { id } = req.params
+  const body = (req.body ?? {}) as Record<string, any>
+
+  const requestedStatus = typeof body.status === "string" ? body.status.trim() : ""
+  const nextStatus = requestedStatus as PlanStatus
+
+  if (!["pending", "scheduled", "completed", "approved", "rejected"].includes(nextStatus)) {
+    return res.status(400).json({
+      code: "INVALID_INPUT",
+      message:
+        "status must be one of: pending, scheduled, completed, approved, rejected",
+    })
+  }
+
+  const reason = typeof body.reason === "string" ? body.reason.trim() : ""
+  if (nextStatus === "rejected" && !reason) {
+    return res.status(400).json({
+      code: "REJECTION_REASON_REQUIRED",
+      message: "reason is required when status is rejected",
+    })
+  }
+...(truncated)
+
+[2026-02-04T13:27:30] CMD: Get-Content -LiteralPath 'src\\api\\admin\\consultations\\[id]\\assign\\route.ts' -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+
+function getOptionalTenantBusinessId(req: MedusaRequest): string | undefined {
+  const authContext = (req as any).auth_context as
+    | {
+        business_id?: string
+        metadata?: Record<string, any>
+        app_metadata?: Record<string, any>
+      }
+    | undefined
+
+  return (
+    authContext?.business_id ||
+    authContext?.metadata?.business_id ||
+    authContext?.app_metadata?.business_id
+  )
+}
+
+function getRequestIp(req: MedusaRequest): string | null {
+  return (
+    ((req.headers["x-forwarded-for"] as string | undefined)?.split(",")[0]?.trim() ??
+      (req as any).request_context?.ip_address ??
+      (req as any).ip ??
+      null)
+  )
+}
+
+/**
+ * POST /admin/consultations/:id/assign
+ *
+ * Body:
+ * - clinician_id: string
+ */
+export async function POST(req: MedusaRequest, res: MedusaResponse) {
+  const { id } = req.params
+  const body = (req.body ?? {}) as Record<string, any>
+
+  const clinicianId = typeof body.clinician_id === "string" ? body.clinician_id.trim() : ""
+  if (!clinicianId) {
+    return res.status(400).json({
+      code: "INVALID_INPUT",
+      message: "clinician_id is required",
+    })
+  }
+
+  const authContext = (req as any).auth_context as
+    | { actor_id?: string; actor_type?: string; actor_email?: string }
+    | undefined
+
+  const actorId = authContext?.actor_id || "unknown"
+  const actorType = ((authContext?.actor_type || "business_user") === "user"
+    ? "business_user"
+    : authContext?.actor_type || "business_user") as any
+
+  const consultationService = req.scope.resolve(CONSULTATION_MODULE) as any
+  const complianceService = req.scope.resolve("complianceModuleService") as any
+  const eventBus = (req.scope as any).resolve?.("event_bus") ?? null
+
+  let consultation: any
+  try {
+    const [consultations] = await consultationService.listAndCountConsultations(
+      { id },
+      { take: 1 }
+    )
+    consultation = consultations?.[0]
+    if (!consultation) {
+      throw new Error("not found")
+    }
+  } catch (error) {
+    return res.status(404).json({
+      code: "NOT_FOUND",
+      message: "Consultation not found",
+    })
+  }
+
+  const tenantBusinessId = getOptionalTenantBusinessId(req)
+  if (tenantBusinessId && consultation.business_id !== tenantBusinessId) {
+    return res.status(404).json({
+      code: "NOT_FOUND",
+...(truncated)
+
+[2026-02-04T13:27:39] CMD: Get-Content src\\api\\admin\\tenant\\consultations\\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { authenticate } from "@medusajs/framework"
+import { CONSULTATION_MODULE } from "../../../../modules/consultation"
+
+/**
+ * GET /admin/tenant/consultations
+ * List consultations for the tenant's business only
+ */
+export const GET = [
+  authenticate("user", ["session", "bearer"]),
+  async (req: MedusaRequest, res: MedusaResponse) => {
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+    const tenantContext = (req as any).tenant_context
+
+    if (!tenantContext?.business_id) {
+      return res.status(401).json({ message: "Not authenticated as tenant user" })
+    }
+
+    // Parse query parameters
+    const {
+      status,
+      clinician_id,
+      patient_id,
+      date_from,
+      date_to,
+      mode,
+      outcome,
+      limit = "50",
+      offset = "0",
+    } = req.query as Record<string, string | undefined>
+
+    // Build filters - always filter by tenant's business_id
+    const filters: Record<string, any> = {
+      business_id: tenantContext.business_id,
+    }
+
+    if (status) {
+      filters.status = status
+    }
+    if (clinician_id) {
+      filters.clinician_id = clinician_id
+    }
+    if (patient_id) {
+      filters.patient_id = patient_id
+    }
+    if (mode) {
+      filters.mode = mode
+    }
+    if (outcome) {
+      filters.outcome = outcome
+    }
+
+    // Date range filtering on scheduled_at
+    if (date_from || date_to) {
+      filters.scheduled_at = {}
+      if (date_from) {
+        filters.scheduled_at.$gte = new Date(date_from)
+      }
+      if (date_to) {
+        filters.scheduled_at.$lte = new Date(date_to)
+      }
+    }
+
+    // Pagination
+    const take = parseInt(limit, 10)
+    const skip = parseInt(offset, 10)
+
+    try {
+      const [consultations, count] = await consultationService.listConsultations(
+        filters,
+        {
+          skip,
+          take,
+          order: { created_at: "DESC" },
+        }
+      )
+
+      res.json({
+        consultations,
+        count,
+...(truncated)
+
+[2026-02-04T13:27:50] CMD: ls src\\api\\admin\\custom
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/4/2026   1:04 PM                users                                                                
+-a----          2/2/2026  10:20 PM            183 route.ts                                                             
+
+
+
+
+[2026-02-04T13:27:56] CMD: Get-Content src\\api\\admin\\custom\\users\\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { Modules } from "@medusajs/framework/utils"
+import { CONSULTATION_MODULE } from "../../../../modules/consultation"
+
+type UserRole = "customer" | "admin" | "clinician"
+type UserStatus = "active" | "inactive"
+
+type NormalizedUser = {
+  id: string
+  entity_id: string
+  role: UserRole
+  status: UserStatus
+  first_name: string | null
+  last_name: string | null
+  email: string | null
+  phone: string | null
+  date_of_birth: string | null
+  created_at: string
+  avatar_url?: string | null
+  deactivation_reason?: string | null
+}
+
+function parseIsoDate(value?: string): Date | undefined {
+  if (!value) return undefined
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return undefined
+  return date
+}
+
+function asInt(value: any, fallback: number): number {
+  if (value == null) return fallback
+  const num = typeof value === "string" ? parseInt(value, 10) : Number(value)
+  return Number.isFinite(num) ? Math.trunc(num) : fallback
+}
+
+function normalizeDigits(value: string): string {
+  return value.replace(/[^\d]/g, "")
+}
+
+function normalizeText(value: string): string {
+  return value.toLowerCase().trim()
+}
+
+function matchesQuery(user: NormalizedUser, q: string): boolean {
+  const query = normalizeText(q)
+  if (!query) return true
+
+  const tokens = query.split(/\s+/).filter(Boolean)
+  const hay = normalizeText(
+    [
+      user.first_name || "",
+      user.last_name || "",
+      user.email || "",
+      user.phone || "",
+    ].join(" ")
+  )
+
+  const qDigits = normalizeDigits(query)
+  const phoneDigits = normalizeDigits(user.phone || "")
+
+  return tokens.every((t) => {
+    const tDigits = normalizeDigits(t)
+    if (tDigits.length >= 4) {
+      return phoneDigits.includes(tDigits) || hay.includes(normalizeText(t))
+    }
+    return hay.includes(normalizeText(t))
+  }) || (qDigits.length >= 4 && phoneDigits.includes(qDigits))
+}
+
+function compositeId(role: UserRole, entityId: string): string {
+  return `${role}__${entityId}`
+}
+
+function inferStatusFromMetadata(meta: any): UserStatus {
+  if (meta && typeof meta.is_active === "boolean") {
+    return meta.is_active ? "active" : "inactive"
+  }
+  return "active"
+}
+
+...(truncated)
+
+[2026-02-04T13:28:08] CMD: Get-Content src\\api\\admin\\payouts\\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { FINANCIALS_MODULE } from "../../../modules/financials"
+
+interface PayoutsQueryParams {
+  business_id?: string
+  status?: string
+  limit?: string
+  offset?: string
+}
+
+export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
+  try {
+    const financialsService = req.scope.resolve(FINANCIALS_MODULE)
+    const query = req.query as PayoutsQueryParams
+
+    // Parse pagination
+    const limit = parseInt(query.limit ?? "20", 10)
+    const offset = parseInt(query.offset ?? "0", 10)
+
+    // Build filters
+    const filters: any = {}
+    if (query.business_id) {
+      filters.business_id = query.business_id
+    }
+    if (query.status) {
+      filters.status = query.status
+    }
+
+    // Get payouts with pagination
+    const [payouts, count] = await financialsService.listAndCountPayouts(filters, {
+      take: limit,
+      skip: offset,
+      order: { created_at: "DESC" },
+    })
+
+    res.json({
+      payouts,
+      count,
+      pagination: {
+        limit,
+        offset,
+        has_more: offset + payouts.length < count,
+      },
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch payouts",
+      error: error instanceof Error ? error.message : "Unknown error",
+    })
+  }
+}
+
+export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+  try {
+    const financialsService = req.scope.resolve(FINANCIALS_MODULE) as any
+    const complianceService = req.scope.resolve("complianceModuleService") as any
+    const authContext = (req as any).auth_context as
+      | { actor_id?: string; actor_type?: string; actor_email?: string; business_id?: string; metadata?: any; app_metadata?: any }
+      | undefined
+
+    const actorId = authContext?.actor_id || "unknown"
+    const actorType = ((authContext?.actor_type || "business_user") === "user"
+      ? "business_user"
+      : authContext?.actor_type || "business_user") as any
+
+    const body = (req.body ?? {}) as Record<string, any>
+
+    const businessIdRaw =
+      (typeof body.business_id === "string" ? body.business_id.trim() : "") ||
+      (authContext?.business_id || authContext?.metadata?.business_id || authContext?.app_metadata?.business_id || (req as any)?.tenant_context?.business_id || "")
+
+    const businessId = `${businessIdRaw}`.trim()
+    if (!businessId) {
+      return res.status(400).json({ code: "INVALID_INPUT", message: "business_id is required" })
+    }
+
+    // Basic idempotency via header or body + unique index (`payout.idempotency_key`)
+    const headerKey = (req.headers["idempotency-key"] as string | undefined)?.trim()
+    const idempotencyKey = (typeof body.idempotency_key === "string" ? body.idempotency_key.trim() : "") || headerKey || ""
+
+...(truncated)
+
+[2026-02-04T13:28:16] CMD: rg -n -S -m 20 "model.define(\
+CWD: business\" src/modules/business
+RESULT: FAIL (exit 1)
+OUTPUT:
+System.ArgumentException: Illegal characters in path.
+   at System.IO.Path.CheckInvalidPathChars(String path, Boolean checkAdditional)
+   at System.IO.Path.GetFileName(String path)
+   at System.Management.Automation.Utils.IsReservedDeviceName(String destinationPath)
+   at System.Management.Automation.Utils.NativeItemExists(String path, Boolean& isDirectory, Exception& exception)
+   at Microsoft.PowerShell.Commands.FileSystemProvider.ItemExists(String path, ErrorRecord& error)
+
+[2026-02-04T13:28:31] CMD: rg -n -S -m 10 "business" src\\modules
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src\\modules\README.md:28:A module must define a service. A service is a TypeScript or JavaScript class holding methods related to a business logic or commerce functionality.
+src\\modules\financials\service.ts:20:  business_id?: string
+src\\modules\financials\service.ts:38:  business_id: string
+src\\modules\financials\service.ts:46:  business_id: string
+src\\modules\financials\service.ts:155:        business_id: order.business_id,
+src\\modules\financials\service.ts:198:        business_id: order.business_id,
+src\\modules\financials\service.ts:227:   * Splits consultation fee between business and clinician
+src\\modules\financials\service.ts:237:    // Split remaining between clinician (70%) and business (30%)
+src\\modules\financials\service.ts:239:    const businessFee = remainingAfterPlatform - clinicianFee
+src\\modules\financials\service.ts:244:        business_id: consultation.clinician_id, // Clinician gets paid directly
+src\\modules\financials\service.ts:265:    // Create earning entry for business
+src\\modules\business\service.ts:2:import { Business } from "./models/business"
+src\\modules\business\service.ts:7:import { BusinessDomain } from "./models/business-domain"
+src\\modules\business\service.ts:8:import { BusinessUser } from "./models/business-user"
+src\\modules\business\service.ts:11:class BusinessModuleService extends MedusaService({
+src\\modules\business\service.ts:12:  Business,
+src\\modules\business\service.ts:17:  BusinessDomain,
+src\\modules\business\service.ts:18:  BusinessUser,
+src\\modules\business\service.ts:21:  async getBusinessBySlug(slug: string) {
+src\\modules\business\service.ts:22:    const businesses = await this.listBusinesses({ slug }, { take: 1 })
+src\\modules\business\service.ts:23:    return businesses[0] ?? null
+src\\modules\financials\models\earning-entry.ts:5:  business_id: model.text(),
+src\\modules\business\index.ts:2:import BusinessModuleService from "./service"
+src\\modules\business\index.ts:4:export const BUSINESS_MODULE = "businessModuleService"
+src\\modules\business\index.ts:6:export default Module(BUSINESS_MODULE, {
+src\\modules\business\index.ts:7:  service: BusinessModuleService,
+src\\modules\compliance\utils\access-control.ts:9:type UserType = "patient" | "clinician" | "business_staff" | "platform_admin"
+src\\modules\compliance\utils\access-control.ts:17:  | "business_staff"
+src\\modules\compliance\utils\access-control.ts:29:  // Business staff: Patients, clinicians, and business staff
+src\\modules\compliance\utils\access-control.ts:30:  business_staff: ["patient", "clinician", "business_staff"],
+src\\modules\compliance\utils\access-control.ts:32:  platform_admin: ["patient", "clinician", "business_staff", "platform_admin"],
+src\\modules\compliance\utils\access-control.ts:41:  "business_staff",
+src\\modules\compliance\utils\access-control.ts:83:  // Business staff can only access documents for their business
+src\\modules\compliance\utils\access-control.ts:84:  if (userType === "business_staff") {
+src\\modules\compliance\utils\access-control.ts:85:    // Additional business membership checks done at route level
+src\\modules\compliance\utils\access-control.ts:133:  // Business staff can modify documents for their business
+src\\modules\compliance\service.ts:27:  business_id: string
+src\\modules\compliance\service.ts:39:  business_id?: string
+src\\modules\compliance\service.ts:52:  actor_type: "customer" | "business_user" | "clinician" | "system" | "api_key"
+src\\modules\compliance\service.ts:58:  entity_type: "consultation" | "order" | "document" | "patient" | "business" | "earning" | "payout"
+src\\modules\compliance\service.ts:60:  business_id?: string | null
+src\\modules\compliance\service.ts:74:  business_id?: string
+src\\modules\compliance\service.ts:87:  business_id?: string
+src\\modules\compliance\service.ts:139:    uploadedByActorType: CreateAuditLogDTO["actor_type"] = "business_user"
+src\\modules\compliance\service.ts:153:      metadata.business_id,
+src\\modules\compliance\service.ts:172:      businessId: metadata.business_id,
+src\\modules\business\migrations\Migration20260204000009.ts:20:    // Add deleted_at indexes for business module tables (fast default filtering)
+src\\modules\business\migrations\Migration20260204000009.ts:21:    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_business_deleted_at" ON "business" ("deleted_at")`)
+src\\modules\business\migrations\Migration20260204000009.ts:24:      `CREATE INDEX IF NOT EXISTS "IDX_business_product_category_deleted_at" ON "business_product_category" ("deleted_at")`
+src\\modules\business\migrations\Migration20260204000009.ts:33:      `CREATE INDEX IF NOT EXISTS "IDX_business_domain_deleted_at" ON "business_domain" ("deleted_at")`
+src\\modules\business\migrations\Migration20260204000009.ts:36:      `CREATE INDEX IF NOT EXISTS "IDX_business_user_deleted_at" ON "business_user" ("deleted_at")`
+src\\modules\business\migrations\Migration20260204000009.ts:46:          WHERE table_name = 'order' AND column_name = 'business_id'
+src\\modules\business\migrations\Migration20260204000009.ts:48:          EXECUTE 'CREATE INDEX IF NOT EXISTS "IDX_order_business_id" ON "order" ("business_id")';
+src\\modules\business\migrations\Migration20260204000009.ts:75:          WHERE table_name = 'product' AND column_name = 'business_id'
+src\\modules\business\migrations\Migration20260204000009.ts:77:          EXECUTE 'CREATE INDEX IF NOT EXISTS "IDX_product_business_id" ON "product" ("business_id")';
+src\\modules\business\migrations\Migration20260204000009.ts:93:    this.addSql(`DROP INDEX IF EXISTS "IDX_order_business_id"`)
+src\\modules\business\migrations\Migration20260204000001.ts:4: * Baseline tables for the Business module.
+src\\modules\business\migrations\Migration20260204000001.ts:7: * This repo defines several Business-module models but previously only had
+src\\modules\business\migrations\Migration20260204000001.ts:14:    // `business`
+src\\modules\business\migrations\Migration20260204000001.ts:16:      CREATE TABLE IF NOT EXISTS "business" (
+src\\modules\business\migrations\Migration20260204000001.ts:41:      `CREATE UNIQUE INDEX IF NOT EXISTS "IDX_business_slug_unique" ON "business" ("slug")`
+src\\modules\business\migrations\Migration20260204000001.ts:44:      `CREATE UNIQUE INDEX IF NOT EXISTS "IDX_business_domain_unique" ON "business" ("domain") WHERE "domain" IS NOT NULL`
+src\\modules\business\migrations\Migration20260204000001.ts:51:        "business_id" TEXT NOT NULL,
+src\\modules\business\migrations\Migration20260204000001.ts:67:      `CREATE INDEX IF NOT EXISTS "IDX_location_business_id" ON "location" ("business_id")`
+src\\modules\business\migrations\Migration20260204000001.ts:70:    // `business_product_category`
+src\\modules\business\migrations\Migration20260204000001.ts:72:      CREATE TABLE IF NOT EXISTS "business_product_category" (
+src\\modules\business\migrations\Migration20250203000003.ts:11:        "business_id" TEXT NOT NULL,
+src\\modules\business\migrations\Migration20250203000003.ts:23:    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_order_status_event_business_id" ON "order_status_event" ("business_id")`);
+src\\modules\compliance\models\document.ts:5:  business_id: model.text(),
+src\\modules\compliance\models\document.ts:22:  access_level: model.enum(["patient_only", "clinician", "business_staff", "platform_admin"]),
+src\\modules\compliance\models\audit-log.ts:5:  actor_type: model.enum(["customer", "business_user", "clinician", "system", "api_key"]),
+src\\modules\compliance\models\audit-log.ts:11:  entity_type: model.enum(["consultation", "order", "document", "patient", "business", "earning", "payout"]),
+src\\modules\compliance\models\audit-log.ts:13:  business_id: model.text().nullable(),
+src\\modules\business\models\product-category.ts:3:export const ProductCategory = model.define("business_product_category", {
+src\\modules\business\models\consult-approval.ts:7:  business_id: model.text(),
+src\\modules\business\models\order-status-event.ts:6:  business_id: model.text(),
+src\\modules\business\models\business.ts:3:export const Business = model.define("business", {
+src\\modules\business\models\location.ts:5:  business_id: model.text(),
+src\\modules\business\models\business-user.ts:3:export const BusinessUser = model.define("business_user", {
+src\\modules\business\models\business-user.ts:5:  business_id: model.text(),
+...(truncated)
+
+[2026-02-04T13:28:37] CMD: Get-Content src\\modules\\business\\models\\business.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { model } from "@medusajs/framework/utils"
+
+export const Business = model.define("business", {
+  id: model.id().primaryKey(),
+  name: model.text(),
+  slug: model.text().unique(),
+  logo_url: model.text().nullable(),
+  primary_color: model.text().nullable(),
+  secondary_color: model.text().nullable(),
+  custom_html_head: model.text().nullable(),
+  custom_html_body: model.text().nullable(),
+  domain: model.text().unique().nullable(),
+  is_active: model.boolean().default(true),
+  status: model.enum(["pending", "approved", "active", "suspended"]).default("pending"),
+  branding_config: model.json().default({}),
+  domain_config: model.json().default({}),
+  catalog_config: model.json().default({}),
+  settings: model.json().default({}),
+  sales_channel_id: model.text().nullable(),
+  publishable_api_key_id: model.text().nullable(),
+})
+
+
+
+[2026-02-04T13:28:45] CMD: Get-Content src\\modules\\consultation\\models\\patient.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { model } from "@medusajs/framework/utils"
+
+/**
+ * Patient Model
+ * 
+ * All PHI (Protected Health Information) fields must be encrypted at rest
+ * using AES-256-GCM encryption for HIPAA compliance.
+ * 
+ * Encrypted fields (service-layer encryption; model-level transforms aren't supported):
+ * - first_name
+ * - last_name
+ * - email
+ * - phone
+ * - emergency_contact_name
+ * - emergency_contact_phone
+ * 
+ * Note: date_of_birth, medical_history, allergies, and medications
+ * are stored as text and should be JSON-stringified/encrypted at the application layer before storage.
+ */
+
+export const Patient = model.define("patient", {
+  id: model.id().primaryKey(),
+  business_id: model.text(),
+  customer_id: model.text().nullable(),
+  
+  first_name: model.text(),
+  last_name: model.text(),
+  email: model.text(),
+  phone: model.text().nullable(),
+  date_of_birth: model.text().nullable(),
+  
+  gender: model.text().nullable(),
+  
+  medical_history: model.text().nullable(),
+  allergies: model.text().nullable(),
+  medications: model.text().nullable(),
+  
+  emergency_contact_name: model.text().nullable(),
+  emergency_contact_phone: model.text().nullable(),
+})
+
+
+
+[2026-02-04T13:28:55] CMD: Get-Content src\\modules\\business\\models\\consult-submission.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { model } from "@medusajs/framework/utils"
+
+export const ConsultSubmission = model.define("consult_submission", {
+  id: model.id().primaryKey(),
+  business_id: model.text(),
+  location_id: model.text().nullable(),
+  product_id: model.text(),
+  customer_email: model.text(),
+  customer_first_name: model.text(),
+  customer_last_name: model.text(),
+  customer_phone: model.text().nullable(),
+  customer_dob: model.text().nullable(),
+  eligibility_answers: model.json().default({}),
+  status: model.enum(["pending", "approved", "rejected", "expired"]).default("pending"),
+  consult_fee: model.bigNumber().nullable(),
+  notes: model.text().nullable(),
+  reviewed_by: model.text().nullable(),
+  reviewed_at: model.dateTime().nullable(),
+})
+
+
+
+[2026-02-04T13:29:00] CMD: Get-Content src\\modules\\business\\models\\location.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { model } from "@medusajs/framework/utils"
+
+export const Location = model.define("location", {
+  id: model.id().primaryKey(),
+  business_id: model.text(),
+  name: model.text(),
+  phone: model.text(),
+  email: model.text().nullable(),
+  address: model.text().nullable(),
+  city: model.text().nullable(),
+  state: model.text().nullable(),
+  zip: model.text().nullable(),
+  serviceable_states: model.array().default([]),
+  is_active: model.boolean().default(true),
+})
+
+
+
+[2026-02-04T13:29:13] CMD: Get-Content src\\modules\\business\\service.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaService } from "@medusajs/framework/utils"
+import { Business } from "./models/business"
+import { Location } from "./models/location"
+import { ProductCategory } from "./models/product-category"
+import { ConsultSubmission } from "./models/consult-submission"
+import { ConsultApproval } from "./models/consult-approval"
+import { BusinessDomain } from "./models/business-domain"
+import { BusinessUser } from "./models/business-user"
+import { OrderStatusEvent } from "./models/order-status-event"
+
+class BusinessModuleService extends MedusaService({
+  Business,
+  Location,
+  ProductCategory,
+  ConsultSubmission,
+  ConsultApproval,
+  BusinessDomain,
+  BusinessUser,
+  OrderStatusEvent,
+}) {
+  async getBusinessBySlug(slug: string) {
+    const businesses = await this.listBusinesses({ slug }, { take: 1 })
+    return businesses[0] ?? null
+  }
+
+  async getBusinessByDomain(domain: string) {
+    const businesses = await this.listBusinesses({ domain }, { take: 1 })
+    return businesses[0] ?? null
+  }
+
+  async getBusinessByDomainFromTable(domain: string) {
+    const domains = await this.listBusinessDomains({ domain }, { take: 1 })
+    if (!domains.length) return null
+    const businesses = await this.listBusinesses(
+      { id: domains[0].business_id },
+      { take: 1 }
+    )
+    return businesses[0] ?? null
+  }
+
+  async listActiveBusinesses() {
+    return await this.listBusinesses(
+      { is_active: true },
+      { order: { name: "ASC" } }
+    )
+  }
+
+  async getBusinessByStatus(status: string) {
+    return await this.listBusinesses(
+      { status },
+      { order: { name: "ASC" } }
+    )
+  }
+
+  async listBusinessDomainsByBusiness(businessId: string) {
+    return await this.listBusinessDomains({ business_id: businessId })
+  }
+
+  async listConsultSubmissionsByBusiness(businessId: string) {
+    return await this.listConsultSubmissions(
+      { business_id: businessId },
+      { order: { created_at: "DESC" } }
+    )
+  }
+
+  async approveConsultSubmission(submissionId: string, reviewedBy: string) {
+    return await this.updateConsultSubmissions(submissionId, {
+      status: "approved",
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date(),
+    })
+  }
+
+  async rejectConsultSubmission(submissionId: string, reviewedBy: string, notes?: string) {
+    return await this.updateConsultSubmissions(submissionId, {
+      status: "rejected",
+      reviewed_by: reviewedBy,
+      reviewed_at: new Date(),
+      notes,
+    })
+...(truncated)
+
+[2026-02-04T13:29:25] CMD: rg -n -S -m 50 "follow" src/modules/consultation src/api | rg -n -S -m 20 "consultation"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+1:src/modules/consultation\service.ts:31:  outcome: "approved" | "rejected" | "requires_followup"
+5:src/modules/consultation\models\consultation.ts:19:  outcome: model.enum(["approved", "rejected", "pending", "requires_followup"]).nullable(),
+6:src/api\admin\consultations\[id]\complete\route.ts:22:        message: "outcome is required (approved, rejected, or requires_followup)",
+7:src/api\admin\consultations\[id]\complete\route.ts:26:    const validOutcomes = ["approved", "rejected", "requires_followup"]
+
+
+[2026-02-04T13:29:37] CMD: rg -n -S -m 50 "type" src/api/store/consultations
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src/api/store/consultations\approvals\route.ts:17:    | { actor_id?: string; actor_type?: string }
+src/api/store/consultations\approvals\route.ts:20:  const customerId = authContext?.actor_type === "customer" ? authContext.actor_id : undefined
+
+
+[2026-02-04T13:29:56] CMD: Get-Content src\\tests\\integration\\consultation-lifecycle.test.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Consultation Lifecycle Tests
+ * 
+ * Tests the consultation status machine and lifecycle transitions.
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import {
+  createTestBusiness,
+  createTestClinician,
+  createTestPatient,
+  createTestConsultation,
+  createTestConsultApproval,
+} from "../utils/factories"
+import { getServices, dateOffset } from "../utils/test-server"
+
+jest.setTimeout(60000)
+
+describe("Consultation Lifecycle", () => {
+  describe("Status Transitions", () => {
+    it("should create consultation with status draft", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+          const business = await createTestBusiness(container)
+          const patient = await createTestPatient(container, { business_id: business.id })
+          
+          // Act
+          const consultation = await createTestConsultation(container, "draft", {
+            business_id: business.id,
+            patient_id: patient.id,
+          })
+          
+          // Assert
+          expect(consultation).toBeDefined()
+          expect(consultation.status).toBe("draft")
+        },
+      })
+    })
+
+    it("should transition draft â†’ scheduled", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+          const business = await createTestBusiness(container)
+          const patient = await createTestPatient(container, { business_id: business.id })
+          const clinician = await createTestClinician(container, { business_id: business.id })
+          const consultation = await createTestConsultation(container, "draft", {
+            business_id: business.id,
+            patient_id: patient.id,
+            clinician_id: clinician.id,
+          })
+          
+          const { consultation: consultationService } = getServices(container)
+          
+          // Act
+          const updated = await consultationService.transitionStatus(
+            consultation.id,
+            "scheduled",
+            "test_user",
+            "Scheduling consultation"
+          )
+          
+          // Assert
+          expect(updated.status).toBe("scheduled")
+        },
+      })
+    })
+
+    it("should transition scheduled â†’ in_progress", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+          const business = await createTestBusiness(container)
+          const patient = await createTestPatient(container, { business_id: business.id })
+          const clinician = await createTestClinician(container, { business_id: business.id })
+          const consultation = await createTestConsultation(container, "scheduled", {
+            business_id: business.id,
+            patient_id: patient.id,
+            clinician_id: clinician.id,
+...(truncated)
+
+[2026-02-04T13:30:06] CMD: Get-Content src\\tests\\utils\\test-server.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Test Server Setup and Utilities
+ * 
+ * Provides test server initialization, database management,
+ * and helper functions for integration testing.
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import { MedusaContainer } from "@medusajs/framework/types"
+
+// Module constants for service resolution (match `src/modules/*/index.ts`)
+import { BUSINESS_MODULE } from "../../modules/business"
+import { COMPLIANCE_MODULE } from "../../modules/compliance"
+import { CONSULTATION_MODULE } from "../../modules/consultation"
+import { FINANCIALS_MODULE } from "../../modules/financials"
+
+export { BUSINESS_MODULE, COMPLIANCE_MODULE, CONSULTATION_MODULE, FINANCIALS_MODULE }
+
+// Test context interface
+export interface TestContext {
+  container: MedusaContainer
+  api: any
+  db: {
+    client: any
+    destroy: () => Promise<void>
+  }
+}
+
+// Global test configuration
+export const TEST_CONFIG = {
+  // Database configuration (uses separate test database)
+  database: {
+    schema: "public",
+    extra: {
+      connectionTimeoutMillis: 10000,
+    },
+  },
+  // Test timeouts
+  timeouts: {
+    default: 30000,
+    long: 60000,
+  },
+}
+
+/**
+ * Initialize test server with Medusa test runner
+ */
+export async function initializeTestServer(
+  testFn: (context: TestContext) => Promise<void>
+): Promise<void> {
+  await medusaIntegrationTestRunner({
+    test: testFn,
+    env: {
+      NODE_ENV: "test",
+    },
+  })
+}
+
+/**
+ * Get services from container
+ */
+export function getServices(container: MedusaContainer) {
+  return {
+    // Core Medusa modules
+    product: container.resolve("product"),
+    customer: container.resolve("customer"),
+    order: container.resolve("order"),
+    cart: container.resolve("cart"),
+    payment: container.resolve("payment"),
+    
+    // Custom modules
+    business: container.resolve(BUSINESS_MODULE),
+    compliance: container.resolve(COMPLIANCE_MODULE),
+    consultation: container.resolve(CONSULTATION_MODULE),
+    financials: container.resolve(FINANCIALS_MODULE),
+  }
+}
+
+/**
+ * Clear test data from database
+...(truncated)
+
+[2026-02-04T13:30:21] CMD: rg -n -S -m 20 "api.get" src\\tests\\integration
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src\\tests\\integration\rate-limiting.test.ts:61:          const response = await api.get(endpoint).catch((err: any) => err.response)
+src\\tests\\integration\rate-limiting.test.ts:89:          const response = await api.get("/store/businesses").catch((err: any) => err.response)
+
+
+[2026-02-04T13:30:27] CMD: Get-Content src\\tests\\integration\\rate-limiting.test.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Rate Limiting Tests
+ * 
+ * Tests rate limiting middleware for API protection against abuse,
+ * brute force attacks, and resource exhaustion.
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import { rateLimiterMiddleware } from "../../api/middlewares/rate-limiter"
+import {
+  createMockRequest,
+  createMockResponse,
+  createMockNext,
+} from "../utils/test-server"
+
+jest.setTimeout(60000)
+
+describe("Rate Limiting", () => {
+  describe("API Rate Limiting", () => {
+    it("should limit auth endpoints", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ api }) => {
+          // Arrange: Make multiple rapid requests to auth endpoint
+          const endpoint = "/store/auth/token"
+          const requests: Promise<any>[] = []
+          
+          // Act: Send multiple requests rapidly
+          for (let i = 0; i < 15; i++) {
+            requests.push(
+              api.post(endpoint, {
+                email: `user${i}@test.com`,
+                password: "wrongpassword",
+              }).catch((err: any) => err.response)
+            )
+          }
+          
+          const responses = await Promise.all(requests)
+          
+          // Assert: Some requests should be rate limited (429)
+          const rateLimitedResponses = responses.filter(
+            (r: any) => r?.status === 429 || r?.statusCode === 429
+          )
+          
+          // Note: Actual rate limiting behavior depends on implementation
+          // This test verifies the rate limiting mechanism is in place
+          expect(responses.length).toBe(15)
+        },
+      })
+    })
+
+    it("should limit consult submission endpoints", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ api, container }) => {
+          // This test verifies the rate limiting is configured for consult endpoints
+          // Actual rate limiting behavior tested at middleware level
+          
+          // Arrange
+          const endpoint = "/store/consultations"
+          
+          // Act: Verify endpoint exists and respects rate limits
+          const response = await api.get(endpoint).catch((err: any) => err.response)
+          
+          // Assert: Should not be rate limited on first request
+          expect(response.status).not.toBe(429)
+        },
+      })
+    })
+
+    it("should apply different limits to different endpoint types", async () => {
+      // This test documents the expected rate limits
+      const rateLimits = {
+        auth: { requests: 5, window: 60 }, // 5 per minute
+        api: { requests: 100, window: 60 }, // 100 per minute
+        consult: { requests: 10, window: 60 }, // 10 per minute
+        general: { requests: 1000, window: 3600 }, // 1000 per hour
+      }
+      
+      // Verify configuration structure
+      expect(rateLimits.auth.requests).toBeLessThan(rateLimits.api.requests)
+      expect(rateLimits.consult.requests).toBeLessThan(rateLimits.api.requests)
+...(truncated)
+
+[2026-02-04T13:30:35] CMD: Get-Content src\\tests\\integration\\documents.test.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Document Storage Tests
+ * 
+ * Tests document upload, integrity verification, access control,
+ * and audit logging for document operations.
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import {
+  createTestBusiness,
+  createTestPatient,
+  createTestDocument,
+  createTestConsultation,
+  createTestClinician,
+} from "../utils/factories"
+import { getServices } from "../utils/test-server"
+
+jest.setTimeout(60000)
+
+describe("Document Storage", () => {
+  describe("Document Upload and Integrity", () => {
+    it("should upload document with checksum", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+          const business = await createTestBusiness(container)
+          const patient = await createTestPatient(container, { business_id: business.id })
+          
+          // Act: Create document with checksum
+          const document = await createTestDocument(container, {
+            business_id: business.id,
+            patient_id: patient.id,
+            uploaded_by: patient.id,
+            checksum: "sha256:a1b2c3d4e5f6...",
+            file_size: 1024,
+            mime_type: "application/pdf",
+          })
+          
+          // Assert
+          expect(document).toBeDefined()
+          expect(document.checksum).toBe("sha256:a1b2c3d4e5f6...")
+          expect(document.file_size).toBe(1024)
+        },
+      })
+    })
+
+    it("should verify document integrity", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+          const business = await createTestBusiness(container)
+          const patient = await createTestPatient(container, { business_id: business.id })
+          const expectedChecksum = "sha256:expected_hash_value"
+          
+          const document = await createTestDocument(container, {
+            business_id: business.id,
+            patient_id: patient.id,
+            uploaded_by: patient.id,
+            checksum: expectedChecksum,
+          })
+          
+          const { compliance } = getServices(container)
+          
+          // Act: Retrieve document and verify checksum
+          const retrievedDoc = await compliance.retrieveDocument(document.id)
+          
+          // Assert: Verify checksum matches
+          expect(retrievedDoc.checksum).toBe(expectedChecksum)
+          
+          // Simulate integrity check
+          const isValid = retrievedDoc.checksum === expectedChecksum
+          expect(isValid).toBe(true)
+        },
+      })
+    })
+
+    it("should reject upload of disallowed file type", async () => {
+      await medusaIntegrationTestRunner({
+        test: async ({ container }) => {
+          // Arrange
+...(truncated)
+
+[2026-02-04T13:30:41] CMD: rg -n -S -m 50 /admin/custom/users src\\tests
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src\\tests\integration\users-management.test.ts:90:          .get(`/admin/custom/users?limit=25&offset=0`, {
+src\\tests\integration\users-management.test.ts:102:          .get(`/admin/custom/users?limit=25&offset=25`, {
+src\\tests\integration\users-management.test.ts:112:          .get(`/admin/custom/users?role=customer&limit=25&offset=0`, {
+src\\tests\integration\users-management.test.ts:147:          .get(`/admin/custom/users?q=${encodeURIComponent("search_target@test.com")}&limit=25&offset=0`, {
+src\\tests\integration\users-management.test.ts:161:            `/admin/custom/users/${encodeURIComponent(compositeId)}/status`,
+src\\tests\integration\users-management.test.ts:171:          .get(`/admin/custom/users?status=inactive&limit=25&offset=0`, {
+src\\tests\integration\users-management.test.ts:187:            `/admin/custom/users/${encodeURIComponent(compositeId)}/status`,
+src\\tests\integration\users-management.test.ts:217:        const res = await fetch(`${api.defaults.baseURL}/admin/custom/users/export?role=customer&q=${encodeURIComponent("csv_export@test.com")}`, {
+src\\tests\integration\users-management.test.ts:250:            `/admin/custom/users?role=customer&q=${encodeURIComponent(customer.email)}&limit=25&offset=0`,
+src\\tests\integration\users-management.test.ts:264:            `/admin/custom/users/${encodeURIComponent(compositeId)}`,
+src\\tests\integration\users-management.test.ts:283:            `/admin/custom/users?role=customer&q=${encodeURIComponent("update_target@test.com")}&limit=25&offset=0`,
+src\\tests\integration\users-management.test.ts:327:          .get(`/admin/custom/users?role=customer&q=${encodeURIComponent("bulk_")}&limit=25&offset=0`, {
+src\\tests\integration\users-management.test.ts:343:            `/admin/custom/users/bulk/status`,
+src\\tests\integration\users-management.test.ts:353:          .get(`/admin/custom/users?status=inactive&role=customer&limit=25&offset=0`, {
+
+
+[2026-02-04T13:30:48] CMD: Get-Content src\\tests\\integration\\users-management.test.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Users Management APIs + behavior (PLAN Week 3-4)
+ *
+ * Covers:
+ * - GET /admin/users (server-side pagination, filters, search)
+ * - POST /admin/users/:id/status (deactivate/reactivate)
+ * - GET /admin/users/export (CSV export respects filters)
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import jwt from "jsonwebtoken"
+import { Modules } from "@medusajs/framework/utils"
+import {
+  createTestClinician,
+  createTestCustomer,
+} from "../utils/factories"
+
+jest.setTimeout(60000)
+
+function signAdminToken(userId: string): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error("JWT_SECRET must be set for integration tests")
+  }
+
+  return jwt.sign(
+    {
+      actor_id: userId,
+      actor_type: "user",
+      auth_identity_id: "",
+      app_metadata: {},
+      user_metadata: {},
+    },
+    secret
+  )
+}
+
+medusaIntegrationTestRunner({
+  testSuite: ({ api, getContainer }) => {
+    describe("Users management (PLAN)", () => {
+      it("lists users with pagination + role/status filters", async () => {
+        const container = getContainer()
+
+        // Seed customers (30)
+        for (let i = 0; i < 30; i++) {
+          await createTestCustomer(container, {
+            email: `customer_${i}@test.com`,
+            first_name: "Test",
+            last_name: `Customer${i}`,
+            phone: `+1555000${String(i).padStart(4, "0")}`,
+            metadata: {
+              is_active: true,
+              date_of_birth: "1990-01-01",
+            },
+          })
+        }
+
+        // Seed a clinician
+        await createTestClinician(container, {
+          business_id: null as any,
+          first_name: "Dr",
+          last_name: "Clinician",
+          email: "clinician@test.com",
+          phone: "+15551234567",
+          status: "active",
+          license_number: "LIC-1",
+          license_state: "FL",
+          license_expiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          credentials: [],
+          specializations: [],
+          timezone: "America/New_York",
+        } as any)
+
+        // Seed an admin user
+        const userService = container.resolve(Modules.USER) as any
+        const adminUser = await userService.createUsers({
+          email: "admin_user@test.com",
+          first_name: "Admin",
+          last_name: "User",
+          metadata: {
+...(truncated)
+
+[2026-02-04T13:30:56] CMD: Get-Content -LiteralPath 'src\\api\\admin\\consultations\\[id]\\route.ts' -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { CONSULTATION_MODULE } from "../../../../modules/consultation"
+import { 
+  ensureTenantContext,
+  verifyTenantAccess, 
+  createNotFoundResponse,
+  logSecurityEvent,
+  TenantContext 
+} from "../../../middlewares/tenant-isolation"
+
+/**
+ * GET /admin/consultations/:id
+ * Get consultation with tenant isolation
+ */
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  const tenantContext = ensureTenantContext(req, res) as TenantContext | null
+  if (!tenantContext) {
+    return
+  }
+
+  const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+  const { id } = req.params
+
+    try {
+      const consultation = await consultationService.getConsultationOrThrow(id)
+      
+      // ENFORCE tenant isolation
+      if (!consultation || consultation.business_id !== tenantContext.business_id) {
+        if (consultation) {
+          await logSecurityEvent(req, "CROSS_TENANT_ACCESS_ATTEMPT", {
+            resource: "consultation",
+            resource_id: id,
+            attempted_by_business: tenantContext.business_id,
+            target_business_id: consultation.business_id,
+          })
+        } else {
+          await logSecurityEvent(req, "RESOURCE_ENUMERATION_ATTEMPT", {
+            resource: "consultation",
+            resource_id: id,
+            attempted_by_business: tenantContext.business_id,
+          })
+        }
+        
+        const notFound = createNotFoundResponse("Consultation")
+        return res.status(notFound.status).json(notFound.body)
+      }
+      
+      // Get status history
+      const statusHistory = await consultationService.listStatusEventsByConsultation(id)
+
+      res.json({
+        consultation: {
+          ...consultation,
+          status_history: statusHistory,
+        },
+      })
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("not found")) {
+        return res.status(404).json({ message: error.message })
+      }
+      res.status(500).json({
+        message: "Failed to retrieve consultation",
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    }
+}
+
+/**
+ * PUT /admin/consultations/:id
+ * Update consultation with tenant isolation
+ */
+export async function PUT(req: MedusaRequest, res: MedusaResponse) {
+  const tenantContext = ensureTenantContext(req, res) as TenantContext | null
+  if (!tenantContext) {
+    return
+  }
+
+  const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+  const { id } = req.params
+
+...(truncated)
+
+[2026-02-04T13:31:14] CMD: Get-Content src\\api\\admin\\audit-logs\\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Admin Audit Logs API Routes
+ * 
+ * GET /admin/audit-logs - Query audit logs with filters
+ */
+
+import {
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+import ComplianceModuleService from "../../../modules/compliance/service"
+
+/**
+ * GET /admin/audit-logs
+ * Query audit logs with various filters
+ * 
+ * Query params:
+ * - actor_id: Filter by actor ID
+ * - actor_type: Filter by actor type (customer, business_user, clinician, system, api_key)
+ * - entity_type: Filter by entity type (consultation, order, document, patient, business, earning, payout)
+ * - entity_id: Filter by entity ID
+ * - business_id: Filter by business ID
+ * - consultation_id: Filter by consultation ID
+ * - order_id: Filter by order ID
+ * - action: Filter by action (create, read, update, delete, download, login, logout, export)
+ * - risk_level: Filter by risk level (low, medium, high, critical)
+ * - flagged: Filter by flagged status (true/false)
+ * - date_from: Filter by date range start (ISO date)
+ * - date_to: Filter by date range end (ISO date)
+ * - limit: Number of results (default: 50, max: 200)
+ * - offset: Pagination offset (default: 0)
+ */
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const complianceService: ComplianceModuleService = req.scope.resolve(
+      "complianceModuleService"
+    )
+
+    // Parse query parameters
+    const query = req.query as Record<string, any>
+    const filters = {
+      actor_id: query.actor_id,
+      actor_type: query.actor_type,
+      entity_type: query.entity_type,
+      entity_id: query.entity_id,
+      business_id: query.business_id,
+      consultation_id: query.consultation_id,
+      order_id: query.order_id,
+      action: query.action,
+      risk_level: query.risk_level,
+      flagged: query.flagged !== undefined ? query.flagged === "true" : undefined,
+      date_from: query.date_from ? new Date(query.date_from) : undefined,
+      date_to: query.date_to ? new Date(query.date_to) : undefined,
+      skip: parseInt(query.offset) || 0,
+      take: Math.min(parseInt(query.limit) || 50, 200),
+    }
+
+    // Remove undefined filters
+    Object.keys(filters).forEach((key) => {
+      if (filters[key] === undefined) delete filters[key]
+    })
+
+    const result = await complianceService.queryAuditLogs(filters)
+
+    res.json({
+      logs: result.logs,
+      count: result.count,
+      total: result.total,
+      limit: filters.take,
+      offset: filters.skip,
+    })
+  } catch (error) {
+    console.error("Error querying audit logs:", error)
+    res.status(500).json({
+      error: "Failed to query audit logs",
+      message: error.message,
+    })
+  }
+}
+
+...(truncated)
+
+[2026-02-04T13:31:26] CMD: ls docs
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\docs
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/3/2026  11:55 PM                archive                                                              
+-a----          2/4/2026   9:44 AM           8795 API.md                                                               
+-a----          2/3/2026   6:33 PM          14754 API_REFERENCE.md                                                     
+-a----          2/4/2026  12:05 AM          22827 ARCHITECTURE.md                                                      
+-a----          2/3/2026   6:36 PM          15669 DEPLOYMENT.md                                                        
+-a----          2/4/2026  12:03 AM          10993 FEATURES.md                                                          
+-a----          2/4/2026  12:02 AM           9296 IMPLEMENTATION_PLAN.md                                               
+-a----          2/4/2026   6:08 AM           4123 MIGRATIONS.md                                                        
+-a----          2/3/2026   6:38 PM           7857 TESTING_SUMMARY.md                                                   
+
+
+
+
+[2026-02-04T13:31:45] CMD: ls src\\api\\admin\\businesses -ErrorAction SilentlyContinue
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\api\admin\businesses
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/4/2026  10:22 AM                [id]                                                                 
+-a----          2/4/2026   5:40 AM            957 route.ts                                                             
+
+
+
+
+[2026-02-04T13:31:54] CMD: Get-Content src\\api\\admin\\businesses\\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { BUSINESS_MODULE } from "../../../modules/business"
+
+export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
+  const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
+
+  const statusFilter = req.query.status as string | undefined
+  const filters: Record<string, any> = {}
+  if (statusFilter) {
+    filters.status = statusFilter
+  }
+
+  const businesses = await businessModuleService.listAndCountBusinesses(filters)
+
+  res.json({ businesses: businesses[0], count: businesses[1] })
+}
+
+export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+  const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
+  const body = (req.body ?? {}) as Record<string, any>
+
+  const business = await businessModuleService.createBusiness({
+    ...body,
+    status: "pending",
+  })
+
+  res.status(201).json({ business })
+}
+
+
+
+[2026-02-04T13:32:02] CMD: ls src\\api\\admin | rg -n -S "clinician"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+10:d-----          2/4/2026   5:40 AM                clinicians                                                           
+
+
+[2026-02-04T13:32:07] CMD: ls src\\api\\admin\\clinicians
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\api\admin\clinicians
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/4/2026  10:22 AM                [id]                                                                 
+-a----          2/4/2026   5:40 AM           2278 route.ts                                                             
+
+
+
+
+[2026-02-04T13:32:16] CMD: Get-Content src\\api\\admin\\clinicians\\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { authenticate } from "@medusajs/framework"
+import { CONSULTATION_MODULE } from "../../../modules/consultation"
+
+export const GET = [
+  authenticate("user", ["session", "bearer"]),
+  async (req: MedusaRequest, res: MedusaResponse) => {
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+
+    // Parse query parameters
+    const {
+      business_id,
+      status,
+      specialization,
+      is_platform_clinician,
+      limit = "50",
+      offset = "0",
+    } = req.query as Record<string, string | undefined>
+
+    // Build filters
+    const filters: Record<string, any> = {}
+
+    if (business_id) {
+      filters.business_id = business_id
+    }
+    if (status) {
+      filters.status = status
+    }
+    if (is_platform_clinician !== undefined) {
+      filters.is_platform_clinician = is_platform_clinician === "true"
+    }
+
+    // Specialization filter - search in specializations array
+    if (specialization) {
+      filters.specializations = { $contains: specialization }
+    }
+
+    // Pagination
+    const take = parseInt(limit, 10)
+    const skip = parseInt(offset, 10)
+
+    try {
+      const [clinicians, count] = await consultationService.listClinicians(
+        filters,
+        {
+          skip,
+          take,
+          order: { created_at: "DESC" },
+        }
+      )
+
+      res.json({
+        clinicians,
+        count,
+        limit: take,
+        offset: skip,
+      })
+    } catch (error) {
+      res.status(500).json({
+        message: "Failed to list clinicians",
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    }
+  },
+]
+
+export const POST = [
+  authenticate("user", ["session", "bearer"]),
+  async (req: MedusaRequest, res: MedusaResponse) => {
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+
+    try {
+      const clinician = await consultationService.createClinician(req.body)
+      res.status(201).json({ clinician })
+    } catch (error) {
+      res.status(400).json({
+        message: "Failed to create clinician",
+        error: error instanceof Error ? error.message : "Unknown error",
+      })
+    }
+...(truncated)
+
+[2026-02-04T13:32:44] CMD: Get-Content src\\tests\\utils\\factories.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Test Data Factories
+ * 
+ * Factory functions to create test data for integration tests.
+ * Follows the factory pattern for creating consistent test entities.
+ */
+
+import { MedusaContainer } from "@medusajs/framework/types"
+import { generateTestId, dateOffset, getServices } from "./test-server"
+
+// ============================================================================
+// Business Factory
+// ============================================================================
+
+export interface BusinessOverrides {
+  id?: string
+  name?: string
+  slug?: string
+  status?: "pending" | "approved" | "active" | "suspended"
+  is_active?: boolean
+  domain?: string
+  sales_channel_id?: string
+  publishable_api_key_id?: string
+  branding_config?: Record<string, any>
+  settings?: Record<string, any>
+}
+
+export async function createTestBusiness(
+  container: MedusaContainer,
+  overrides: BusinessOverrides = {}
+) {
+  const { business } = getServices(container)
+  
+  const id = overrides.id || generateTestId("bus")
+  const name = overrides.name || `Test Business ${id}`
+  const slug = overrides.slug || `test-business-${id}`
+  
+  return await business.createBusinesses({
+    id,
+    name,
+    slug,
+    status: overrides.status || "active",
+    is_active: overrides.is_active !== undefined ? overrides.is_active : true,
+    domain: overrides.domain || null,
+    sales_channel_id: overrides.sales_channel_id || null,
+    publishable_api_key_id: overrides.publishable_api_key_id || null,
+    branding_config: overrides.branding_config || {},
+    settings: overrides.settings || {},
+    domain_config: {},
+    catalog_config: {},
+  })
+}
+
+// ============================================================================
+// Customer Factory
+// ============================================================================
+
+export interface CustomerOverrides {
+  id?: string
+  email?: string
+  first_name?: string
+  last_name?: string
+  phone?: string
+  has_account?: boolean
+  metadata?: Record<string, any>
+}
+
+export async function createTestCustomer(
+  container: MedusaContainer,
+  overrides: CustomerOverrides = {}
+) {
+  const { customer } = getServices(container)
+  
+  const id = overrides.id || generateTestId("cust")
+  
+  return await customer.createCustomers({
+    id,
+    email: overrides.email || `customer_${id}@test.com`,
+    first_name: overrides.first_name || "Test",
+    last_name: overrides.last_name || "Customer",
+...(truncated)
+
+[2026-02-04T13:32:52] CMD: rg -n -S "function createTestConsultation" -n src\\tests\\utils\\factories.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+263:export async function createTestConsultation(
+874:export async function createTestConsultationStatusEvent(
+
+
+[2026-02-04T13:32:59] CMD: (Get-Content src\\tests\\utils\\factories.ts | Select-Object -Skip 240 -First 120) -join [Environment]::NewLine
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  id?: string
+  business_id: string
+  patient_id: string
+  clinician_id?: string
+  mode?: "async_form" | "video" | "phone" | "chat"
+  status?: ConsultationStatus
+  scheduled_at?: Date
+  started_at?: Date
+  ended_at?: Date
+  duration_minutes?: number
+  chief_complaint?: string
+  medical_history?: Record<string, any>
+  assessment?: string
+  plan?: string
+  notes?: string
+  outcome?: "approved" | "rejected" | "pending" | "requires_followup" | null
+  rejection_reason?: string
+  approved_medications?: string[]
+  originating_submission_id?: string
+  order_id?: string
+}
+
+export async function createTestConsultation(
+  container: MedusaContainer,
+  status: ConsultationStatus = "draft",
+  overrides: ConsultationOverrides
+) {
+  const { consultation } = getServices(container)
+  
+  const id = overrides.id || generateTestId("consult")
+  
+  if (!overrides.business_id) {
+    throw new Error("business_id is required to create a consultation")
+  }
+  if (!overrides.patient_id) {
+    throw new Error("patient_id is required to create a consultation")
+  }
+  
+  return await consultation.createConsultations({
+    id,
+    business_id: overrides.business_id,
+    patient_id: overrides.patient_id,
+    clinician_id: overrides.clinician_id || null,
+    mode: overrides.mode || "async_form",
+    status,
+    scheduled_at: overrides.scheduled_at || null,
+    started_at: overrides.started_at || null,
+    ended_at: overrides.ended_at || null,
+    duration_minutes: overrides.duration_minutes || null,
+    chief_complaint: overrides.chief_complaint || null,
+    medical_history: overrides.medical_history || null,
+    assessment: overrides.assessment || null,
+    plan: overrides.plan || null,
+    notes: overrides.notes || null,
+    outcome: overrides.outcome || null,
+    rejection_reason: overrides.rejection_reason || null,
+    approved_medications: overrides.approved_medications || null,
+    originating_submission_id: overrides.originating_submission_id || null,
+    order_id: overrides.order_id || null,
+  })
+}
+
+// ============================================================================
+// Consult Approval Factory
+// ============================================================================
+
+export type ApprovalStatus = "pending" | "approved" | "rejected" | "expired"
+
+export interface ConsultApprovalOverrides {
+  id?: string
+  customer_id: string
+  product_id: string
+  business_id: string
+  status?: ApprovalStatus
+  consultation_id?: string
+  approved_by?: string
+  approved_at?: Date
+  expires_at?: Date
+}
+
+...(truncated)
+
+[2026-02-04T13:33:06] CMD: rg -n -S "createTestOrder\(" src\\tests\\utils\\factories.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+390:export async function createTestOrder(
+938:  const order = await createTestOrder(container, orderStatus, {
+
+
+[2026-02-04T13:33:11] CMD: (Get-Content src\\tests\\utils\\factories.ts | Select-Object -Skip 380 -First 130) -join [Environment]::NewLine
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  customer_id?: string
+  business_id?: string
+  status?: OrderStatus
+  total?: number
+  currency_code?: string
+  items?: OrderItemInput[]
+  metadata?: Record<string, any>
+}
+
+export async function createTestOrder(
+  container: MedusaContainer,
+  status: OrderStatus = "pending",
+  overrides: OrderOverrides = {}
+) {
+  const { order } = getServices(container)
+  
+  const id = overrides.id || generateTestId("order")
+  const total = overrides.total || 100
+  const customStatus = overrides.status || status
+
+  // The Medusa OrderModule has its own DB enum for `order.status`.
+  // Our application-specific lifecycle statuses are stored in metadata.custom_status.
+  const medusaStatus = (() => {
+    if (customStatus === "delivered") return "completed"
+    if (customStatus === "cancelled" || customStatus === "refunded") return "canceled"
+    return "pending"
+  })()
+  
+  // Create order with items
+  const orderData: any = {
+    id,
+    customer_id: overrides.customer_id || null,
+    status: medusaStatus,
+    total,
+    currency_code: overrides.currency_code || "usd",
+    metadata: {
+      ...overrides.metadata,
+      business_id: overrides.business_id,
+      custom_status: customStatus,
+      status_updated_at: new Date().toISOString(),
+    },
+  }
+  
+  // Add items if provided
+  if (overrides.items && overrides.items.length > 0) {
+    orderData.items = overrides.items.map((item, index) => ({
+      id: item.id || `${id}_item_${index}`,
+      title: item.title || `Item ${index + 1}`,
+      quantity: item.quantity || 1,
+      unit_price: item.unit_price || 10,
+      total: item.total || (item.unit_price || 10) * (item.quantity || 1),
+      product_id: item.product_id || null,
+      variant_id: item.variant_id || null,
+    }))
+  }
+  
+  return await order.createOrders(orderData)
+}
+
+// ============================================================================
+// Earning Entry Factory
+// ============================================================================
+
+export type EarningStatus = "pending" | "available" | "paid_out" | "paid" | "reversed"
+export type EarningType = 
+  | "product_sale" 
+  | "consultation_fee" 
+  | "shipping_fee" 
+  | "platform_fee" 
+  | "clinician_fee"
+
+export interface EarningEntryOverrides {
+  id?: string
+  business_id: string
+  order_id?: string
+  line_item_id?: string
+  consultation_id?: string
+  type?: EarningType
+  description?: string
+  gross_amount?: number
+...(truncated)
+
+[2026-02-04T13:33:41] CMD: rg -n -S -m 50 "CO-" src
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T13:33:54] CMD: rg -n -S -m 50 "custom/consult" src\\api
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T13:34:15] CMD: rg -n -S "createTestConsultSubmission" src\\tests\\utils\\factories.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+747:export async function createTestConsultSubmission(
+
+
+[2026-02-04T13:34:20] CMD: (Get-Content src\\tests\\utils\\factories.ts | Select-Object -Skip 700 -First 90) -join [Environment]::NewLine
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+    throw new Error("actor_id is required to create an audit log")
+  }
+  if (!overrides.entity_id) {
+    throw new Error("entity_id is required to create an audit log")
+  }
+  
+  return await compliance.createAuditLogs({
+    id,
+    actor_type: overrides.actor_type || "customer",
+    actor_id: overrides.actor_id,
+    actor_email: overrides.actor_email || null,
+    ip_address: overrides.ip_address || "127.0.0.1",
+    user_agent: overrides.user_agent || "Test User Agent",
+    action: overrides.action || "read",
+    entity_type: overrides.entity_type || "consultation",
+    entity_id: overrides.entity_id,
+    business_id: overrides.business_id || null,
+    consultation_id: overrides.consultation_id || null,
+    order_id: overrides.order_id || null,
+    changes: overrides.changes || null,
+    metadata: overrides.metadata || {},
+    risk_level: overrides.risk_level || "low",
+    flagged: overrides.flagged !== undefined ? overrides.flagged : false,
+    created_at: overrides.created_at || new Date(),
+  })
+}
+
+// ============================================================================
+// Consult Submission Factory
+// ============================================================================
+
+export type SubmissionStatus = "pending" | "approved" | "rejected"
+
+export interface ConsultSubmissionOverrides {
+  id?: string
+  business_id: string
+  customer_id: string
+  patient_data?: Record<string, any>
+  questionnaire_responses?: Record<string, any>
+  status?: SubmissionStatus
+  reviewed_by?: string
+  reviewed_at?: Date
+  notes?: string
+  order_id?: string
+}
+
+export async function createTestConsultSubmission(
+  container: MedusaContainer,
+  overrides: ConsultSubmissionOverrides
+) {
+  const { business } = getServices(container)
+  
+  const id = overrides.id || generateTestId("sub")
+  
+  if (!overrides.business_id) {
+    throw new Error("business_id is required to create a consult submission")
+  }
+  if (!overrides.customer_id) {
+    throw new Error("customer_id is required to create a consult submission")
+  }
+  
+  return await business.createConsultSubmissions({
+    id,
+    business_id: overrides.business_id,
+    customer_id: overrides.customer_id,
+    patient_data: overrides.patient_data || {},
+    questionnaire_responses: overrides.questionnaire_responses || {},
+    status: overrides.status || "pending",
+    reviewed_by: overrides.reviewed_by || null,
+    reviewed_at: overrides.reviewed_at || null,
+    notes: overrides.notes || null,
+    order_id: overrides.order_id || null,
+  })
+}
+
+// ============================================================================
+// Order Status Event Factory
+// ============================================================================
+
+export interface OrderStatusEventOverrides {
+...(truncated)
+
+[2026-02-04T13:34:32] CMD: rg -n -S -m 20 "createTestConsultSubmission" src\\tests
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src\\tests\utils\factories.ts:747:export async function createTestConsultSubmission(
+
+
+[2026-02-04T13:34:47] CMD: rg -n -S "async listPatients" src\\modules\\consultation\\service.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+425:  async listPatients(
+525:  async listPatientsByBusiness(businessId: string) {
+
+
+[2026-02-04T13:34:55] CMD: (Get-Content src\\modules\\consultation\\service.ts | Select-Object -Skip 410 -First 120) -join [Environment]::NewLine
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+      if (dateTo) {
+        filters.scheduled_at.$lte = dateTo
+      }
+    }
+
+    return await this.listConsultations(filters, {
+      order: { scheduled_at: "ASC" },
+    })
+  }
+
+  // ==========================================
+  // PATIENT METHODS
+  // ==========================================
+
+  async listPatients(
+    filters: Record<string, any> = {},
+    options: {
+      skip?: number
+      take?: number
+      order?: Record<string, "ASC" | "DESC">
+    } = {}
+  ) {
+    const { skip, take, order } = options
+    const { filters: f, options: o } = this.normalizeListArgs(filters, {
+      skip,
+      take,
+      order: order || { created_at: "DESC" },
+    })
+    const [patients, count] = await this.listAndCountPatients(
+      f,
+      o
+    )
+
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return [patients, count] as any
+    }
+
+    const decrypted = patients.map((p) =>
+      decryptFields(p as any, ConsultationModuleService.PATIENT_PHI_FIELDS as any)
+    )
+
+    return [decrypted, count] as any
+  }
+
+  async getPatientOrThrow(id: string, relations: string[] = []) {
+    const { filters: f, options: o } = this.normalizeListArgs({ id }, { take: 1, relations })
+    const patients = await this.listAndCountPatients(f, o)
+    if (!patients[0].length) {
+      throw new Error(`Patient not found: ${id}`)
+    }
+
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return patients[0][0]
+    }
+
+    return decryptFields(
+      patients[0][0] as any,
+      ConsultationModuleService.PATIENT_PHI_FIELDS as any
+    ) as any
+  }
+
+  async createPatient(data: Record<string, any>) {
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return await this.createPatients(data)
+    }
+
+    const encrypted = encryptFields(
+      data as any,
+      ConsultationModuleService.PATIENT_PHI_FIELDS as any
+    )
+    return await this.createPatients(encrypted)
+  }
+
+  async updatePatient(id: string, data: Record<string, any>) {
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return await this.updatePatients(id, data)
+    }
+
+    const encrypted = encryptFields(
+      data as any,
+...(truncated)
+
+[2026-02-04T13:35:11] CMD: Get-Content jest.integration.config.js -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Jest Configuration for Integration Tests
+ * 
+ * This configuration extends the base Jest config for integration testing.
+ */
+
+const { loadEnv } = require("@medusajs/utils")
+loadEnv("test", process.cwd())
+
+module.exports = {
+  // Use SWC for fast TypeScript compilation
+  transform: {
+    "^.+\\.[jt]s$": [
+      "@swc/jest",
+      {
+        jsc: {
+          parser: { syntax: "typescript", decorators: true },
+          target: "es2020",
+        },
+      },
+    ],
+  },
+
+  // Test environment
+  testEnvironment: "node",
+
+  // File extensions
+  moduleFileExtensions: ["js", "ts", "json"],
+
+  // Ignore patterns
+  modulePathIgnorePatterns: [
+    "dist/",
+    "<rootDir>/.medusa/",
+    "node_modules/",
+  ],
+
+  // Test patterns for custom integration tests
+  testMatch: [
+    "**/src/tests/integration/**/*.test.ts",
+  ],
+
+  // Setup files (needs Jest globals like `expect`, `beforeAll`, etc.)
+  setupFilesAfterEnv: ["./src/tests/setup.ts"],
+
+  // Module name mapping for path aliases
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
+
+  // Coverage configuration
+  collectCoverageFrom: [
+    "src/**/*.ts",
+    "!src/**/*.d.ts",
+    "!src/scripts/**",
+    "!src/**/index.ts",
+  ],
+  coverageDirectory: "coverage/integration",
+  coverageReporters: ["text", "lcov", "html"],
+
+  // Test timeout (30 seconds default, 60 for long operations)
+  testTimeout: 30000,
+
+  // Verbose output for debugging
+  verbose: true,
+
+  // Clear mocks between tests
+  clearMocks: true,
+
+  // Restore mocks after each test
+  restoreMocks: true,
+
+  // Fail on console errors in tests
+  errorOnDeprecated: true,
+
+  // reporters
+  reporters: [
+    "default",
+    [
+      "jest-junit",
+      {
+...(truncated)
+
+[2026-02-04T13:36:38] CMD: npm run test:integration:custom -- src/tests/integration/consultations-management.test.ts
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+node.exe : npm warn Unknown project config "public-hoist-pattern". This will stop working in the next major version of 
+npm.
+At line:1 char:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\User\AppData\Roaming\n ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (npm warn Unknow...version of npm.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+> TheRxSpot_Marketplace@0.0.1 test:integration:custom
+> NODE_OPTIONS=--experimental-vm-modules jest --config=jest.integration.config.js --silent=false --runInBand --forceExit src/tests/integration/consultations-management.test.ts
+
+'NODE_OPTIONS' is not recognized as an internal or external command,
+operable program or batch file.
+
+
+[2026-02-04T13:36:50] CMD: ='--experimental-vm-modules'; node .\node_modules\jest\bin\jest.js --config=jest.integration.config.js --silent=false --runInBand --forceExit src/tests/integration/consultations-management.test.ts
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+System.Management.Automation.CommandNotFoundException: The term '=--experimental-vm-modules' is not recognized as the name of a cmdlet, function, script file, or operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)
+   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.Interpreter.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.LightLambda.RunVoid1[T0](T0 arg0)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipeImpl(ScriptBlockClauseToInvoke clauseToInvoke, Boolean createLocalScope, Dictionary`2 functionsToDefine, List`1 variablesToDefine, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Object[] args)
+   at System.Management.Automation.ScriptBlock.<>c__DisplayClass57_0.<InvokeWithPipe>b__0()
+   at System.Management.Automation.Runspaces.RunspaceBase.RunActionIfNoRunningPipelinesWithThreadCheck(Action action)
+   at System.Management.Automation.ScriptBlock.InvokeWithPipe(Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Pipe outputPipe, InvocationInfo invocationInfo, Boolean propagateAllExceptionsToTop, List`1 variablesToDefine, Dictionary`2 functionsToDefine, Object[] args)
+   at System.Management.Automation.ScriptBlock.InvokeUsingCmdlet(Cmdlet contextCmdlet, Boolean useLocalScope, ErrorHandlingBehavior errorHandlingBehavior, Object dollarUnder, Object input, Object scriptThis, Object[] args)
+   at Microsoft.PowerShell.Commands.InvokeExpressionCommand.ProcessRecord()
+   at System.Management.Automation.CommandProcessor.ProcessRecord()
+
+[2026-02-04T13:37:11] CMD: $env:NODE_OPTIONS="--experimental-vm-modules"; node .\node_modules\jest\bin\jest.js --config=jest.integration.config.js --silent=false --runInBand --forceExit src/tests/integration/consultations-management.test.ts
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+...(truncated)
+      74 |           location_id: null,
+
+      at dbErrorMapper (node_modules/@medusajs/utils/src/dal/mikro-orm/db-error-mapper.ts:60:11)
+      at MikroOrmAbstractBaseRepository_.transaction 
+(node_modules/@medusajs/utils/src/dal/mikro-orm/mikro-orm-repository.ts:70:12)
+      at AbstractService_.descriptor.value 
+(node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-transaction-manager.ts:31:14)
+      at BusinessModuleService.methodImplementation 
+(node_modules/@medusajs/utils/src/modules-sdk/medusa-service.ts:194:27)
+      at BusinessModuleService.descriptor.value 
+(node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-into-context.ts:27:14)
+      at BusinessModuleService.descriptor.value 
+(node_modules/@medusajs/utils/src/modules-sdk/decorators/emit-events.ts:26:22)
+      at Object.<anonymous> (src/tests/integration/consultations-management.test.ts:71:28)
+
+  ?  › Consultations management (PLAN) › returns consultation detail payload
+
+    column "raw_consult_fee" of relation "consult_submission" does not exist
+
+      189 |
+      190 |         const businessService = container.resolve(BUSINESS_MODULE) as any
+    > 191 |         const submission = await businessService.createConsultSubmissions({
+          |                            ^
+      192 |           id: `sub_${Date.now()}_detail`,
+      193 |           business_id: business.id,
+      194 |           location_id: null,
+
+      at dbErrorMapper (node_modules/@medusajs/utils/src/dal/mikro-orm/db-error-mapper.ts:60:11)
+      at MikroOrmAbstractBaseRepository_.transaction 
+(node_modules/@medusajs/utils/src/dal/mikro-orm/mikro-orm-repository.ts:70:12)
+      at AbstractService_.descriptor.value 
+(node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-transaction-manager.ts:31:14)
+      at BusinessModuleService.methodImplementation 
+(node_modules/@medusajs/utils/src/modules-sdk/medusa-service.ts:194:27)
+      at BusinessModuleService.descriptor.value 
+(node_modules/@medusajs/utils/src/modules-sdk/decorators/inject-into-context.ts:27:14)
+      at BusinessModuleService.descriptor.value 
+(node_modules/@medusajs/utils/src/modules-sdk/decorators/emit-events.ts:26:22)
+      at Object.<anonymous> (src/tests/integration/consultations-management.test.ts:191:28)
+
+  ?  › Consultations management (PLAN) › updates notes (autosave) and writes an audit log
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      271 |           .catch((e: any) => e.response)
+      272 |
+    > 273 |         expect(update.status).toBe(200)
+          |                               ^
+      274 |         expect(update.data.consultation?.id).toBe(consultation.id)
+      275 |         expect(update.data.consultation?.notes).toBe("New clinician notes")
+      276 |         expect(update.data.consultation?.admin_notes).toBe("Internal admin note")
+
+      at Object.toBe (src/tests/integration/consultations-management.test.ts:273:31)
+
+  ?  › Consultations management (PLAN) › exports HTML for list + detail (PDF flow)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      313 |         )
+      314 |
+    > 315 |         expect(listRes.status).toBe(200)
+          |                                ^
+      316 |         expect(listRes.headers.get("content-type") || "").toContain("text/html")
+      317 |         const listHtml = await listRes.text()
+      318 |         expect(listHtml).toContain(consultation.id)
+
+      at Object.toBe (src/tests/integration/consultations-management.test.ts:315:32)
+
+Test Suites: 1 failed, 1 total
+Tests:       4 failed, 4 total
+Snapshots:   0 total
+Time:        46.372 s
+Ran all test suites matching /src\\tests\\integration\\consultations-management.test.ts/i.
+
+
+[2026-02-04T13:38:21] CMD: Get-Content src\\modules\\business\\migrations\\Migration20260204000001.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { Migration } from "@mikro-orm/migrations"
+
+/**
+ * Baseline tables for the Business module.
+ *
+ * NOTE:
+ * This repo defines several Business-module models but previously only had
+ * a migration for `order_status_event`. Medusa v2's module migrator will not
+ * auto-create tables for custom models without migrations, so clean DBs and
+ * integration tests would fail with `relation "<table>" does not exist`.
+ */
+export class Migration20260204000001 extends Migration {
+  async up(): Promise<void> {
+    // `business`
+    this.addSql(`
+      CREATE TABLE IF NOT EXISTS "business" (
+        "id" TEXT PRIMARY KEY,
+        "name" TEXT NOT NULL,
+        "slug" TEXT NOT NULL,
+        "logo_url" TEXT NULL,
+        "primary_color" TEXT NULL,
+        "secondary_color" TEXT NULL,
+        "custom_html_head" TEXT NULL,
+        "custom_html_body" TEXT NULL,
+        "domain" TEXT NULL,
+        "is_active" BOOLEAN NOT NULL DEFAULT TRUE,
+        "status" TEXT NOT NULL DEFAULT 'pending',
+        "branding_config" JSONB NOT NULL DEFAULT '{}'::jsonb,
+        "domain_config" JSONB NOT NULL DEFAULT '{}'::jsonb,
+        "catalog_config" JSONB NOT NULL DEFAULT '{}'::jsonb,
+        "settings" JSONB NOT NULL DEFAULT '{}'::jsonb,
+        "sales_channel_id" TEXT NULL,
+        "publishable_api_key_id" TEXT NULL,
+        "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "deleted_at" TIMESTAMPTZ NULL
+      )
+    `)
+
+    this.addSql(
+      `CREATE UNIQUE INDEX IF NOT EXISTS "IDX_business_slug_unique" ON "business" ("slug")`
+    )
+    this.addSql(
+      `CREATE UNIQUE INDEX IF NOT EXISTS "IDX_business_domain_unique" ON "business" ("domain") WHERE "domain" IS NOT NULL`
+    )
+
+    // `location`
+    this.addSql(`
+      CREATE TABLE IF NOT EXISTS "location" (
+        "id" TEXT PRIMARY KEY,
+        "business_id" TEXT NOT NULL,
+        "name" TEXT NOT NULL,
+        "phone" TEXT NOT NULL,
+        "email" TEXT NULL,
+        "address" TEXT NULL,
+        "city" TEXT NULL,
+        "state" TEXT NULL,
+        "zip" TEXT NULL,
+        "serviceable_states" TEXT[] NOT NULL DEFAULT '{}'::text[],
+        "is_active" BOOLEAN NOT NULL DEFAULT TRUE,
+        "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "deleted_at" TIMESTAMPTZ NULL
+      )
+    `)
+    this.addSql(
+      `CREATE INDEX IF NOT EXISTS "IDX_location_business_id" ON "location" ("business_id")`
+    )
+
+    // `business_product_category`
+    this.addSql(`
+      CREATE TABLE IF NOT EXISTS "business_product_category" (
+        "id" TEXT PRIMARY KEY,
+        "name" TEXT NOT NULL,
+        "description" TEXT NULL,
+        "image_url" TEXT NULL,
+        "requires_consult" BOOLEAN NOT NULL DEFAULT FALSE,
+        "sort_order" INTEGER NOT NULL DEFAULT 0,
+        "is_active" BOOLEAN NOT NULL DEFAULT TRUE,
+        "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+...(truncated)
+
+[2026-02-04T13:38:36] CMD: Get-Content src\\modules\\financials\\migrations\\Migration20250203000001.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { Migration } from '@mikro-orm/migrations';
+
+export class Migration20250203000001 extends Migration {
+
+  async up(): Promise<void> {
+    // Create earning_entry table
+    this.addSql(`
+      CREATE TABLE IF NOT EXISTS "earning_entry" (
+        "id" TEXT PRIMARY KEY,
+        "business_id" TEXT NOT NULL,
+        "order_id" TEXT NOT NULL,
+        "order_item_id" TEXT NULL,
+        "consultation_id" TEXT NULL,
+        "type" TEXT NOT NULL CHECK ("type" IN ('product_sale', 'consultation_fee', 'shipping_fee', 'platform_fee', 'clinician_fee')),
+        "gross_amount" NUMERIC NOT NULL,
+        "platform_fee" NUMERIC NOT NULL,
+        "payment_processing_fee" NUMERIC NOT NULL,
+        "net_amount" NUMERIC NOT NULL,
+        "clinician_fee" NUMERIC NULL,
+        "status" TEXT NOT NULL DEFAULT 'pending' CHECK ("status" IN ('pending', 'available', 'paid', 'reversed')),
+        "available_at" TIMESTAMPTZ NULL,
+        "paid_at" TIMESTAMPTZ NULL,
+        "payout_id" TEXT NULL,
+        "description" TEXT NOT NULL,
+        "metadata" JSONB NULL,
+        "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_earning_entry_business_id" ON "earning_entry" ("business_id")`);
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_earning_entry_order_id" ON "earning_entry" ("order_id")`);
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_earning_entry_consultation_id" ON "earning_entry" ("consultation_id")`);
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_earning_entry_status" ON "earning_entry" ("status")`);
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_earning_entry_payout_id" ON "earning_entry" ("payout_id")`);
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_earning_entry_created_at" ON "earning_entry" ("created_at")`);
+
+    // Create payout table
+    this.addSql(`
+      CREATE TABLE IF NOT EXISTS "payout" (
+        "id" TEXT PRIMARY KEY,
+        "business_id" TEXT NOT NULL,
+        "total_amount" NUMERIC NOT NULL,
+        "fee_amount" NUMERIC NOT NULL,
+        "net_amount" NUMERIC NOT NULL,
+        "status" TEXT NOT NULL DEFAULT 'pending' CHECK ("status" IN ('pending', 'processing', 'completed', 'failed')),
+        "method" TEXT NOT NULL CHECK ("method" IN ('ach', 'wire', 'check', 'stripe_connect')),
+        "destination_account" TEXT NULL,
+        "requested_at" TIMESTAMPTZ NOT NULL,
+        "processed_at" TIMESTAMPTZ NULL,
+        "completed_at" TIMESTAMPTZ NULL,
+        "earning_entries" JSONB NOT NULL DEFAULT '[]',
+        "transaction_id" TEXT NULL,
+        "failure_reason" TEXT NULL,
+        "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_payout_business_id" ON "payout" ("business_id")`);
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_payout_status" ON "payout" ("status")`);
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_payout_requested_at" ON "payout" ("requested_at")`);
+  }
+
+  async down(): Promise<void> {
+    this.addSql(`DROP TABLE IF EXISTS "earning_entry"`);
+    this.addSql(`DROP TABLE IF EXISTS "payout"`);
+  }
+
+}
+
+
+
+[2026-02-04T13:38:46] CMD: Get-Content src\\modules\\business\\models\\consult-submission.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { model } from "@medusajs/framework/utils"
+
+export const ConsultSubmission = model.define("consult_submission", {
+  id: model.id().primaryKey(),
+  business_id: model.text(),
+  location_id: model.text().nullable(),
+  product_id: model.text(),
+  customer_email: model.text(),
+  customer_first_name: model.text(),
+  customer_last_name: model.text(),
+  customer_phone: model.text().nullable(),
+  customer_dob: model.text().nullable(),
+  eligibility_answers: model.json().default({}),
+  status: model.enum(["pending", "approved", "rejected", "expired"]).default("pending"),
+  consult_fee: model.bigNumber().nullable(),
+  notes: model.text().nullable(),
+  reviewed_by: model.text().nullable(),
+  reviewed_at: model.dateTime().nullable(),
+})
+
+
+
+[2026-02-04T13:38:55] CMD: Get-Content src\\modules\\financials\\models\\earning-entry.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { model } from "@medusajs/framework/utils"
+
+export const EarningEntry = model.define("earning_entry", {
+  id: model.id().primaryKey(),
+  business_id: model.text(),
+  // Can be null for consultation-only earnings (no order created)
+  order_id: model.text().nullable(),
+  line_item_id: model.text().nullable(),
+  consultation_id: model.text().nullable(),
+  type: model.enum(["product_sale", "consultation_fee", "shipping_fee", "platform_fee", "clinician_fee"]),
+  description: model.text().default(""),
+  
+  // Financial amounts (stored in cents/smallest currency unit)
+  gross_amount: model.bigNumber(),
+  platform_fee: model.bigNumber(),
+  payment_processing_fee: model.bigNumber(),
+  net_amount: model.bigNumber(),
+  clinician_fee: model.bigNumber().nullable(),
+  
+  // Status tracking
+  // "paid_out" = locked to a payout request (PLAN terminology)
+  status: model.enum(["pending", "available", "paid_out", "paid", "reversed"]).default("pending"),
+  available_at: model.dateTime().nullable(),
+  paid_at: model.dateTime().nullable(),
+  payout_id: model.text().nullable(),
+  
+  // Additional metadata
+  metadata: model.json().default({}),
+})
+
+
+
+[2026-02-04T13:39:09] CMD: rg -n -S -m 50 "raw_gross_amount" src\\modules
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src\\modules\financials\migrations\Migration20260204000004.ts:20:    this.addSql(`ALTER TABLE "earning_entry" ADD COLUMN IF NOT EXISTS "raw_gross_amount" JSONB NULL`)
+src\\modules\financials\migrations\Migration20260204000004.ts:32:        "raw_gross_amount" = COALESCE("raw_gross_amount", jsonb_build_object('value', "gross_amount"::text, 'precision', 20)),
+
+
+[2026-02-04T13:39:19] CMD: Get-Content src\\modules\\financials\\migrations\\Migration20260204000004.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { Migration } from "@mikro-orm/migrations"
+
+/**
+ * BigNumber column compatibility for Medusa v2.
+ *
+ * Medusa's `model.bigNumber()` maps to `raw_<field>` JSONB columns
+ * (e.g. `raw_net_amount`), not plain numeric columns.
+ *
+ * The initial financials migration created numeric columns (`net_amount`, etc.)
+ * which causes runtime errors like:
+ *   column "raw_net_amount" does not exist
+ *
+ * This migration:
+ * - Adds `raw_*` JSONB columns for all bigNumber fields.
+ * - Drops NOT NULL constraints on the legacy numeric columns so inserts won't fail.
+ */
+export class Migration20260204000004 extends Migration {
+  async up(): Promise<void> {
+    // earning_entry: raw_* columns
+    this.addSql(`ALTER TABLE "earning_entry" ADD COLUMN IF NOT EXISTS "raw_gross_amount" JSONB NULL`)
+    this.addSql(`ALTER TABLE "earning_entry" ADD COLUMN IF NOT EXISTS "raw_platform_fee" JSONB NULL`)
+    this.addSql(
+      `ALTER TABLE "earning_entry" ADD COLUMN IF NOT EXISTS "raw_payment_processing_fee" JSONB NULL`
+    )
+    this.addSql(`ALTER TABLE "earning_entry" ADD COLUMN IF NOT EXISTS "raw_net_amount" JSONB NULL`)
+    this.addSql(`ALTER TABLE "earning_entry" ADD COLUMN IF NOT EXISTS "raw_clinician_fee" JSONB NULL`)
+
+    // Backfill raw columns from legacy numeric columns when possible
+    this.addSql(`
+      UPDATE "earning_entry"
+      SET
+        "raw_gross_amount" = COALESCE("raw_gross_amount", jsonb_build_object('value', "gross_amount"::text, 'precision', 20)),
+        "raw_platform_fee" = COALESCE("raw_platform_fee", jsonb_build_object('value', "platform_fee"::text, 'precision', 20)),
+        "raw_payment_processing_fee" = COALESCE("raw_payment_processing_fee", jsonb_build_object('value', "payment_processing_fee"::text, 'precision', 20)),
+        "raw_net_amount" = COALESCE("raw_net_amount", jsonb_build_object('value', "net_amount"::text, 'precision', 20)),
+        "raw_clinician_fee" = CASE
+          WHEN "clinician_fee" IS NULL THEN "raw_clinician_fee"
+          ELSE COALESCE("raw_clinician_fee", jsonb_build_object('value', "clinician_fee"::text, 'precision', 20))
+        END
+    `)
+
+    // Allow legacy numeric columns to be null (Medusa writes raw_* columns)
+    this.addSql(`ALTER TABLE "earning_entry" ALTER COLUMN "gross_amount" DROP NOT NULL`)
+    this.addSql(`ALTER TABLE "earning_entry" ALTER COLUMN "platform_fee" DROP NOT NULL`)
+    this.addSql(`ALTER TABLE "earning_entry" ALTER COLUMN "payment_processing_fee" DROP NOT NULL`)
+    this.addSql(`ALTER TABLE "earning_entry" ALTER COLUMN "net_amount" DROP NOT NULL`)
+
+    // payout: raw_* columns + legacy numeric columns nullable
+    this.addSql(`ALTER TABLE "payout" ADD COLUMN IF NOT EXISTS "raw_total_amount" JSONB NULL`)
+    this.addSql(`ALTER TABLE "payout" ADD COLUMN IF NOT EXISTS "raw_fee_amount" JSONB NULL`)
+    this.addSql(`ALTER TABLE "payout" ADD COLUMN IF NOT EXISTS "raw_net_amount" JSONB NULL`)
+
+    this.addSql(`
+      UPDATE "payout"
+      SET
+        "raw_total_amount" = COALESCE("raw_total_amount", jsonb_build_object('value', "total_amount"::text, 'precision', 20)),
+        "raw_fee_amount" = COALESCE("raw_fee_amount", jsonb_build_object('value', "fee_amount"::text, 'precision', 20)),
+        "raw_net_amount" = COALESCE("raw_net_amount", jsonb_build_object('value', "net_amount"::text, 'precision', 20))
+    `)
+
+    this.addSql(`ALTER TABLE "payout" ALTER COLUMN "total_amount" DROP NOT NULL`)
+    this.addSql(`ALTER TABLE "payout" ALTER COLUMN "fee_amount" DROP NOT NULL`)
+    this.addSql(`ALTER TABLE "payout" ALTER COLUMN "net_amount" DROP NOT NULL`)
+  }
+
+  async down(): Promise<void> {
+    // Keep columns for safety; no-op rollback.
+  }
+}
+
+
+
+
+[2026-02-04T13:39:28] CMD: rg -n -S -m 20 "raw_consult_fee" src\\modules
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T13:39:35] CMD: ls src\\modules\\business\\migrations
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\modules\business\migrations
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          2/3/2026   6:16 PM           1175 Migration20250203000003.ts                                           
+-a----          2/4/2026   8:32 AM           7722 Migration20260204000001.ts                                           
+-a----          2/4/2026  10:12 AM           4396 Migration20260204000009.ts                                           
+
+
+
+
+[2026-02-04T13:40:06] CMD: ls src\\api\\admin\\custom\\users
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\api\admin\custom\users
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+d-----          2/4/2026   1:04 PM                bulk                                                                 
+d-----          2/4/2026   1:00 PM                export                                                               
+d-----          2/4/2026   1:08 PM                [id]                                                                 
+-a----          2/4/2026   1:00 PM           9610 route.ts                                                             
+
+
+
+
+[2026-02-04T13:40:13] CMD: Get-Content src\\api\\admin\\custom\\users\\export\\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { Modules } from "@medusajs/framework/utils"
+import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+
+type UserRole = "customer" | "admin" | "clinician"
+
+function parseIsoDate(value?: string): Date | undefined {
+  if (!value) return undefined
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return undefined
+  return date
+}
+
+function normalizeDigits(value: string): string {
+  return value.replace(/[^\d]/g, "")
+}
+
+function normalizeText(value: string): string {
+  return value.toLowerCase().trim()
+}
+
+function matchesQuery(user: any, q: string): boolean {
+  const query = normalizeText(q)
+  if (!query) return true
+
+  const tokens = query.split(/\s+/).filter(Boolean)
+  const hay = normalizeText(
+    [
+      user.first_name || "",
+      user.last_name || "",
+      user.email || "",
+      user.phone || "",
+    ].join(" ")
+  )
+
+  const qDigits = normalizeDigits(query)
+  const phoneDigits = normalizeDigits(user.phone || "")
+
+  return tokens.every((t) => {
+    const tDigits = normalizeDigits(t)
+    if (tDigits.length >= 4) {
+      return phoneDigits.includes(tDigits) || hay.includes(normalizeText(t))
+    }
+    return hay.includes(normalizeText(t))
+  }) || (qDigits.length >= 4 && phoneDigits.includes(qDigits))
+}
+
+function inferStatusFromMetadata(meta: any): "active" | "inactive" {
+  if (meta && typeof meta.is_active === "boolean") {
+    return meta.is_active ? "active" : "inactive"
+  }
+  return "active"
+}
+
+function getMetaValue(meta: any, key: string): string | null {
+  if (!meta || typeof meta !== "object") return null
+  const value = (meta as any)[key]
+  if (typeof value === "string" && value.trim()) return value.trim()
+  return null
+}
+
+function csvEscape(value: any): string {
+  const str = value == null ? "" : String(value)
+  return `"${str.replace(/\"/g, `""`)}"`
+}
+
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  try {
+    const query = req.query as Record<string, any>
+
+    const role = (typeof query.role === "string" ? query.role.trim() : "") as UserRole | ""
+    const status = (typeof query.status === "string" ? query.status.trim() : "") as
+      | "active"
+      | "inactive"
+      | ""
+    const q = typeof query.q === "string" ? query.q.trim() : ""
+
+    if (role && !["customer", "admin", "clinician"].includes(role)) {
+      return res.status(400).json({
+        code: "INVALID_INPUT",
+...(truncated)
+
+[2026-02-04T13:40:22] CMD: Get-Content src\\modules\\business\\migrations\\Migration20260204000009.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { Migration } from "@mikro-orm/migrations"
+
+/**
+ * Data hardening:
+ * - Add soft-delete support to legacy tables missing `deleted_at`
+ * - Add missing performance indexes listed in PLAN.txt
+ * - Add `deleted_at` indexes to speed default filtering
+ */
+export class Migration20260204000009 extends Migration {
+  async up(): Promise<void> {
+    // Ensure soft-delete support for legacy order_status_event table
+    this.addSql(
+      `ALTER TABLE "order_status_event" ADD COLUMN IF NOT EXISTS "deleted_at" TIMESTAMPTZ NULL`
+    )
+
+    this.addSql(
+      `CREATE INDEX IF NOT EXISTS "IDX_order_status_event_deleted_at" ON "order_status_event" ("deleted_at")`
+    )
+
+    // Add deleted_at indexes for business module tables (fast default filtering)
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_business_deleted_at" ON "business" ("deleted_at")`)
+    this.addSql(`CREATE INDEX IF NOT EXISTS "IDX_location_deleted_at" ON "location" ("deleted_at")`)
+    this.addSql(
+      `CREATE INDEX IF NOT EXISTS "IDX_business_product_category_deleted_at" ON "business_product_category" ("deleted_at")`
+    )
+    this.addSql(
+      `CREATE INDEX IF NOT EXISTS "IDX_consult_submission_deleted_at" ON "consult_submission" ("deleted_at")`
+    )
+    this.addSql(
+      `CREATE INDEX IF NOT EXISTS "IDX_consult_approval_deleted_at" ON "consult_approval" ("deleted_at")`
+    )
+    this.addSql(
+      `CREATE INDEX IF NOT EXISTS "IDX_business_domain_deleted_at" ON "business_domain" ("deleted_at")`
+    )
+    this.addSql(
+      `CREATE INDEX IF NOT EXISTS "IDX_business_user_deleted_at" ON "business_user" ("deleted_at")`
+    )
+
+    // PLAN performance indexes on core Medusa tables (only if columns exist)
+    this.addSql(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'order' AND column_name = 'business_id'
+        ) THEN
+          EXECUTE 'CREATE INDEX IF NOT EXISTS "IDX_order_business_id" ON "order" ("business_id")';
+        END IF;
+
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'order' AND column_name = 'status'
+        ) THEN
+          EXECUTE 'CREATE INDEX IF NOT EXISTS "IDX_order_status" ON "order" ("status")';
+        END IF;
+
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'order' AND column_name = 'created_at'
+        ) THEN
+          EXECUTE 'CREATE INDEX IF NOT EXISTS "IDX_order_created_at" ON "order" ("created_at")';
+        END IF;
+      END $$;
+    `)
+
+    this.addSql(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'product' AND column_name = 'business_id'
+        ) THEN
+          EXECUTE 'CREATE INDEX IF NOT EXISTS "IDX_product_business_id" ON "product" ("business_id")';
+        END IF;
+
+        IF EXISTS (
+...(truncated)
+
+[2026-02-04T13:40:54] CMD: rg -n -S -m 50 "\" src\\api src\\modules
+CWD: .
+RESULT: FAIL (exit 2)
+OUTPUT:
+rg : rg: regex parse error:
+At line:1 char:1
++ rg -n -S -m 50 "\" src\\api src\\modules
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (rg: regex parse error::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+    (?:\)
+    ^
+error: unclosed group
+
+
+[2026-02-04T13:41:04] CMD: rg -n -S -m 50 '\\' src\\api src\\modules
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src\\api\middlewares\consult-gating.ts:11:  { pattern: /^\/store\/carts$/, method: "POST" },
+src\\api\middlewares\consult-gating.ts:13:  { pattern: /^\/store\/carts\/[^\/]+\/line-items/, method: "POST" },
+src\\api\middlewares\consult-gating.ts:14:  { pattern: /^\/store\/carts\/[^\/]+\/items/, method: "POST" },
+src\\api\middlewares\consult-gating.ts:16:  { pattern: /^\/store\/carts\/[^\/]+\/line-items\/batch/, method: "POST" },
+src\\api\middlewares\consult-gating.ts:17:  { pattern: /^\/store\/carts\/[^\/]+\/items\/batch/, method: "POST" },
+src\\api\middlewares\consult-gating.ts:19:  { pattern: /^\/store\/carts\/[^\/]+$/, method: "POST" },
+src\\api\middlewares\consult-gating.ts:20:  { pattern: /^\/store\/carts\/[^\/]+$/, method: "PUT" },
+src\\api\middlewares\auto-logoff.ts:56:    { pattern: /^\/auth\//, methods: ["POST", "GET"] },
+src\\api\middlewares\auto-logoff.ts:58:    { pattern: /^\/store\/customers$/, methods: ["POST"] },
+src\\api\middlewares\auto-logoff.ts:60:    { pattern: /^\/auth\/customer\/.*\/reset-password/, methods: ["POST"] },
+src\\api\middlewares\auto-logoff.ts:62:    { pattern: /^\/store\/businesses/, methods: ["GET"] },
+src\\api\middlewares\auto-logoff.ts:63:    { pattern: /^\/store\/product-categories/, methods: ["GET"] },
+src\\api\middlewares\auto-logoff.ts:65:    { pattern: /^\/health/, methods: ["GET"] },
+src\\api\middlewares\audit-logging.ts:103:    { regex: /\/admin\/consultations\/([^\/]+)/, type: "consultation" },
+src\\api\middlewares\audit-logging.ts:104:    { regex: /\/admin\/patients\/([^\/]+)/, type: "patient" },
+src\\api\middlewares\audit-logging.ts:105:    { regex: /\/admin\/documents\/([^\/]+)/, type: "document" },
+src\\api\middlewares\audit-logging.ts:106:    { regex: /\/admin\/orders\/([^\/]+)/, type: "order" },
+src\\api\middlewares\audit-logging.ts:107:    { regex: /\/admin\/businesses\/([^\/]+)/, type: "business" },
+src\\api\middlewares\audit-logging.ts:108:    { regex: /\/admin\/earnings\/([^\/]+)/, type: "earning" },
+src\\api\middlewares\audit-logging.ts:109:    { regex: /\/admin\/payouts\/([^\/]+)/, type: "payout" },
+src\\api\middlewares\audit-logging.ts:110:    { regex: /\/store\/consultations\/([^\/]+)/, type: "consultation" },
+src\\api\middlewares\audit-logging.ts:111:    { regex: /\/store\/documents\/([^\/]+)/, type: "document" },
+src\\api\middlewares\audit-logging.ts:112:    { regex: /\/store\/orders\/([^\/]+)/, type: "order" },
+src\\api\middlewares\audit-logging.ts:113:    { regex: /\/store\/carts\/([^\/]+)/, type: "cart" },
+src\\api\middlewares\audit-logging.ts:338:  const docMatch = req.path?.match(/\/documents\/([^\/]+)/)
+src\\modules\financials\service.ts:457:        `Payout validation failed for ${validationErrors.length} earning(s):\n` +
+src\\modules\financials\service.ts:458:        validationErrors.map(e => `  - ${e}`).join('\n')
+src\\api\admin\custom\users\route.ts:37:  return value.replace(/[^\d]/g, "")
+src\\api\admin\custom\users\route.ts:48:  const tokens = query.split(/\s+/).filter(Boolean)
+src\\api\admin\custom\users\export\route.ts:15:  return value.replace(/[^\d]/g, "")
+src\\api\admin\custom\users\export\route.ts:26:  const tokens = query.split(/\s+/).filter(Boolean)
+src\\api\admin\custom\users\export\route.ts:64:  return `"${str.replace(/\"/g, `""`)}"`
+src\\api\admin\custom\users\export\route.ts:232:    return res.send(lines.join("\n"))
+src\\modules\compliance\services\storage\local-storage.ts:34:    const sanitizedKey = key.replace(/\.\./g, "").replace(/^\//, "")
+src\\modules\compliance\services\storage\local-storage.ts:91:    const sanitizedKey = key.replace(/\\/g, "/")
+src\\api\admin\documents\[id]\download\route.ts:156:      `${disposition}; filename=\"${(content.document.file_name || "document").replace(/\"/g, "")}\"`
+
+
+[2026-02-04T13:41:52] CMD: ls src\\modules\\consultation\\migrations
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+
+
+    Directory: D:\GitHub\TheRxSpot_Marketplace\src\modules\consultation\migrations
+
+
+Mode                 LastWriteTime         Length Name                                                                 
+----                 -------------         ------ ----                                                                 
+-a----          2/3/2026   6:16 PM           2176 Migration20250203000004.ts                                           
+-a----          2/4/2026   8:32 AM           5198 Migration20260204000002.ts                                           
+-a----          2/4/2026  10:12 AM           2449 Migration20260204000010.ts                                           
+-a----          2/4/2026  12:57 PM            672 Migration20260204000013.ts                                           
+
+
+
+
+[2026-02-04T13:42:30] CMD: rg -n -S -m 20 "Modules\.PRODUCT" src\\api
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src\\api\store\carts\route.ts:75:  const productService = req.scope.resolve(Modules.PRODUCT)
+src\\api\middlewares\consult-gating.ts:91:  const productModuleService = req.scope.resolve(Modules.PRODUCT)
+src\\api\middlewares\consult-gating.ts:163:  const productModuleService = req.scope.resolve(Modules.PRODUCT)
+
+
+[2026-02-04T13:42:38] CMD: Get-Content src\\api\\store\\carts\\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+
+/**
+ * Store Carts API Extension
+ * 
+ * This file extends the default Medusa cart functionality with:
+ * - Business context injection for multi-tenant carts
+ * - Consult gating validation hooks
+ * 
+ * Note: Core cart operations (create, update, add items) are handled by Medusa's
+ * default store cart routes. This file provides additional business-aware endpoints.
+ */
+
+/**
+ * POST /store/carts
+ * Create a new cart with business context
+ */
+export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+  const cartService = req.scope.resolve(Modules.CART)
+  const business = (req as any).context?.business
+  
+  try {
+    // Create cart with optional business context
+    const body = (req.body ?? {}) as Record<string, any>
+    const cartData: any = {
+      ...body,
+    }
+    
+    // If a business context exists, store it in cart metadata
+    if (business) {
+      cartData.metadata = {
+        ...cartData.metadata,
+        business_id: business.id,
+        business_name: business.name,
+        sales_channel_id: business.sales_channel_id,
+      }
+      
+      // Use the business's sales channel if available
+      if (business.sales_channel_id) {
+        cartData.sales_channel_id = business.sales_channel_id
+      }
+    }
+    
+    // Create the cart using Medusa's cart service
+    const cart = await cartService.createCarts(cartData)
+    
+    res.status(200).json({ cart })
+  } catch (error) {
+    console.error("Error creating cart:", error)
+    res.status(500).json({
+      code: "CART_CREATE_ERROR",
+      message: error.message,
+    })
+  }
+}
+
+/**
+ * GET /store/carts/:id
+ * Retrieve a cart with business context
+ * 
+ * Note: This is handled by Medusa's default route.
+ * The consult-gating middleware validates items on add/update.
+ */
+
+/**
+ * Helper function to validate cart items against consult requirements
+ * This can be called manually or is automatically triggered by middleware
+ */
+export async function validateCartConsultApprovals(
+  req: MedusaRequest,
+  cartId: string
+): Promise<{ valid: boolean; errors?: any[] }> {
+  const cartService = req.scope.resolve(Modules.CART)
+  const productService = req.scope.resolve(Modules.PRODUCT)
+  const businessService = req.scope.resolve("businessModuleService")
+  const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+  
+  try {
+    // Retrieve cart with items
+...(truncated)
+
+[2026-02-04T13:43:50] CMD: Get-Content src\\modules\\compliance\\models\\audit-log.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { model } from "@medusajs/framework/utils"
+
+export const AuditLog = model.define("audit_log", {
+  id: model.id().primaryKey(),
+  actor_type: model.enum(["customer", "business_user", "clinician", "system", "api_key"]),
+  actor_id: model.text(),
+  actor_email: model.text().nullable(),
+  ip_address: model.text().nullable(),
+  user_agent: model.text().nullable(),
+  action: model.enum(["create", "read", "update", "delete", "download", "login", "logout", "export"]),
+  entity_type: model.enum(["consultation", "order", "document", "patient", "business", "earning", "payout"]),
+  entity_id: model.text(),
+  business_id: model.text().nullable(),
+  consultation_id: model.text().nullable(),
+  order_id: model.text().nullable(),
+  changes: model.json().nullable(),
+  metadata: model.json().nullable(),
+  risk_level: model.enum(["low", "medium", "high", "critical"]).default("low"),
+  flagged: model.boolean().default(false),
+})
+
+
+
+[2026-02-04T13:48:00] CMD: $env:NODE_OPTIONS="--experimental-vm-modules"; node .\node_modules\jest\bin\jest.js --config=jest.integration.config.js --silent=false --runInBand --forceExit src/tests/integration/consultations-management.test.ts
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+...(truncated)
+    Consultations management (PLAN)
+      × lists consultations with pagination + filters + search (3022 ms)
+      × returns consultation detail payload (7132 ms)
+      × updates notes (autosave) and writes an audit log (6778 ms)
+      × exports HTML for list + detail (PDF flow) (6355 ms)
+
+  ?  › Consultations management (PLAN) › lists consultations with pagination + filters + search
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      123 |           .catch((e: any) => e.response)
+      124 |
+    > 125 |         expect(listAll.status).toBe(200)
+          |                                ^
+      126 |         expect(Array.isArray(listAll.data.consultations)).toBe(true)
+      127 |         expect(listAll.data.consultations.length).toBeGreaterThanOrEqual(2)
+      128 |
+
+      at Object.toBe (src/tests/integration/consultations-management.test.ts:125:32)
+
+  ?  › Consultations management (PLAN) › returns consultation detail payload
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      233 |           .catch((e: any) => e.response)
+      234 |
+    > 235 |         expect(res.status).toBe(200)
+          |                            ^
+      236 |         expect(res.data.consultation?.id).toBe(consultation.id)
+      237 |         expect(res.data.consultation?.business?.id).toBe(business.id)
+      238 |         expect(res.data.consultation?.patient?.email).toBe(patient.email)
+
+      at Object.toBe (src/tests/integration/consultations-management.test.ts:235:28)
+
+  ?  › Consultations management (PLAN) › updates notes (autosave) and writes an audit log
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      271 |           .catch((e: any) => e.response)
+      272 |
+    > 273 |         expect(update.status).toBe(200)
+          |                               ^
+      274 |         expect(update.data.consultation?.id).toBe(consultation.id)
+      275 |         expect(update.data.consultation?.notes).toBe("New clinician notes")
+      276 |         expect(update.data.consultation?.admin_notes).toBe("Internal admin note")
+
+      at Object.toBe (src/tests/integration/consultations-management.test.ts:273:31)
+
+  ?  › Consultations management (PLAN) › exports HTML for list + detail (PDF flow)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+      313 |         )
+      314 |
+    > 315 |         expect(listRes.status).toBe(200)
+          |                                ^
+      316 |         expect(listRes.headers.get("content-type") || "").toContain("text/html")
+      317 |         const listHtml = await listRes.text()
+      318 |         expect(listHtml).toContain(consultation.id)
+
+      at Object.toBe (src/tests/integration/consultations-management.test.ts:315:32)
+
+Test Suites: 1 failed, 1 total
+Tests:       4 failed, 4 total
+Snapshots:   0 total
+Time:        48.321 s
+Ran all test suites matching /src\\tests\\integration\\consultations-management.test.ts/i.
+
+
+[2026-02-04T13:49:03] CMD: Get-Content src\\api\\admin\\custom\\route.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http";
+
+export async function GET(
+  req: MedusaRequest,
+  res: MedusaResponse
+) {
+  res.sendStatus(200);
+}
+
+
+
+[2026-02-04T13:49:19] CMD: Get-Content src\\tests\\setup.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Global Test Setup
+ * 
+ * This file runs before all tests to configure the test environment.
+ * It handles database connections, mocking, and global test utilities.
+ */
+
+import { MetadataStorage } from "@medusajs/framework/mikro-orm/core"
+
+// Clear metadata before tests to prevent conflicts
+MetadataStorage.clear()
+
+// Set test environment
+process.env.NODE_ENV = "test"
+process.env.TZ = "UTC"
+
+// JWT secrets for testing (128+ characters as required)
+process.env.JWT_SECRET = "test_jwt_secret_128_chars_long_for_testing_purposes_only_" + "x".repeat(70)
+process.env.COOKIE_SECRET = "test_cookie_secret_128_chars_long_for_testing_purposes_only_" + "x".repeat(70)
+
+// Test database configuration
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || process.env.DATABASE_URL
+
+// Disable logging in tests unless explicitly enabled
+process.env.LOG_LEVEL = process.env.TEST_LOG_LEVEL || "silent"
+
+// ============================================================================
+// Mock External Services
+// ============================================================================
+
+// Mock AWS S3
+jest.mock("@aws-sdk/client-s3", () => ({
+  S3Client: jest.fn().mockImplementation(() => ({
+    send: jest.fn().mockResolvedValue({
+      Body: {
+        transformToByteArray: jest.fn().mockResolvedValue(Buffer.from("test")),
+      },
+    }),
+  })),
+  PutObjectCommand: jest.fn().mockImplementation((params) => params),
+  GetObjectCommand: jest.fn().mockImplementation((params) => params),
+  DeleteObjectCommand: jest.fn().mockImplementation((params) => params),
+  HeadObjectCommand: jest.fn().mockImplementation((params) => params),
+}))
+
+jest.mock("@aws-sdk/s3-request-presigner", () => ({
+  getSignedUrl: jest.fn().mockResolvedValue("https://presigned-url.s3.amazonaws.com/test"),
+}))
+
+// Mock Stripe
+jest.mock("stripe", () => {
+  return jest.fn().mockImplementation(() => ({
+    transfers: {
+      create: jest.fn().mockResolvedValue({ id: "tr_test_123" }),
+    },
+    accounts: {
+      create: jest.fn().mockResolvedValue({ id: "acct_test_123" }),
+      retrieve: jest.fn().mockResolvedValue({ id: "acct_test_123" }),
+    },
+    balanceTransactions: {
+      list: jest.fn().mockResolvedValue({ data: [] }),
+    },
+    payouts: {
+      create: jest.fn().mockResolvedValue({ id: "po_test_123" }),
+    },
+  }))
+})
+
+// Mock SendGrid / Email services
+jest.mock("@sendgrid/mail", () => ({
+  setApiKey: jest.fn(),
+  send: jest.fn().mockResolvedValue([{}, {}]),
+}))
+
+// Mock Twilio / SMS services
+jest.mock(
+  "twilio",
+  () => {
+    return jest.fn().mockImplementation(() => ({
+      messages: {
+...(truncated)
+
+[2026-02-04T13:49:45] CMD: rg -n -S -m 50 "admin/custom" src\\api
+CWD: .
+RESULT: FAIL (exit 1)
+
+[2026-02-04T13:50:18] CMD: rg -n -S -m 50 "signAdminToken" src\\tests
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+src\\tests\integration\consultation-apis.test.ts:43:function signAdminToken(userId: string, businessId?: string): string {
+src\\tests\integration\consultation-apis.test.ts:192:          const adminToken = signAdminToken("user_test_admin", business.id)
+src\\tests\integration\consultation-apis.test.ts:254:          const adminToken = signAdminToken("user_test_admin", business.id)
+src\\tests\integration\consultation-apis.test.ts:363:          const adminToken = signAdminToken("user_test_admin", business.id)
+src\\tests\integration\consultations-management.test.ts:27:function signAdminToken(userId: string): string {
+src\\tests\integration\consultations-management.test.ts:117:        const adminToken = signAdminToken(adminUser.id)
+src\\tests\integration\consultations-management.test.ts:227:        const adminToken = signAdminToken(adminUser.id)
+src\\tests\integration\consultations-management.test.ts:263:        const adminToken = signAdminToken(adminUser.id)
+src\\tests\integration\consultations-management.test.ts:306:        const adminToken = signAdminToken(adminUser.id)
+src\\tests\integration\dashboard-home.test.ts:23:function signAdminToken(userId: string, businessId?: string): string {
+src\\tests\integration\dashboard-home.test.ts:85:        const adminToken = signAdminToken("admin_dashboard_user_01")
+src\\tests\integration\financial-apis.test.ts:15:function signAdminToken(userId: string, businessId?: string): string {
+src\\tests\integration\financial-apis.test.ts:71:        const adminToken = signAdminToken("user_admin_fin_01", business.id)
+src\\tests\integration\financial-apis.test.ts:133:        const adminToken = signAdminToken("user_admin_fin_02", business.id)
+src\\tests\integration\financial-apis.test.ts:219:        const adminToken = signAdminToken("user_admin_fin_03", business.id)
+src\\tests\integration\soft-delete-restore.test.ts:25:function signAdminToken(userId: string, businessId?: string): string {
+src\\tests\integration\soft-delete-restore.test.ts:51:        const adminToken = signAdminToken("admin_test_user", business.id)
+src\\tests\integration\users-management.test.ts:20:function signAdminToken(userId: string): string {
+src\\tests\integration\users-management.test.ts:87:        const adminToken = signAdminToken(adminUser.id)
+src\\tests\integration\users-management.test.ts:144:        const adminToken = signAdminToken(adminUser.id)
+src\\tests\integration\users-management.test.ts:215:        const adminToken = signAdminToken(adminUser.id)
+src\\tests\integration\users-management.test.ts:246:        const adminToken = signAdminToken(adminUser.id)
+src\\tests\integration\users-management.test.ts:323:        const adminToken = signAdminToken(adminUser.id)
+
+
+[2026-02-04T13:50:26] CMD: Get-Content src\\tests\\integration\\consultation-apis.test.ts -Raw
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+/**
+ * Consultation API Endpoint Tests
+ *
+ * Covers:
+ * - GET /store/consultations/approvals?product_id={id}
+ * - POST /admin/consultations/{id}/assign
+ * - POST /admin/consultations/{id}/status
+ */
+
+import { medusaIntegrationTestRunner } from "@medusajs/test-utils"
+import jwt from "jsonwebtoken"
+import {
+  createTestBusiness,
+  createTestCustomer,
+  createTestPatient,
+  createTestProduct,
+  createTestClinician,
+  createTestConsultation,
+  createTestConsultApproval,
+} from "../utils/factories"
+import { dateOffset } from "../utils/test-server"
+
+jest.setTimeout(60000)
+
+function signCustomerToken(customerId: string): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error("JWT_SECRET must be set for integration tests")
+  }
+
+  return jwt.sign(
+    {
+      actor_id: customerId,
+      actor_type: "customer",
+      auth_identity_id: "",
+      app_metadata: {},
+      user_metadata: {},
+    },
+    secret
+  )
+}
+
+function signAdminToken(userId: string, businessId?: string): string {
+  const secret = process.env.JWT_SECRET
+  if (!secret) {
+    throw new Error("JWT_SECRET must be set for integration tests")
+  }
+
+  return jwt.sign(
+    {
+      actor_id: userId,
+      actor_type: "user",
+      auth_identity_id: "",
+      business_id: businessId,
+      app_metadata: businessId ? { business_id: businessId } : {},
+      user_metadata: {},
+    },
+    secret
+  )
+}
+
+medusaIntegrationTestRunner({
+  testSuite: ({ api, getContainer }) => {
+    describe("Consultation APIs", () => {
+      let publishableApiKey: string
+
+      beforeEach(async () => {
+        const container = getContainer()
+        const apiKeyService = container.resolve("api_key") as any
+
+        const key = await apiKeyService.createApiKeys({
+          title: "test publishable key",
+          type: "publishable",
+          created_by: "integration_test",
+        })
+
+        publishableApiKey = key.token
+      })
+
+      describe("GET /store/consultations/approvals", () => {
+...(truncated)
+
+[2026-02-04T13:51:42] CMD: $env:NODE_OPTIONS="--experimental-vm-modules"; node .\node_modules\jest\bin\jest.js --config=jest.integration.config.js --silent=false --runInBand --forceExit src/tests/integration/consultations-management.test.ts
+CWD: .
+RESULT: FAIL (exit 1)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:30100) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:48
++ ... m-modules"; node .\node_modules\jest\bin\jest.js --config=jest.integr ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:30100) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+FAIL src/tests/integration/consultations-management.test.ts (46.49 s)
+    Consultations management (PLAN)
+      v lists consultations with pagination + filters + search (3402 ms)
+      v returns consultation detail payload (7386 ms)
+      × updates notes (autosave) and writes an audit log (6241 ms)
+      v exports HTML for list + detail (PDF flow) (6821 ms)
+
+  ?  › Consultations management (PLAN) › updates notes (autosave) and writes an audit log
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      282 |         )
+      283 |
+    > 284 |         expect(Array.isArray(logs)).toBe(true)
+          |                                     ^
+      285 |         expect(logs.length).toBeGreaterThan(0)
+      286 |       })
+      287 |
+
+      at Object.toBe (src/tests/integration/consultations-management.test.ts:284:37)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 3 passed, 4 total
+Snapshots:   0 total
+Time:        46.635 s, estimated 49 s
+Ran all test suites matching /src\\tests\\integration\\consultations-management.test.ts/i.
+
+
+[2026-02-04T13:52:59] CMD: $env:NODE_OPTIONS="--experimental-vm-modules"; node .\node_modules\jest\bin\jest.js --config=jest.integration.config.js --silent=false --runInBand --forceExit src/tests/integration/consultations-management.test.ts
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:21108) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:48
++ ... m-modules"; node .\node_modules\jest\bin\jest.js --config=jest.integr ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:21108) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+PASS src/tests/integration/consultations-management.test.ts (47.196 s)
+    Consultations management (PLAN)
+      v lists consultations with pagination + filters + search (3737 ms)
+      v returns consultation detail payload (7309 ms)
+      v updates notes (autosave) and writes an audit log (6927 ms)
+      v exports HTML for list + detail (PDF flow) (6640 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       4 passed, 4 total
+Snapshots:   0 total
+Time:        47.347 s
+Ran all test suites matching /src\\tests\\integration\\consultations-management.test.ts/i.
+
+
+[2026-02-04T13:54:04] CMD: git status
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+On branch main
+Your branch is ahead of 'origin/main' by 31 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   progress.txt
+	modified:   src/modules/consultation/models/consultation.ts
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	src/api/admin/custom/consultations/
+	src/modules/business/migrations/Migration20260204000015.ts
+	src/modules/consultation/migrations/Migration20260204000016.ts
+	src/tests/integration/consultations-management.test.ts
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+

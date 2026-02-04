@@ -15,7 +15,14 @@ export const Consultation = model.define("consultation", {
   medical_history: model.json().nullable(),
   assessment: model.text().nullable(),
   plan: model.text().nullable(),
+  /**
+   * Clinician-facing notes. In admin UI this is labeled "Clinician notes".
+   */
   notes: model.text().nullable(),
+  /**
+   * Internal admin notes (not visible to patients).
+   */
+  admin_notes: model.text().nullable(),
   outcome: model.enum(["approved", "rejected", "pending", "requires_followup"]).nullable(),
   rejection_reason: model.text().nullable(),
   approved_medications: model.array().nullable(),
