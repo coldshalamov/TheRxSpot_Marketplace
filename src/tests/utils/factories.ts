@@ -430,7 +430,7 @@ export async function createTestOrder(
 // Earning Entry Factory
 // ============================================================================
 
-export type EarningStatus = "pending" | "available" | "paid" | "reversed"
+export type EarningStatus = "pending" | "available" | "paid_out" | "paid" | "reversed"
 export type EarningType = 
   | "product_sale" 
   | "consultation_fee" 
@@ -490,7 +490,7 @@ export async function createTestEarningEntry(
     net_amount: netAmount,
     clinician_fee: overrides.clinician_fee || null,
     status,
-    available_at: status === "available" || status === "paid" 
+    available_at: status === "available" || status === "paid_out" || status === "paid"
       ? (overrides.available_at || new Date()) 
       : null,
     paid_at: status === "paid" ? (overrides.paid_at || new Date()) : null,

@@ -435,7 +435,7 @@ class FinancialsService extends FinancialsBaseService {
     for (const earning of earnings) {
       await this.updateEarningEntries(earning.id, {
         payout_id: payout.id,
-        status: "pending", // Will be updated to 'paid' when payout completes
+        status: "paid_out", // PLAN: locked to payout request
       })
     }
 

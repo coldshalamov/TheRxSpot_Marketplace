@@ -3,7 +3,8 @@ import { model } from "@medusajs/framework/utils"
 export const EarningEntry = model.define("earning_entry", {
   id: model.id().primaryKey(),
   business_id: model.text(),
-  order_id: model.text(),
+  // Can be null for consultation-only earnings (no order created)
+  order_id: model.text().nullable(),
   line_item_id: model.text().nullable(),
   consultation_id: model.text().nullable(),
   type: model.enum(["product_sale", "consultation_fee", "shipping_fee", "platform_fee", "clinician_fee"]),
@@ -17,7 +18,8 @@ export const EarningEntry = model.define("earning_entry", {
   clinician_fee: model.bigNumber().nullable(),
   
   // Status tracking
-  status: model.enum(["pending", "available", "paid", "reversed"]).default("pending"),
+  // "paid_out" = locked to a payout request (PLAN terminology)
+  status: model.enum(["pending", "available", "paid_out", "paid", "reversed"]).default("pending"),
   available_at: model.dateTime().nullable(),
   paid_at: model.dateTime().nullable(),
   payout_id: model.text().nullable(),

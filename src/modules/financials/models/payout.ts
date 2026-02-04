@@ -3,6 +3,8 @@ import { model } from "@medusajs/framework/utils"
 export const Payout = model.define("payout", {
   id: model.id().primaryKey(),
   business_id: model.text(),
+  // Used to dedupe payout creation requests (idempotency guard)
+  idempotency_key: model.text().nullable(),
   
   // Payout amounts
   total_amount: model.bigNumber(),
