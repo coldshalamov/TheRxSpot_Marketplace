@@ -122,6 +122,49 @@ export function requireTenantContext() {
 }
 
 /**
+ * Helper for route handlers (Medusa route loader only registers HTTP method exports
+ * that are functions, not middleware arrays). Use this when you can't rely on
+ * `requireTenantContext()` being mounted as a route-level middleware.
+ *
+ * Returns the tenant context and attaches it to `req.tenant_context`, or writes an
+ * error response and returns null.
+ */
+export function ensureTenantContext(
+  req: MedusaRequest,
+  res: MedusaResponse
+): TenantContext | null {
+  const authContext = (req as any).auth_context
+
+  if (!authContext) {
+    res.status(401).json({
+      message: "Unauthorized: No authentication context",
+    })
+    return null
+  }
+
+  const businessId =
+    authContext.business_id ||
+    authContext.metadata?.business_id ||
+    authContext.app_metadata?.business_id
+
+  if (!businessId) {
+    res.status(403).json({
+      message: "Forbidden: No business context found",
+    })
+    return null
+  }
+
+  const tenantContext: TenantContext = {
+    business_id: businessId,
+    user_id: authContext.actor_id,
+    user_type: authContext.actor_type,
+  }
+
+  ;(req as any).tenant_context = tenantContext
+  return tenantContext
+}
+
+/**
  * Verify that a resource belongs to the current tenant
  * Returns true if access is allowed, false if denied
  * Logs security violations

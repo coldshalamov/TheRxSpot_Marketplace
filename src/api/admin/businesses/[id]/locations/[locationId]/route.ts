@@ -27,7 +27,7 @@ export const DELETE = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
   const { locationId } = req.params
   
-  await businessModuleService.deleteLocations(locationId)
+  await (businessModuleService as any).softDeleteLocations(locationId)
   
   res.status(204).send()
 }

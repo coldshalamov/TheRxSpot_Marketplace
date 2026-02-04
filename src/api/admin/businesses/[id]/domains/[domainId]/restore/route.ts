@@ -1,32 +1,24 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { BUSINESS_MODULE } from "../../../../../modules/business"
-
-const VALID_TRANSITIONS: Record<string, string[]> = {
-  pending: ["approved"],
-  approved: ["active", "suspended"],
-  active: ["suspended"],
-  suspended: ["active"],
-}
+import { BUSINESS_MODULE } from "../../../../../../../modules/business"
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const { id } = req.params
-  const { status } = req.body as { status: string }
-
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE) as any
   const complianceService = req.scope.resolve("complianceModuleService") as any
-  const business = await businessModuleService.retrieveBusiness(id)
 
-  const allowed = VALID_TRANSITIONS[business.status] || []
-  if (!allowed.includes(status)) {
-    return res.status(400).json({
-      message: `Cannot transition from "${business.status}" to "${status}". Allowed: ${allowed.join(", ") || "none"}`,
-    })
+  const { id: businessId, domainId } = req.params as any
+
+  const [domains] = await businessModuleService.listAndCountBusinessDomains(
+    { id: domainId },
+    { take: 1, withDeleted: true }
+  )
+
+  const existing = domains?.[0]
+  if (!existing || existing.business_id !== businessId) {
+    return res.status(404).json({ message: "Domain not found" })
   }
 
-  const [updated] = await businessModuleService.updateBusinesses({
-    selector: { id },
-    data: { status },
-  })
+  await businessModuleService.restoreBusinessDomains(domainId)
+  const restored = await businessModuleService.retrieveBusinessDomain(domainId).catch(() => null)
 
   const authContext = (req as any).auth_context as any
   const actorId = authContext?.actor_id || "unknown"
@@ -47,12 +39,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     user_agent: userAgent,
     action: "update",
     entity_type: "business",
-    entity_id: id,
-    business_id: id,
-    changes: { before: { status: business.status }, after: { status } },
-    metadata: { transition: `${business.status}->${status}` },
-    risk_level: "high",
+    entity_id: businessId,
+    business_id: businessId,
+    changes: { before: { domain_deleted_at: existing.deleted_at ?? null }, after: { domain_deleted_at: null } },
+    metadata: { restored_domain_id: domainId },
+    risk_level: "medium",
   })
 
-  res.json({ business: updated })
+  return res.json({ domain: restored ?? existing })
 }

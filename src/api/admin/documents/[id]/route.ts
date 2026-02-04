@@ -10,11 +10,10 @@ import {
   MedusaRequest,
   MedusaResponse,
 } from "@medusajs/framework/http"
-import { authenticate } from "@medusajs/framework"
 import ComplianceModuleService from "../../../../modules/compliance/service"
 import { logAuditEvent } from "../../../middlewares/audit-logging"
 import { 
-  requireTenantContext, 
+  ensureTenantContext,
   createNotFoundResponse,
   logSecurityEvent,
   TenantContext 
@@ -24,17 +23,17 @@ import {
  * GET /admin/documents/:id
  * Get document metadata with tenant isolation
  */
-export const GET = [
-  authenticate("user", ["session", "bearer"]),
-  requireTenantContext(),
-  async (req: MedusaRequest, res: MedusaResponse) => {
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
     try {
       const complianceService: ComplianceModuleService = req.scope.resolve(
         "complianceModuleService"
       )
 
       const { id } = req.params
-      const tenantContext = (req as any).tenant_context as TenantContext
+      const tenantContext = ensureTenantContext(req, res) as TenantContext | null
+      if (!tenantContext) {
+        return
+      }
 
       // Get document with access check
       const doc = (await complianceService.getDocumentById(id)) as any
@@ -100,8 +99,7 @@ export const GET = [
         message: error.message,
       })
     }
-  },
-]
+}
 
 /**
  * PUT /admin/documents/:id
@@ -112,17 +110,17 @@ export const GET = [
  * - description: New description (optional)
  * - access_level: New access level (optional)
  */
-export const PUT = [
-  authenticate("user", ["session", "bearer"]),
-  requireTenantContext(),
-  async (req: MedusaRequest, res: MedusaResponse) => {
+export async function PUT(req: MedusaRequest, res: MedusaResponse) {
     try {
       const complianceService: ComplianceModuleService = req.scope.resolve(
         "complianceModuleService"
       )
 
       const { id } = req.params
-      const tenantContext = (req as any).tenant_context as TenantContext
+      const tenantContext = ensureTenantContext(req, res) as TenantContext | null
+      if (!tenantContext) {
+        return
+      }
       const body = req.body || {}
 
       // First retrieve to check tenant isolation
@@ -220,24 +218,23 @@ export const PUT = [
         message: error.message,
       })
     }
-  },
-]
+}
 
 /**
  * DELETE /admin/documents/:id
  * Delete a document with tenant isolation
  */
-export const DELETE = [
-  authenticate("user", ["session", "bearer"]),
-  requireTenantContext(),
-  async (req: MedusaRequest, res: MedusaResponse) => {
+export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
     try {
       const complianceService: ComplianceModuleService = req.scope.resolve(
         "complianceModuleService"
       )
 
       const { id } = req.params
-      const tenantContext = (req as any).tenant_context as TenantContext
+      const tenantContext = ensureTenantContext(req, res) as TenantContext | null
+      if (!tenantContext) {
+        return
+      }
 
       // First retrieve to check tenant isolation
       const existingDocument = (await complianceService.getDocumentById(id)) as any
@@ -292,5 +289,4 @@ export const DELETE = [
         message: error.message,
       })
     }
-  },
-]
+}

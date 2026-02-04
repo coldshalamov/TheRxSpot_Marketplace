@@ -1,16 +1,25 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { provisionBusinessWorkflow } from "../../../../../workflows/provision-business"
+import { BUSINESS_MODULE } from "../../../../../modules/business"
 
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
-  const { id } = req.params
+  const businessModuleService = req.scope.resolve(BUSINESS_MODULE) as any
   const complianceService = req.scope.resolve("complianceModuleService") as any
 
-  const { result } = await provisionBusinessWorkflow(req.scope).run({
-    input: {
-      business_id: id,
-      storefront_base_url: (req.body as any)?.storefront_base_url,
-    },
-  })
+  const { id } = req.params
+
+  const [businesses] = await businessModuleService.listAndCountBusinesses(
+    { id },
+    { take: 1, withDeleted: true }
+  )
+
+  const existing = businesses?.[0]
+  if (!existing) {
+    return res.status(404).json({ message: "Business not found" })
+  }
+
+  await businessModuleService.restoreBusinesses(id)
+  const [restoredList] = await businessModuleService.listAndCountBusinesses({ id }, { take: 1 })
+  const restored = restoredList?.[0]
 
   const authContext = (req as any).auth_context as any
   const actorId = authContext?.actor_id || "unknown"
@@ -33,10 +42,10 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     entity_type: "business",
     entity_id: id,
     business_id: id,
-    changes: { before: null, after: { provisioned: true } },
-    metadata: { workflow: "provisionBusinessWorkflow" },
-    risk_level: "high",
+    changes: { before: { deleted_at: existing.deleted_at ?? null }, after: { deleted_at: null } },
+    metadata: { restored: true },
+    risk_level: "medium",
   })
 
-  res.json({ business: result })
+  return res.json({ business: restored ?? existing })
 }

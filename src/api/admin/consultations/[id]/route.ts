@@ -1,8 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { authenticate } from "@medusajs/framework"
 import { CONSULTATION_MODULE } from "../../../../modules/consultation"
 import { 
-  requireTenantContext, 
+  ensureTenantContext,
   verifyTenantAccess, 
   createNotFoundResponse,
   logSecurityEvent,
@@ -13,13 +12,14 @@ import {
  * GET /admin/consultations/:id
  * Get consultation with tenant isolation
  */
-export const GET = [
-  authenticate("user", ["session", "bearer"]),
-  requireTenantContext(),
-  async (req: MedusaRequest, res: MedusaResponse) => {
-    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
-    const { id } = req.params
-    const tenantContext = (req as any).tenant_context as TenantContext
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  const tenantContext = ensureTenantContext(req, res) as TenantContext | null
+  if (!tenantContext) {
+    return
+  }
+
+  const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+  const { id } = req.params
 
     try {
       const consultation = await consultationService.getConsultationOrThrow(id)
@@ -63,20 +63,20 @@ export const GET = [
         error: error instanceof Error ? error.message : "Unknown error",
       })
     }
-  },
-]
+}
 
 /**
  * PUT /admin/consultations/:id
  * Update consultation with tenant isolation
  */
-export const PUT = [
-  authenticate("user", ["session", "bearer"]),
-  requireTenantContext(),
-  async (req: MedusaRequest, res: MedusaResponse) => {
-    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
-    const { id } = req.params
-    const tenantContext = (req as any).tenant_context as TenantContext
+export async function PUT(req: MedusaRequest, res: MedusaResponse) {
+  const tenantContext = ensureTenantContext(req, res) as TenantContext | null
+  if (!tenantContext) {
+    return
+  }
+
+  const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+  const { id } = req.params
 
     try {
       // First retrieve to check tenant isolation
@@ -114,20 +114,20 @@ export const PUT = [
         error: error instanceof Error ? error.message : "Unknown error",
       })
     }
-  },
-]
+}
 
 /**
  * DELETE /admin/consultations/:id
  * Delete consultation with tenant isolation
  */
-export const DELETE = [
-  authenticate("user", ["session", "bearer"]),
-  requireTenantContext(),
-  async (req: MedusaRequest, res: MedusaResponse) => {
-    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
-    const { id } = req.params
-    const tenantContext = (req as any).tenant_context as TenantContext
+export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
+  const tenantContext = ensureTenantContext(req, res) as TenantContext | null
+  if (!tenantContext) {
+    return
+  }
+
+  const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+  const { id } = req.params
 
     try {
       // First retrieve to check tenant isolation
@@ -154,7 +154,7 @@ export const DELETE = [
         return res.status(notFound.status).json(notFound.body)
       }
       
-      await consultationService.deleteConsultation(id)
+      await (consultationService as any).softDeleteConsultations(id)
       res.status(204).send()
     } catch (error) {
       if (error instanceof Error && error.message.includes("not found")) {
@@ -165,5 +165,4 @@ export const DELETE = [
         error: error instanceof Error ? error.message : "Unknown error",
       })
     }
-  },
-]
+}

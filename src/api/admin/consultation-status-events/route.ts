@@ -1,11 +1,8 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { authenticate } from "@medusajs/framework"
 import { CONSULTATION_MODULE } from "../../../modules/consultation"
 
-export const GET = [
-  authenticate("user", ["session", "bearer"]),
-  async (req: MedusaRequest, res: MedusaResponse) => {
-    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+export async function GET(req: MedusaRequest, res: MedusaResponse) {
+  const consultationService = req.scope.resolve(CONSULTATION_MODULE)
 
     // Parse query parameters
     const {
@@ -60,5 +57,4 @@ export const GET = [
         error: error instanceof Error ? error.message : "Unknown error",
       })
     }
-  },
-]
+}

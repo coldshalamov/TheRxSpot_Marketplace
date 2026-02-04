@@ -346,11 +346,9 @@ class ComplianceModuleService extends ComplianceBaseService {
       throw new Error("Access denied: You do not have permission to delete this document")
     }
 
-    // Delete from storage
-    await this.storageProvider.delete(document.storage_key)
-
-    // Delete from database
-    await this.deleteDocuments(id)
+    // Soft delete in database to allow restore (do not remove from storage).
+    // NOTE: Storage cleanup/purge can be implemented later as an explicit admin action.
+    await (this as any).softDeleteDocuments(id)
 
     // Log audit event
     await this.logAuditEvent({

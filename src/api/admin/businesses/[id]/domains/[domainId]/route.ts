@@ -17,7 +17,7 @@ export const DELETE = async (req: MedusaRequest, res: MedusaResponse) => {
   const { domainId } = req.params
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
 
-  await businessModuleService.deleteBusinessDomains(domainId)
+  await (businessModuleService as any).softDeleteBusinessDomains(domainId)
 
   res.status(204).send()
 }
