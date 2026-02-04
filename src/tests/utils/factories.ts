@@ -396,17 +396,28 @@ export async function createTestOrder(
   
   const id = overrides.id || generateTestId("order")
   const total = overrides.total || 100
+  const customStatus = overrides.status || status
+
+  // The Medusa OrderModule has its own DB enum for `order.status`.
+  // Our application-specific lifecycle statuses are stored in metadata.custom_status.
+  const medusaStatus = (() => {
+    if (customStatus === "delivered") return "completed"
+    if (customStatus === "cancelled" || customStatus === "refunded") return "canceled"
+    return "pending"
+  })()
   
   // Create order with items
   const orderData: any = {
     id,
     customer_id: overrides.customer_id || null,
-    status,
+    status: medusaStatus,
     total,
     currency_code: overrides.currency_code || "usd",
     metadata: {
       ...overrides.metadata,
       business_id: overrides.business_id,
+      custom_status: customStatus,
+      status_updated_at: new Date().toISOString(),
     },
   }
   

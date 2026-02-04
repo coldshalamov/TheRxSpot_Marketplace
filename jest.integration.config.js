@@ -39,8 +39,8 @@ module.exports = {
     "**/src/tests/integration/**/*.test.ts",
   ],
 
-  // Setup files
-  setupFiles: ["./src/tests/setup.ts"],
+  // Setup files (needs Jest globals like `expect`, `beforeAll`, etc.)
+  setupFilesAfterEnv: ["./src/tests/setup.ts"],
 
   // Module name mapping for path aliases
   moduleNameMapper: {
