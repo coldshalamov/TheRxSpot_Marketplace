@@ -1,0 +1,27 @@
+import { model } from "@medusajs/framework/utils"
+
+export const Document = model.define("document", {
+  id: model.id().primaryKey(),
+  business_id: model.text(),
+  patient_id: model.text(),
+  consultation_id: model.text().nullable(),
+  order_id: model.text().nullable(),
+  uploaded_by: model.text(),
+  type: model.enum(["prescription", "lab_result", "medical_record", "consent_form", "id_verification", "insurance_card", "other"]),
+  title: model.text(),
+  description: model.text().nullable(),
+  storage_provider: model.enum(["s3", "gcs", "azure", "local"]),
+  storage_bucket: model.text(),
+  storage_key: model.text(),
+  file_name: model.text(),
+  file_size: model.number(),
+  mime_type: model.text(),
+  checksum: model.text(),
+  encryption_key_id: model.text().nullable(),
+  is_encrypted: model.boolean().default(false),
+  access_level: model.enum(["patient_only", "clinician", "business_staff", "platform_admin"]),
+  expires_at: model.dateTime().nullable(),
+  download_count: model.number().default(0),
+  last_downloaded_at: model.dateTime().nullable(),
+  last_downloaded_by: model.text().nullable(),
+})

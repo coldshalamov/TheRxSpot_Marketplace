@@ -1,0 +1,179 @@
+import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { orderStatusTransitionWorkflow } from "../../../../../workflows/order-lifecycle"
+
+interface StatusUpdateBody {
+  status: string
+  reason?: string
+}
+
+// Valid order statuses - tenant can only update to certain statuses
+const ALLOWED_TENANT_STATUSES = [
+  "processing",
+  "fulfilled",
+  "delivered",
+]
+
+const VALID_STATUSES = [
+  "pending",
+  "consult_pending",
+  "consult_complete",
+  "consult_rejected",
+  "payment_captured",
+  "processing",
+  "fulfilled",
+  "delivered",
+  "cancelled",
+  "refunded",
+]
+
+export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
+  try {
+    const tenantContext = (req as any).tenant_context
+    if (!tenantContext) {
+      return res.status(401).json({ message: "Not authenticated" })
+    }
+
+    const { id } = req.params
+    const { status: newStatus, reason } = req.body as StatusUpdateBody
+
+    // Validate status
+    if (!newStatus || !VALID_STATUSES.includes(newStatus)) {
+      return res.status(400).json({
+        message: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
+      })
+    }
+
+    // Verify tenant has access to this order
+    const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+    const { data: orders } = await query.graph({
+      entity: "order",
+      fields: ["id", "status", "metadata"],
+      filters: {
+        id,
+        business: {
+          id: tenantContext.business_id,
+        },
+      },
+    })
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: "Order not found" })
+    }
+
+    const order = orders[0]
+
+    // Get current custom status
+    const currentStatus =
+      (order.metadata?.custom_status as string) || getStatusFromOrder(order)
+
+    // Prevent transition to same status
+    if (currentStatus === newStatus) {
+      return res.status(400).json({
+        message: `Order is already in status: ${newStatus}`,
+      })
+    }
+
+    // Restrict certain status transitions for tenants
+    // Tenants can generally only move forward in the fulfillment flow
+    if (!ALLOWED_TENANT_STATUSES.includes(newStatus)) {
+      return res.status(403).json({
+        message: `Tenant cannot set order to status: ${newStatus}. Allowed: ${ALLOWED_TENANT_STATUSES.join(", ")}`,
+      })
+    }
+
+    // Get current user
+    const changedBy = (req as any).auth_context?.auth_identity_id ?? null
+
+    // Execute workflow
+    const result = await orderStatusTransitionWorkflow(req.scope).run({
+      input: {
+        orderId: id,
+        fromStatus: currentStatus,
+        toStatus: newStatus,
+        changedBy,
+        reason,
+      },
+    })
+
+    res.json({
+      success: result.success,
+      order_id: id,
+      from_status: currentStatus,
+      to_status: newStatus,
+      earnings_updated: result.earningsUpdated,
+    })
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      return res.status(404).json({ message: "Order not found" })
+    }
+    if (
+      error instanceof Error &&
+      (error.message.includes("Invalid status transition") ||
+        error.message.includes("Status mismatch"))
+    ) {
+      return res.status(400).json({ message: error.message })
+    }
+    res.status(500).json({
+      message: "Failed to update order status",
+      error: error instanceof Error ? error.message : "Unknown error",
+    })
+  }
+}
+
+export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
+  try {
+    const tenantContext = (req as any).tenant_context
+    if (!tenantContext) {
+      return res.status(401).json({ message: "Not authenticated" })
+    }
+
+    const { id } = req.params
+
+    // Verify tenant has access to this order
+    const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+    const { data: orders } = await query.graph({
+      entity: "order",
+      fields: ["id", "status", "payment_status", "fulfillment_status", "metadata"],
+      filters: {
+        id,
+        business: {
+          id: tenantContext.business_id,
+        },
+      },
+    })
+
+    if (!orders || orders.length === 0) {
+      return res.status(404).json({ message: "Order not found" })
+    }
+
+    const order = orders[0]
+    const currentStatus =
+      (order.metadata?.custom_status as string) || getStatusFromOrder(order)
+
+    res.json({
+      order_id: id,
+      current_status: currentStatus,
+      medusa_status: order.status,
+      payment_status: order.payment_status,
+      fulfillment_status: order.fulfillment_status,
+    })
+  } catch (error) {
+    res.status(500).json({
+      message: "Failed to fetch order status",
+      error: error instanceof Error ? error.message : "Unknown error",
+    })
+  }
+}
+
+/**
+ * Helper to derive custom status from Medusa order status
+ */
+function getStatusFromOrder(order: any): string {
+  if (order.status === "pending") return "pending"
+  if (order.status === "completed") return "delivered"
+  if (order.status === "canceled") return "cancelled"
+  if (order.payment_status === "captured") return "payment_captured"
+  if (order.fulfillment_status === "fulfilled") return "fulfilled"
+  return "pending"
+}

@@ -1,0 +1,102 @@
+# ==========================================
+# TheRxSpot Marketplace - Docker Ignore
+# Files and directories to exclude from Docker build
+# ==========================================
+
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist
+build
+*.tsbuildinfo
+
+# Environment files (except .env.template for reference)
+.env
+.env.local
+.env.*.local
+!.env.template
+
+# Testing
+coverage
+.nyc_output
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Documentation
+*.md
+docs
+
+# CI/CD (not needed in production image)
+.github
+
+# Docker files (not needed in image)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Logs
+logs
+*.log
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Archive files
+*.zip
+*.tar.gz
+*.tgz
+
+# Large binary files
+medusa-develop.zip
+b2b-starter-medusa-main.zip
+nextjs-starter-medusa-main.zip
+
+# Storefront (separate application)
+TheRxSpot_Marketplace-storefront
+
+# Tenant Admin (separate application)
+tenant-admin
+
+# Marketplace App (separate application)
+marketplace-app
+
+# Integration tests (not needed in production)
+integration-tests
+
+# Reports
+report_*.md
+PLAN_*.md
+SPEC_*.md
+
+# Development configuration files
+.eslintrc*
+.prettierrc*
+jest.config.js
+
+# Medusa specific
+.medusa
+uploads/*
+!uploads/.gitkeep
+
+# Misc
+README.md
+LICENSE
+CHANGELOG.md
