@@ -37646,3 +37646,107 @@ OUTPUT:
 ?? src/types/
 
 
+[2026-02-04T18:46:07] CMD: git add progress.txt src/admin/routes/consultations/[id]/page.tsx
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+git : warning: in the working copy of 'progress.txt', LF will be replaced by CRLF the next time Git touches it
+At line:1 char:1
++ git add progress.txt src/admin/routes/consultations/[id]/page.tsx
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (warning: in the... Git touches it:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+warning: in the working copy of 'src/admin/routes/consultations/[id]/page.tsx', LF will be replaced by CRLF the next 
+time Git touches it
+
+
+[2026-02-04T18:46:19] CMD: git commit -m "feat(admin-ui): rich text clinician notes + safe paste (npm run build)"
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+[main 3aa053e] feat(admin-ui): rich text clinician notes + safe paste (npm run build)
+ 2 files changed, 251 insertions(+), 3 deletions(-)
+
+
+[2026-02-04T18:46:33] CMD: node --experimental-vm-modules node_modules/jest/bin/jest.js src/tests/integration/consultations-management.test.ts --config jest.integration.config.js --silent=false --runInBand --forceExit
+CWD: .
+RESULT: PASS (exit 0)
+OUTPUT:
+  console.log
+    ?? Starting test suite...
+
+      at Object.log (src/tests/setup.ts:129:11)
+
+node : (node:26288) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+At line:1 char:1
++ node --experimental-vm-modules node_modules/jest/bin/jest.js src/test ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ((node:26288) Ex...nge at any time:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+(Use `node --trace-warnings ...` to show where the warning was created)
+  console.info
+    Note: If the index "IDX_user_email" fails to create, then delete any existing users with duplicate emails before retrying the migration.
+
+      at Migration20240703095850.up (node_modules/@medusajs/user/src/migrations/Migration20240703095850.ts:11:13)
+          at async Promise.allSettled (index 0)
+          at async Promise.allSettled (index 0)
+
+  console.warn
+    [Virus Scanner] ClamAV not available, falling back to file-type validation. For production, install ClamAV and set CLAMAV_HOST/CLAMAV_PORT environment variables.
+
+      162 |   } catch (error) {
+      163 |     clamscanAvailable = false
+    > 164 |     console.warn(
+          |             ^
+      165 |       "[Virus Scanner] ClamAV not available, falling back to file-type validation. " +
+      166 |       "For production, install ClamAV and set CLAMAV_HOST/CLAMAV_PORT environment variables."
+      167 |     )
+
+      at warn (src/api/middlewares/document-upload.ts:164:13)
+      at scanFileForViruses (src/api/middlewares/document-upload.ts:242:5)
+      at virusScanMiddleware (src/api/middlewares/document-upload.ts:313:26)
+      at src/api/admin/consultations/[id]/documents/route.ts:113:5
+
+  console.warn
+    [HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.
+
+      108 |     if (query.patient_id || query.consultation_id) {
+      109 |       // Log security warning
+    > 110 |       console.warn("[HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.")
+          |               ^
+      111 |       
+      112 |       // Log audit event for potential security issue
+      113 |       try {
+
+      at warn (src/api/admin/documents/route.ts:110:15)
+      at GET (node_modules/@medusajs/framework/src/http/utils/wrap-handler.ts:27:14)
+
+  console.log
+    ? Test suite completed
+
+      at Object.log (src/tests/setup.ts:134:11)
+
+PASS src/tests/integration/consultations-management.test.ts (49.429 s)
+    Consultations management (PLAN)
+      v lists consultations with pagination + filters + search (3341 ms)
+      v returns consultation detail payload (6228 ms)
+      v updates notes (autosave) and writes an audit log (5991 ms)
+      v exports HTML for list + detail (PDF flow) (6295 ms)
+      v uploads + lists + downloads a document and surfaces events in audit logs (6143 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       5 passed, 5 total
+Snapshots:   0 total
+Time:        49.571 s, estimated 52 s
+Ran all test suites matching /src\\tests\\integration\\consultations-management.test.ts/i.
+
+
+[MANUAL_LOG] Commands executed outside scripts/run-logged.ps1:
+- git status --porcelain  -> PASS (but should use wrapper next time)
+
+[2026-02-04T18:47:43] CMD: Add-Content -Encoding Default -LiteralPath .\progress.txt -Value @('[MANUAL_LOG] Commands executed outside scripts/run-logged.ps1:','- git status --porcelain  -> PASS (but should use wrapper next time)','')
+CWD: .
+RESULT: PASS (exit 0)
+
