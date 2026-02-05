@@ -1,6 +1,7 @@
 import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../modules/business"
+import { getLogger } from "../utils/logger"
 
 /**
  * Subscriber: Handle business status changes
@@ -24,7 +25,7 @@ export default async function businessStatusChangedHandler({
   reason?: string
 }>) {
   const businessService = container.resolve(BUSINESS_MODULE)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   logger.info(
     `Processing business status change: ${data.id} from ${data.previous_status} to ${data.new_status}`
@@ -78,7 +79,7 @@ async function handleActivation(
   container: SubscriberArgs<any>["container"],
   business: any
 ) {
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   logger.info(`Activating business ${business.id}`)
   
@@ -114,7 +115,7 @@ async function handleSuspension(
   business: any,
   reason?: string
 ) {
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   logger.info(`Suspending business ${business.id}`)
   
@@ -149,7 +150,7 @@ async function handleDeactivation(
   container: SubscriberArgs<any>["container"],
   business: any
 ) {
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   logger.info(`Deactivating business ${business.id}`)
   
@@ -179,7 +180,7 @@ async function handlePendingReview(
   container: SubscriberArgs<any>["container"],
   business: any
 ) {
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   logger.info(`Setting business ${business.id} to pending review`)
   
@@ -202,7 +203,7 @@ async function activateSalesChannel(
   salesChannelId: string
 ) {
   const salesChannelService = container.resolve(Modules.SALES_CHANNEL)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     await salesChannelService.updateSalesChannels(salesChannelId, {
@@ -222,7 +223,7 @@ async function deactivateSalesChannel(
   salesChannelId: string
 ) {
   const salesChannelService = container.resolve(Modules.SALES_CHANNEL)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     await salesChannelService.updateSalesChannels(salesChannelId, {
@@ -242,7 +243,7 @@ async function activateApiKey(
   apiKeyId: string
 ) {
   const apiKeyService = container.resolve(Modules.API_KEY)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     // Medusa's API Key module doesn't support "un-revoking" a key.
@@ -263,7 +264,7 @@ async function revokeApiKey(
   apiKeyId: string
 ) {
   const apiKeyService = container.resolve(Modules.API_KEY)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     await apiKeyService.revoke(apiKeyId, {
@@ -283,7 +284,7 @@ async function activateDomains(
   businessId: string
 ) {
   const businessService = container.resolve(BUSINESS_MODULE)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     // The BusinessDomain model doesn't have an explicit status field; domain activation is
@@ -303,7 +304,7 @@ async function suspendDomains(
   businessId: string
 ) {
   const businessService = container.resolve(BUSINESS_MODULE)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     const domains = await businessService.listBusinessDomainsByBusiness(businessId)
@@ -332,7 +333,7 @@ async function deactivateDomains(
   businessId: string
 ) {
   const businessService = container.resolve(BUSINESS_MODULE)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     const domains = await businessService.listBusinessDomainsByBusiness(businessId)
@@ -412,7 +413,7 @@ async function sendStatusChangeNotification(
   data: any
 ) {
   const notificationService = container.resolve(Modules.NOTIFICATION)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     const businessEmail = business.contact_email || business.email
@@ -468,7 +469,7 @@ async function sendPendingReviewNotification(
   business: any
 ) {
   const notificationService = container.resolve(Modules.NOTIFICATION)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     const complianceEmail = process.env.COMPLIANCE_EMAIL || "compliance@therxspot.app"

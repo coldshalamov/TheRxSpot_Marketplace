@@ -17,6 +17,9 @@ import ComplianceModuleService from "../../../modules/compliance/service"
 import { CONSULTATION_MODULE } from "../../../modules/consultation"
 import { uploadSingleDocument, handleMulterError, virusScanMiddleware } from "../../middlewares/document-upload"
 import { logAuditEvent } from "../../middlewares/audit-logging"
+import { getLogger } from "../../../utils/logger"
+
+const logger = getLogger()
 
 // Export config to disable body parsing for multipart uploads
 export const config = {
@@ -107,7 +110,9 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     // HIPAA-008: Warn if PHI is detected in query params
     if (query.patient_id || query.consultation_id) {
       // Log security warning
-      console.warn("[HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead.")
+      logger.warn(
+        "[HIPAA-008] PHI detected in URL query params. Use POST /admin/documents/search instead."
+      )
       
       // Log audit event for potential security issue
       try {
@@ -239,7 +244,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         : undefined,
     })
   } catch (error) {
-    console.error("Error listing documents:", error)
+    logger.error({ error }, "admin-documents: failed to list documents")
     res.status(500).json({
       error: "Failed to list documents",
       message: error.message,
@@ -346,7 +351,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         },
       })
     } catch (error) {
-      console.error("Error uploading document:", error)
+      logger.error({ error }, "admin-documents: failed to upload document")
       res.status(500).json({
         error: "Failed to upload document",
         message: error.message,

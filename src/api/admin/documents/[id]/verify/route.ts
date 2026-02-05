@@ -9,6 +9,9 @@ import {
   MedusaResponse,
 } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../../../../modules/compliance/service"
+import { getLogger } from "../../../../../utils/logger"
+
+const logger = getLogger()
 
 /**
  * GET /admin/documents/:id/verify
@@ -42,7 +45,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       verified_at: new Date().toISOString(),
     })
   } catch (error) {
-    console.error("Error verifying document:", error)
+    logger.error({ error }, "admin-documents: failed to verify document")
     
     if (error.message?.includes("not found")) {
       return res.status(404).json({

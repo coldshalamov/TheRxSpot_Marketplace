@@ -14,6 +14,9 @@
 
 import { MedusaRequest, MedusaResponse, MedusaNextFunction } from "@medusajs/framework/http"
 import { logAuditEvent } from "./audit-logging"
+import { getLogger } from "../../utils/logger"
+
+const logger = getLogger()
 
 /**
  * Extended request type with session activity tracking
@@ -178,7 +181,7 @@ export function createAutoLogoffMiddleware(timeoutMinutes: number = DEFAULT_TIME
           })
         } catch (logError) {
           // Log error but don't prevent the security response
-          console.error("[AutoLogoff] Failed to log session timeout:", logError)
+          logger.error({ error: logError }, "auto-logoff: failed to log session timeout")
         }
         
         // Clear the session to force re-authentication

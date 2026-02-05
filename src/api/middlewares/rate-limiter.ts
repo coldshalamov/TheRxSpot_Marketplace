@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse, MedusaNextFunction } from "@medusajs/framework/http"
 import Redis from "ioredis"
+import { getLogger } from "../../utils/logger"
 
 /**
  * Redis-based distributed rate limiter for Medusa API endpoints
@@ -30,7 +31,8 @@ function getRedisClient(): Redis {
     })
     
     redisClient.on("error", (err) => {
-      console.error("Redis rate limiter error:", err)
+      const logger = getLogger()
+      logger.error({ error: err }, "rate-limiter: redis client error")
     })
   }
   return redisClient
@@ -87,7 +89,8 @@ export async function checkRateLimit(
   
   if (!results) {
     // If Redis fails, allow the request (fail open for availability)
-    console.error("Redis pipeline failed for rate limiting")
+    const logger = getLogger()
+    logger.error("rate-limiter: redis pipeline failed")
     return { allowed: true, remaining: maxRequests, resetTime }
   }
   
@@ -166,7 +169,11 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
       next()
     } catch (error) {
       // Log error but allow request (fail open)
-      console.error("Rate limiter error:", error)
+      const logger = getLogger()
+      logger.error(
+        { error: error instanceof Error ? error.message : String(error) },
+        "rate-limiter: error"
+      )
       next()
     }
   }

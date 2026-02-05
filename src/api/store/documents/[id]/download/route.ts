@@ -9,6 +9,9 @@ import {
   MedusaResponse,
 } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../../../../modules/compliance/service"
+import { getLogger } from "../../../../../utils/logger"
+
+const logger = getLogger()
 
 /**
  * GET /store/documents/:id/download
@@ -72,7 +75,10 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       document_id: id,
     })
   } catch (error) {
-    console.error("Error generating patient download URL:", error)
+    logger.error(
+      { error },
+      "store-documents: failed to generate patient download URL"
+    )
     
     if (error.message?.includes("not found")) {
       return res.status(404).json({

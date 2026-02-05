@@ -12,6 +12,9 @@ import {
 } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../../../modules/compliance/service"
 import { logAuditEvent } from "../../../middlewares/audit-logging"
+import { getLogger } from "../../../../utils/logger"
+
+const logger = getLogger()
 import { 
   ensureTenantContext,
   createNotFoundResponse,
@@ -85,7 +88,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         },
       })
     } catch (error: any) {
-      console.error("Error getting document:", error)
+      logger.error({ error }, "admin-documents: failed to get document")
       
       if (error.message?.includes("not found")) {
         return res.status(404).json({
@@ -197,7 +200,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
         },
       })
     } catch (error: any) {
-      console.error("Error updating document:", error)
+      logger.error({ error }, "admin-documents: failed to update document")
       
       if (error.message?.includes("not found")) {
         return res.status(404).json({
@@ -268,7 +271,7 @@ export async function DELETE(req: MedusaRequest, res: MedusaResponse) {
 
       res.status(204).send()
     } catch (error: any) {
-      console.error("Error deleting document:", error)
+      logger.error({ error }, "admin-documents: failed to delete document")
       
       if (error.message?.includes("not found")) {
         return res.status(404).json({

@@ -236,11 +236,11 @@
                     <p>The patient/provider facing shop interface with premium aesthetics.</p>
                 </a>
 
-                <a href="http://localhost:9000/app" target="_blank" class="launch-btn">
+                <a id="admin-launch-btn" href="http://localhost:9000/app" target="_blank" class="launch-btn">
                     <div class="icon">
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                     </div>
-                    <span class="port">:9000</span>
+                    <span id="admin-port-label" class="port">:9000</span>
                     <h3>Admin Panel <span class="badge">Medusa</span></h3>
                     <p>Manage products, orders, and fulfillment logistics.</p>
                 </a>
@@ -271,6 +271,22 @@
     </div>
 
     <script>
+        // Admin URL is configurable via query parameter from Launch-Marketplace.ps1.
+        (function configureAdminLink() {
+            const params = new URLSearchParams(window.location.search);
+            const backendPort = params.get('backendPort') || '9000';
+            const adminLink = document.getElementById('admin-launch-btn');
+            const adminPortLabel = document.getElementById('admin-port-label');
+
+            if (adminLink) {
+                adminLink.href = `http://localhost:${backendPort}/app`;
+            }
+
+            if (adminPortLabel) {
+                adminPortLabel.textContent = `:${backendPort}`;
+            }
+        })();
+
         // Subtle Mouse Parallel Effect
         document.addEventListener('mousemove', (e) => {
             const hero = document.querySelector('.hero-image');

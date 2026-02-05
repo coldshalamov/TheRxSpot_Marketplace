@@ -1,5 +1,6 @@
 import { FINANCIALS_MODULE } from "../modules/financials"
 import { BUSINESS_MODULE } from "../modules/business"
+import { getLogger } from "../utils/logger"
 
 /**
  * Hold period configuration for healthcare transactions (in hours)
@@ -57,9 +58,13 @@ async function getBusinessHoldPeriod(
     // Default to standard hold period for established businesses
     return HOLD_PERIODS.DEFAULT
   } catch (error) {
-    console.warn(
-      `[process-payouts] Could not determine business hold period for ${businessId}, using default:`,
-      error instanceof Error ? error.message : error
+    const logger = getLogger()
+    logger.warn(
+      {
+        business_id: businessId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      "process-payouts: could not determine business hold period, using default"
     )
     return HOLD_PERIODS.DEFAULT
   }
@@ -75,8 +80,9 @@ async function getBusinessHoldPeriod(
  */
 export default async function processPayoutsJob(container: any) {
   const financialsService = container.resolve(FINANCIALS_MODULE)
+  const logger = getLogger()
 
-  console.log("[process-payouts] Starting payout processing job")
+  logger.info("process-payouts: starting payout processing job")
 
   try {
     // Find all pending payouts
@@ -89,8 +95,9 @@ export default async function processPayoutsJob(container: any) {
       }
     )
 
-    console.log(
-      `[process-payouts] Found ${pendingPayouts.length} pending payouts`
+    logger.info(
+      { pending_payouts: pendingPayouts.length },
+      "process-payouts: found pending payouts"
     )
 
     let processedCount = 0
@@ -112,15 +119,28 @@ export default async function processPayoutsJob(container: any) {
 
         if (hoursSinceRequest < holdPeriodHours) {
           const daysRemaining = Math.ceil((holdPeriodHours - hoursSinceRequest) / 24)
-          console.log(
-            `[process-payouts] Payout ${payout.id} is within hold period (${hoursSinceRequest.toFixed(1)} hours / ${holdPeriodHours} hours required, ${daysRemaining} days remaining), skipping`
+          logger.info(
+            {
+              payout_id: payout.id,
+              business_id: payout.business_id,
+              hours_since_request: Number(hoursSinceRequest.toFixed(1)),
+              hold_period_hours: holdPeriodHours,
+              days_remaining: daysRemaining,
+            },
+            "process-payouts: payout within hold period, skipping"
           )
           skippedCount++
           continue
         }
 
-        console.log(
-          `[process-payouts] Processing payout ${payout.id} for business ${payout.business_id}, amount: ${payout.net_amount}, held for ${hoursSinceRequest.toFixed(1)} hours`
+        logger.info(
+          {
+            payout_id: payout.id,
+            business_id: payout.business_id,
+            net_amount: payout.net_amount,
+            hours_since_request: Number(hoursSinceRequest.toFixed(1)),
+          },
+          "process-payouts: processing payout"
         )
 
         // Process the payout
@@ -133,18 +153,30 @@ export default async function processPayoutsJob(container: any) {
 
         if (processedPayout.status === "completed") {
           processedCount++
-          console.log(`[process-payouts] Payout ${payout.id} completed successfully`)
+          logger.info(
+            { payout_id: payout.id, business_id: payout.business_id },
+            "process-payouts: payout completed successfully"
+          )
         } else if (processedPayout.status === "failed") {
           failedCount++
-          console.error(
-            `[process-payouts] Payout ${payout.id} failed: ${processedPayout.failure_reason}`
+          logger.error(
+            {
+              payout_id: payout.id,
+              business_id: payout.business_id,
+              failure_reason: processedPayout.failure_reason,
+            },
+            "process-payouts: payout failed"
           )
         }
       } catch (error) {
         failedCount++
-        console.error(
-          `[process-payouts] Error processing payout ${payout.id}:`,
-          error instanceof Error ? error.message : error
+        logger.error(
+          {
+            payout_id: payout.id,
+            business_id: payout.business_id,
+            error: error instanceof Error ? error.message : String(error),
+          },
+          "process-payouts: error processing payout"
         )
 
         // Update payout with failure info
@@ -166,13 +198,18 @@ export default async function processPayoutsJob(container: any) {
       }
     }
 
-    console.log(
-      `[process-payouts] Job completed. Processed: ${processedCount}, Failed: ${failedCount}, Skipped (hold period): ${skippedCount}`
+    logger.info(
+      {
+        processed: processedCount,
+        failed: failedCount,
+        skipped: skippedCount,
+      },
+      "process-payouts: job completed"
     )
   } catch (error) {
-    console.error(
-      "[process-payouts] Fatal error in payout processing job:",
-      error instanceof Error ? error.message : error
+    logger.error(
+      { error: error instanceof Error ? error.message : String(error) },
+      "process-payouts: fatal error in payout processing job"
     )
   }
 }

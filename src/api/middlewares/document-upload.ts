@@ -12,6 +12,7 @@ import multer from "multer"
 import path from "path"
 import { v4 as uuidv4 } from "uuid"
 import NodeClam from "clamscan"
+import { getLogger } from "../../utils/logger"
 
 // Allowed MIME types for medical documents
 const ALLOWED_MIME_TYPES = [
@@ -31,6 +32,8 @@ const MIME_TO_EXTENSIONS: Record<string, string[]> = {
 let clamscan: NodeClam | null = null
 let clamscanInitialized = false
 let clamscanAvailable = false
+
+const logger = getLogger()
 
 // Maximum file size (10MB default)
 const MAX_FILE_SIZE = parseInt(process.env.DOCUMENT_MAX_SIZE || "10485760")
@@ -158,12 +161,12 @@ export async function initializeVirusScanner(): Promise<boolean> {
     })
     
     clamscanAvailable = true
-    console.log("[Virus Scanner] ClamAV initialized successfully")
+    logger.info("virus-scanner: ClamAV initialized successfully")
   } catch (error) {
     clamscanAvailable = false
-    console.warn(
-      "[Virus Scanner] ClamAV not available, falling back to file-type validation. " +
-      "For production, install ClamAV and set CLAMAV_HOST/CLAMAV_PORT environment variables."
+    logger.warn(
+      "virus-scanner: ClamAV not available, falling back to file-type validation. " +
+        "For production, install ClamAV and set CLAMAV_HOST/CLAMAV_PORT environment variables."
     )
   }
 
@@ -191,7 +194,7 @@ async function validateFileContent(
     if (!fileType) {
       // Unable to detect file type - allow if it's a common type we support
       // but log a warning
-      console.warn("[Virus Scanner] Unable to detect file type from content")
+      logger.warn("virus-scanner: unable to detect file type from content")
       return { valid: true }
     }
 
@@ -208,15 +211,22 @@ async function validateFileContent(
     const allowedTypes = [normalizedExpected, ...(mimeAliases[normalizedExpected] || [])]
     
     if (!allowedTypes.includes(normalizedDetected)) {
-      console.warn(
-        `[Virus Scanner] MIME type mismatch: expected ${expectedMimeType}, detected ${fileType.mime}`
+      logger.warn(
+        {
+          expected_mime_type: expectedMimeType,
+          detected_mime_type: fileType.mime,
+        },
+        "virus-scanner: MIME type mismatch"
       )
       return { valid: false, detectedMimeType: fileType.mime }
     }
 
     return { valid: true, detectedMimeType: fileType.mime }
   } catch (error) {
-    console.error("[Virus Scanner] Error validating file content:", error)
+    logger.error(
+      { error: error instanceof Error ? error.message : String(error) },
+      "virus-scanner: error validating file content"
+    )
     // Fail open to avoid blocking legitimate uploads, but log the error
     return { valid: true }
   }
@@ -249,16 +259,22 @@ export async function scanFileForViruses(
       
       if (result.isInfected) {
         const viruses = Array.isArray(result.viruses) ? result.viruses : [result.viruses]
-        console.error(`[Virus Scanner] THREAT DETECTED in ${filename}:`, viruses)
+        logger.error(
+          { filename, threats: viruses },
+          "virus-scanner: threat detected"
+        )
         return { 
           clean: false, 
           threats: [`Virus detected: ${viruses.join(", ")}`] 
         }
       }
       
-      console.log(`[Virus Scanner] File scanned successfully: ${filename}`)
+      logger.info({ filename }, "virus-scanner: file scanned successfully")
     } catch (error) {
-      console.error("[Virus Scanner] ClamAV scan failed:", error)
+      logger.error(
+        { error: error instanceof Error ? error.message : String(error) },
+        "virus-scanner: ClamAV scan failed"
+      )
       threats.push("Virus scan failed - unable to verify file safety")
       return { clean: false, threats }
     }
@@ -272,7 +288,7 @@ export async function scanFileForViruses(
     if (!contentValidation.valid) {
       const msg = `File content does not match declared type. ` +
                   `Expected: ${mimeType}, detected: ${contentValidation.detectedMimeType || "unknown"}`
-      console.warn(`[Virus Scanner] ${msg} for ${filename}`)
+      logger.warn({ filename }, `virus-scanner: ${msg}`)
       threats.push(msg)
       return { clean: false, threats }
     }
@@ -285,7 +301,7 @@ export async function scanFileForViruses(
     
     if (allowedExts && !allowedExts.includes(ext)) {
       const msg = `File extension '${ext}' does not match MIME type '${mimeType}'`
-      console.warn(`[Virus Scanner] ${msg} for ${filename}`)
+      logger.warn({ filename }, `virus-scanner: ${msg}`)
       threats.push(msg)
       return { clean: false, threats }
     }
@@ -317,9 +333,9 @@ export async function virusScanMiddleware(
       )
       
       if (!scanResult.clean) {
-        console.error(
-          `[Security] File upload rejected for ${file.originalname}:`,
-          scanResult.threats
+        logger.error(
+          { filename: file.originalname, threats: scanResult.threats },
+          "security: file upload rejected"
         )
         return res.status(400).json({
           error: "Security threat detected",
@@ -331,7 +347,10 @@ export async function virusScanMiddleware(
     }
     next()
   } catch (error) {
-    console.error("[Security] Virus scan middleware error:", error)
+    logger.error(
+      { error: error instanceof Error ? error.message : String(error) },
+      "security: virus scan middleware error"
+    )
     return res.status(500).json({
       error: "Scan failed",
       message: "Failed to scan file for viruses",

@@ -1,5 +1,6 @@
 import { BUSINESS_MODULE } from "../modules/business"
 import { CONSULTATION_MODULE } from "../modules/consultation"
+import { getLogger } from "../utils/logger"
 
 function isUniqueViolation(err: unknown): boolean {
   if (!err) return false
@@ -166,7 +167,7 @@ async function ensurePendingApproval(container: any, input: { businessId: string
  * ...this job can be retried safely without duplicating records due to DB uniqueness guards.
  */
 export default async function processConsultSubmissionJob(container: any) {
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   const businessService = container.resolve(BUSINESS_MODULE) as any
 
   const pending = await businessService.listConsultSubmissionsDecrypted(
@@ -184,14 +185,20 @@ export default async function processConsultSubmissionJob(container: any) {
       const lastName = (submission.customer_last_name || "").trim()
 
       if (!businessId || !productId || !email || !firstName || !lastName) {
-        logger?.warn?.(`[process-consult-submission] skipping invalid submission ${submission.id}`)
+        logger.warn(
+          { consult_submission_id: submission.id, tenant_id: businessId ?? null },
+          "process-consult-submission: skipping invalid submission"
+        )
         continue
       }
 
       if (!customerId) {
         // Without a customer_id we can still create a Patient by email, but we can't reliably link approvals
         // to a store session. Keep it conservative.
-        logger?.warn?.(`[process-consult-submission] submission missing customer_id: ${submission.id}`)
+        logger.warn(
+          { consult_submission_id: submission.id, tenant_id: businessId },
+          "process-consult-submission: submission missing customer_id"
+        )
         continue
       }
 
@@ -223,7 +230,10 @@ export default async function processConsultSubmissionJob(container: any) {
       })
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
-      logger?.warn?.(`[process-consult-submission] failed for ${submission.id}: ${msg}`)
+      logger.warn(
+        { consult_submission_id: submission.id, error: msg },
+        "process-consult-submission: failed"
+      )
     }
   }
 }

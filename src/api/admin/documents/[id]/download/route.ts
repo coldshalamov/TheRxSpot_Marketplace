@@ -14,6 +14,9 @@ import {
 } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../../../../modules/compliance/service"
 import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import { getLogger } from "../../../../../utils/logger"
+
+const logger = getLogger()
 
 /**
  * GET /admin/documents/:id/download
@@ -157,7 +160,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     )
     return res.status(200).send(content.buffer)
   } catch (error) {
-    console.error("Error generating download URL:", error)
+    logger.error({ error }, "admin-documents: failed to generate download URL")
     
     if (error.message?.includes("not found")) {
       return res.status(404).json({

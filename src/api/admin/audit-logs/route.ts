@@ -9,6 +9,9 @@ import {
   MedusaResponse,
 } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../../modules/compliance/service"
+import { getLogger } from "../../../utils/logger"
+
+const logger = getLogger()
 
 /**
  * GET /admin/audit-logs
@@ -70,7 +73,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       offset: filters.skip,
     })
   } catch (error) {
-    console.error("Error querying audit logs:", error)
+    logger.error({ error }, "admin-audit-logs: failed to query audit logs")
     res.status(500).json({
       error: "Failed to query audit logs",
       message: error.message,

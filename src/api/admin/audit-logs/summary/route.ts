@@ -9,6 +9,9 @@ import {
   MedusaResponse,
 } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../../../modules/compliance/service"
+import { getLogger } from "../../../../utils/logger"
+
+const logger = getLogger()
 
 /**
  * GET /admin/audit-logs/summary
@@ -49,7 +52,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
     res.json(stats)
   } catch (error) {
-    console.error("Error getting audit log stats:", error)
+    logger.error({ error }, "admin-audit-logs-summary: failed to get stats")
     res.status(500).json({
       error: "Failed to get audit log statistics",
       message: error.message,

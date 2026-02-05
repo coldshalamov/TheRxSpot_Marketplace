@@ -1,6 +1,7 @@
 import { BUSINESS_MODULE } from "../modules/business"
 import dns from "dns"
 import { promisify } from "util"
+import { getLogger } from "../utils/logger"
 
 /**
  * Job: Verify custom domain DNS records
@@ -29,9 +30,9 @@ const ALLOW_VERCEL_CNAME = (process.env.ALLOW_VERCEL_CNAME || "").toLowerCase() 
 
 export default async function domainVerificationJob(container: any) {
   const businessService = container.resolve(BUSINESS_MODULE)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
-  logger.info("Starting domain verification job")
+  logger.info("domain-verification: starting job")
   
   try {
     // Verify only unverified domains.
@@ -41,19 +42,22 @@ export default async function domainVerificationJob(container: any) {
     )
     
     if (domains.length === 0) {
-      logger.info("No domains to verify")
+      logger.info("domain-verification: no domains to verify")
       return
     }
     
-    logger.info(`Verifying ${domains.length} domains`)
+    logger.info({ count: domains.length }, "domain-verification: verifying domains")
     
     for (const domain of domains) {
       await verifyDomain(container, domain)
     }
     
-    logger.info(`Completed verification of ${domains.length} domains`)
+    logger.info({ count: domains.length }, "domain-verification: completed verification")
   } catch (error) {
-    logger.error(`Error in domain verification job: ${error.message}`)
+    logger.error(
+      { error: error instanceof Error ? error.message : String(error) },
+      "domain-verification: error in job"
+    )
     throw error
   }
 }
@@ -63,9 +67,12 @@ export default async function domainVerificationJob(container: any) {
  */
 async function verifyDomain(container: any, domain: any) {
   const businessService = container.resolve(BUSINESS_MODULE)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
-  logger.info(`Verifying domain: ${domain.domain}`)
+  logger.info(
+    { domain: domain.domain, tenant_id: domain.business_id },
+    "domain-verification: verifying domain"
+  )
   
   try {
     let isVerified = false
@@ -124,7 +131,10 @@ async function verifyDomain(container: any, domain: any) {
         dns_error: null,
       })
       
-      logger.info(`Domain ${domain.domain} verified successfully`)
+      logger.info(
+        { domain: domain.domain, tenant_id: domain.business_id },
+        "domain-verification: verified successfully"
+      )
       await notifyDomainVerified(container, domain)
     } else {
       await businessService.updateBusinessDomains(domain.id, {
@@ -133,11 +143,17 @@ async function verifyDomain(container: any, domain: any) {
         dns_error: dnsError,
       })
       
-      logger.warn(`Domain ${domain.domain} verification failed: ${dnsError}`)
+      logger.warn(
+        { domain: domain.domain, tenant_id: domain.business_id, dns_error: dnsError },
+        "domain-verification: verification failed"
+      )
       await notifyDomainError(container, domain, dnsError)
     }
   } catch (error) {
-    logger.error(`Error verifying domain ${domain.domain}: ${error.message}`)
+    logger.error(
+      { domain: domain.domain, tenant_id: domain.business_id, error: error instanceof Error ? error.message : String(error) },
+      "domain-verification: error verifying domain"
+    )
     
     await businessService.updateBusinessDomains(domain.id, {
       is_verified: false,
@@ -152,7 +168,7 @@ async function verifyDomain(container: any, domain: any) {
  */
 async function notifyDomainVerified(container: any, domain: any) {
   const notificationService = container.resolve("notification")
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     const businessService = container.resolve(BUSINESS_MODULE)
@@ -171,7 +187,10 @@ async function notifyDomainVerified(container: any, domain: any) {
       })
     }
   } catch (error) {
-    logger.error(`Failed to send domain verified notification: ${error.message}`)
+    logger.error(
+      { domain: domain.domain, tenant_id: domain.business_id, error: error instanceof Error ? error.message : String(error) },
+      "domain-verification: failed to send verified notification"
+    )
   }
 }
 
@@ -184,7 +203,7 @@ async function notifyDomainError(
   error: string | null
 ) {
   const notificationService = container.resolve("notification")
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     const businessService = container.resolve(BUSINESS_MODULE)
@@ -204,7 +223,10 @@ async function notifyDomainError(
       })
     }
   } catch (err) {
-    logger.error(`Failed to send domain error notification: ${err.message}`)
+    logger.error(
+      { domain: domain.domain, tenant_id: domain.business_id, error: err instanceof Error ? err.message : String(err) },
+      "domain-verification: failed to send error notification"
+    )
   }
 }
 

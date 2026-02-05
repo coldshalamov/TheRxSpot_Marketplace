@@ -1,6 +1,7 @@
 import { BUSINESS_MODULE } from "../modules/business"
 import { createHmac } from "crypto"
 import { sendEmail } from "../utils/email"
+import { getLogger } from "../utils/logger"
 
 function asString(v: unknown): string | null {
   if (typeof v !== "string") return null
@@ -27,7 +28,7 @@ function signWebhook(secret: string, timestampMs: string, eventId: string, body:
 
 async function reconcileApprovedConsultApprovals(container: any) {
   const businessService = container.resolve(BUSINESS_MODULE) as any
-  const logger = container.resolve("logger")
+  const logger = getLogger()
 
   // Best-effort reconciliation to guarantee "no lost dispatches" even if the approving
   // request fails before writing an outbox event.
@@ -52,14 +53,21 @@ async function reconcileApprovedConsultApprovals(container: any) {
       },
       metadata: { source: "reconcileApprovedConsultApprovals" },
     }).catch((e: any) => {
-      logger?.warn?.(`[dispatch-outbox] reconcile failed for ${approval.id}: ${e?.message ?? e}`)
+      logger.warn(
+        {
+          tenant_id: approval.business_id,
+          consult_approval_id: approval.id,
+          error: e?.message ?? String(e),
+        },
+        "dispatch-outbox: reconcile failed"
+      )
     })
   }
 }
 
 async function deliverEvent(container: any, event: any) {
   const businessService = container.resolve(BUSINESS_MODULE) as any
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   const complianceService = container.resolve("complianceModuleService") as any
 
   const now = getNow()
@@ -165,7 +173,14 @@ async function deliverEvent(container: any, event: any) {
     }).catch(() => null)
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    logger?.warn?.(`[dispatch-outbox] failed event ${event.id}: ${msg}`)
+    logger.warn(
+      {
+        tenant_id: event.business_id,
+        outbox_event_id: event.id,
+        error: msg,
+      },
+      "dispatch-outbox: event delivery failed"
+    )
 
     const isDead = attempts >= 5
     const nextMs = isDead ? null : computeBackoffMs(attempts)
@@ -215,12 +230,15 @@ async function deliverEvent(container: any, event: any) {
 
 export default async function dispatchOutboxEventsJob(container: any) {
   const businessService = container.resolve(BUSINESS_MODULE) as any
-  const logger = container.resolve("logger")
+  const logger = getLogger()
 
-  logger?.info?.("[dispatch-outbox] Starting outbox dispatch job")
+  logger.info("dispatch-outbox: starting outbox dispatch job")
 
   await reconcileApprovedConsultApprovals(container).catch((e: any) => {
-    logger?.warn?.(`[dispatch-outbox] reconcile error: ${e?.message ?? e}`)
+    logger.warn(
+      { error: e?.message ?? String(e) },
+      "dispatch-outbox: reconcile error"
+    )
   })
 
   const pending = await businessService.listOutboxEvents(

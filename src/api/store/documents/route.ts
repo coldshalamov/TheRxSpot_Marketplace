@@ -13,6 +13,9 @@ import {
 } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../../modules/compliance/service"
 import { uploadSingleDocument, handleMulterError } from "../../middlewares/document-upload"
+import { getLogger } from "../../../utils/logger"
+
+const logger = getLogger()
 
 // Export config to disable body parsing for multipart uploads
 export const config = {
@@ -93,7 +96,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       offset: filters.skip,
     })
   } catch (error) {
-    console.error("Error listing patient documents:", error)
+    logger.error({ error }, "store-documents: failed to list patient documents")
     res.status(500).json({
       error: "Failed to list documents",
       message: error.message,
@@ -218,7 +221,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         },
       })
     } catch (error) {
-      console.error("Error uploading patient document:", error)
+      logger.error({ error }, "store-documents: failed to upload patient document")
       res.status(500).json({
         error: "Failed to upload document",
         message: error.message,

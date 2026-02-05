@@ -2,6 +2,7 @@ import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { BUSINESS_MODULE } from "../modules/business"
 import { sendEmail } from "../utils/email"
 import processConsultSubmissionJob from "../jobs/process-consult-submission"
+import { getLogger } from "../utils/logger"
 
 /**
  * Subscriber: Handle consult submission created
@@ -18,16 +19,22 @@ export default async function consultSubmissionCreatedHandler({
   container,
 }: SubscriberArgs<{ id: string; business_id: string }>) {
   const businessService = container.resolve(BUSINESS_MODULE)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
-  logger.info(`Processing consult submission created event: ${data.id}`)
+  logger.info(
+    { consult_submission_id: data.id, tenant_id: data.business_id ?? null },
+    "consult-submission-created: processing event"
+  )
   
   try {
     // Retrieve the full submission
     const submission = await businessService.retrieveConsultSubmissionDecrypted(data.id)
     
     if (!submission) {
-      logger.warn(`Consult submission ${data.id} not found`)
+      logger.warn(
+        { consult_submission_id: data.id, tenant_id: data.business_id ?? null },
+        "consult-submission-created: submission not found"
+      )
       return
     }
     
@@ -35,7 +42,10 @@ export default async function consultSubmissionCreatedHandler({
     const business = await businessService.retrieveBusiness(submission.business_id)
     
     if (!business) {
-      logger.warn(`Business ${submission.business_id} not found for submission ${data.id}`)
+      logger.warn(
+        { consult_submission_id: data.id, tenant_id: submission.business_id },
+        "consult-submission-created: business not found"
+      )
       return
     }
     
@@ -54,9 +64,15 @@ export default async function consultSubmissionCreatedHandler({
     // 4. Check for urgent/eligible submissions and escalate if needed
     await checkEscalationRules(container, submission, business)
     
-    logger.info(`Successfully processed consult submission created: ${data.id}`)
+    logger.info(
+      { consult_submission_id: data.id, tenant_id: submission.business_id },
+      "consult-submission-created: processed successfully"
+    )
   } catch (error) {
-    logger.error(`Error processing consult submission ${data.id}: ${error instanceof Error ? error.message : String(error)}`)
+    logger.error(
+      { consult_submission_id: data.id, error: error instanceof Error ? error.message : String(error) },
+      "consult-submission-created: error processing submission"
+    )
     // Don't throw - subscriber failures should not break core consult intake.
   }
 }
@@ -69,7 +85,7 @@ async function sendImmediateNotification(
   submission: any,
   business: any
 ) {
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     const businessEmail =
@@ -78,7 +94,10 @@ async function sendImmediateNotification(
       business.settings?.fulfillment_email
     
     if (!businessEmail) {
-      logger.warn(`No business email found for business ${business.id}`)
+      logger.warn(
+        { tenant_id: business.id },
+        "consult-submission-created: no business email found"
+      )
       return
     }
 
@@ -98,9 +117,15 @@ async function sendImmediateNotification(
 
     await sendEmail({ to: businessEmail, subject, text })
     
-    logger.info(`Sent immediate notification to business for submission ${submission.id}`)
+    logger.info(
+      { consult_submission_id: submission.id, tenant_id: business.id },
+      "consult-submission-created: immediate notification sent"
+    )
   } catch (error) {
-    logger.error(`Failed to send immediate notification: ${error instanceof Error ? error.message : String(error)}`)
+    logger.error(
+      { consult_submission_id: submission.id, tenant_id: business.id, error: error instanceof Error ? error.message : String(error) },
+      "consult-submission-created: failed to send immediate notification"
+    )
     // Don't throw - notification failure shouldn't fail submission processing
   }
 }
@@ -113,7 +138,7 @@ async function createDashboardNotification(
   submission: any,
   business: any
 ) {
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     // This would typically create a notification record in a notifications table
@@ -133,10 +158,16 @@ async function createDashboardNotification(
     // Placeholder: integrate a notification service (DB/WebSocket) when available.
     // await notificationService.createNotification(notification)
     
-    logger.info(`Created dashboard notification for submission ${submission.id}`)
+    logger.info(
+      { consult_submission_id: submission.id, tenant_id: business.id },
+      "consult-submission-created: dashboard notification created"
+    )
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
-    logger.error(`Failed to create dashboard notification: ${msg}`)
+    logger.error(
+      { consult_submission_id: submission.id, tenant_id: business.id, error: msg },
+      "consult-submission-created: failed to create dashboard notification"
+    )
     // Don't throw
   }
 }
@@ -149,7 +180,7 @@ async function logSubmissionAnalytics(
   submission: any,
   business: any
 ) {
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     // Update business statistics
@@ -170,10 +201,16 @@ async function logSubmissionAnalytics(
 
     await businessService.updateBusinesses({ id: business.id, settings: nextSettings } as any)
     
-    logger.info(`Logged analytics for submission ${submission.id}`)
+    logger.info(
+      { consult_submission_id: submission.id, tenant_id: business.id },
+      "consult-submission-created: analytics logged"
+    )
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error)
-    logger.error(`Failed to log analytics: ${msg}`)
+    logger.error(
+      { consult_submission_id: submission.id, tenant_id: business.id, error: msg },
+      "consult-submission-created: failed to log analytics"
+    )
     // Don't throw
   }
 }
@@ -186,7 +223,7 @@ async function checkEscalationRules(
   submission: any,
   business: any
 ) {
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     // Check for returning customers
@@ -197,13 +234,19 @@ async function checkEscalationRules(
     )
     
     if (previousSubmissions.length > 1) {
-      logger.info(`Returning customer detected for submission ${submission.id}`)
+      logger.info(
+        { consult_submission_id: submission.id, tenant_id: business.id },
+        "consult-submission-created: returning customer detected"
+      )
       
       // Could add special handling for returning customers
       // e.g., expedited review, loyalty discounts, etc.
     }
   } catch (error) {
-    logger.error(`Failed to check escalation rules: ${error instanceof Error ? error.message : String(error)}`)
+    logger.error(
+      { consult_submission_id: submission.id, tenant_id: business.id, error: error instanceof Error ? error.message : String(error) },
+      "consult-submission-created: failed to check escalation rules"
+    )
     // Don't throw
   }
 }

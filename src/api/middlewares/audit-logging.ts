@@ -9,6 +9,9 @@
 
 import { MedusaRequest, MedusaResponse, MedusaNextFunction } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../modules/compliance/service"
+import { getLogger } from "../../utils/logger"
+
+const logger = getLogger()
 
 /**
  * Extended request type with audit context
@@ -276,7 +279,7 @@ async function createAuditLog(
     })
   } catch (error) {
     // Log error but don't fail the request
-    console.error("Failed to create audit log:", error)
+    logger.error({ error }, "audit-logging: failed to create audit log")
   }
 }
 
@@ -320,7 +323,9 @@ export async function auditLoggingMiddleware(
   const action = mapMethodToAction(req.method || "GET")
 
   // Create audit log (fire and forget, don't block response)
-  createAuditLog(req, res, entityInfo, action).catch(console.error)
+  createAuditLog(req, res, entityInfo, action).catch((error) =>
+    logger.error({ error }, "audit-logging: failed to create audit log")
+  )
 
   next()
 }
@@ -381,10 +386,12 @@ export async function documentAuditMiddleware(
             risk_level: action === "delete" ? "high" : action === "download" ? "medium" : "low",
             flagged: action === "delete",
           })
-          .catch(console.error)
+          .catch((error) =>
+            logger.error({ error }, "audit-logging: failed to create audit log")
+          )
       }
     } catch (error) {
-      console.error("Failed to log document audit:", error)
+      logger.error({ error }, "audit-logging: failed to log document audit")
     }
   }
 
@@ -431,10 +438,15 @@ export function createAuthAuditMiddleware(action: "login" | "logout") {
               risk_level: "low",
               flagged: false,
             })
-            .catch(console.error)
+            .catch((error) =>
+              logger.error({ error }, "audit-logging: failed to create audit log")
+            )
         }
       } catch (error) {
-        console.error(`Failed to log ${action} audit:`, error)
+        logger.error(
+          { error, action },
+          "audit-logging: failed to log audit action"
+        )
       }
     }
 
@@ -501,7 +513,7 @@ export async function logAuditEvent(
       flagged: (options.riskLevel === "high" || options.riskLevel === "critical"),
     })
   } catch (error) {
-    console.error("Failed to create manual audit log:", error)
+    logger.error({ error }, "audit-logging: failed to create manual audit log")
   }
 }
 

@@ -1,6 +1,7 @@
 import { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { Modules } from "@medusajs/framework/utils"
 import { FINANCIALS_MODULE } from "../modules/financials"
+import { getLogger } from "../utils/logger"
 
 /**
  * Handler for order delivered status
@@ -14,13 +15,14 @@ export default async function orderDeliveredHandler({
 
   const orderService = container.resolve(Modules.ORDER)
   const financialsService = container.resolve(FINANCIALS_MODULE)
+  const logger = getLogger()
 
   try {
     // Fetch order
     const order = await orderService.retrieveOrder(orderId)
 
     if (!order) {
-      console.error(`[order-delivered] Order not found: ${orderId}`)
+      logger.error({ order_id: orderId }, "order-delivered: order not found")
       return
     }
 
@@ -34,13 +36,14 @@ export default async function orderDeliveredHandler({
     // Make earnings available
     await financialsService.makeEarningsAvailable(orderId)
 
-    console.log(
-      `[order-delivered] Earnings for order ${orderId} are now available`
+    logger.info(
+      { order_id: orderId },
+      "order-delivered: earnings now available"
     )
   } catch (error) {
-    console.error(
-      `[order-delivered] Error processing order ${orderId}:`,
-      error instanceof Error ? error.message : error
+    logger.error(
+      { order_id: orderId, error: error instanceof Error ? error.message : String(error) },
+      "order-delivered: error processing order"
     )
   }
 }

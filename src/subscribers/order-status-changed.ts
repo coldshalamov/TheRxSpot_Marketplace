@@ -1,6 +1,7 @@
 import { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../modules/business"
+import { getLogger } from "../utils/logger"
 
 /**
  * Handler for order status change events
@@ -15,13 +16,14 @@ export default async function orderStatusChangedHandler({
 
   const orderService = container.resolve(Modules.ORDER)
   const businessService = container.resolve(BUSINESS_MODULE)
+  const logger = getLogger()
 
   try {
     // Fetch order
     const order = await orderService.retrieveOrder(orderId)
 
     if (!order) {
-      console.error(`[order-status-changed] Order not found: ${orderId}`)
+      logger.error({ order_id: orderId }, "order-status-changed: order not found")
       return
     }
 
@@ -46,8 +48,9 @@ export default async function orderStatusChangedHandler({
     if (recentEvents.length === 0) {
       const businessId = String(order.metadata?.business_id ?? "")
       if (!businessId) {
-        console.error(
-          `[order-status-changed] Missing order.metadata.business_id for order ${orderId}; skipping OrderStatusEvent creation`
+        logger.error(
+          { order_id: orderId },
+          "order-status-changed: missing metadata.business_id; skipping OrderStatusEvent creation"
         )
         return
       }
@@ -68,7 +71,7 @@ export default async function orderStatusChangedHandler({
     }
 
     // Trigger notifications based on status
-    await triggerNotifications(container, orderId, customStatus, order)
+    await triggerNotifications(logger, orderId, customStatus, order)
 
     // Update previous_status in metadata
     const nextMetadata = {
@@ -78,13 +81,19 @@ export default async function orderStatusChangedHandler({
 
     await orderService.updateOrders({ id: orderId, metadata: nextMetadata } as any)
 
-    console.log(
-      `[order-status-changed] Order ${orderId} status: ${previousStatus} -> ${customStatus}`
+    logger.info(
+      {
+        order_id: orderId,
+        tenant_id: order.metadata?.business_id ?? null,
+        from_status: previousStatus ?? null,
+        to_status: customStatus,
+      },
+      "order-status-changed: order status updated"
     )
   } catch (error) {
-    console.error(
-      `[order-status-changed] Error processing order ${orderId}:`,
-      error instanceof Error ? error.message : error
+    logger.error(
+      { order_id: orderId, error: error instanceof Error ? error.message : String(error) },
+      "order-status-changed: error processing order"
     )
   }
 }
@@ -93,7 +102,7 @@ export default async function orderStatusChangedHandler({
  * Trigger appropriate notifications based on order status
  */
 async function triggerNotifications(
-  container: any,
+  logger: ReturnType<typeof getLogger>,
   orderId: string,
   status: string,
   order: any
@@ -104,42 +113,42 @@ async function triggerNotifications(
   switch (status) {
     case "consult_pending":
       // Notify patient that consultation is pending
-      console.log(`[notification] Order ${orderId}: Consultation pending`)
+      logger.info({ order_id: orderId }, "notification: consultation pending")
       break
 
     case "consult_complete":
       // Notify patient that consultation approved, order processing
-      console.log(`[notification] Order ${orderId}: Consultation approved`)
+      logger.info({ order_id: orderId }, "notification: consultation approved")
       break
 
     case "consult_rejected":
       // Notify patient that consultation rejected, order cancelled
-      console.log(`[notification] Order ${orderId}: Consultation rejected`)
+      logger.info({ order_id: orderId }, "notification: consultation rejected")
       break
 
     case "processing":
       // Notify patient that order is being prepared
-      console.log(`[notification] Order ${orderId}: Being processed`)
+      logger.info({ order_id: orderId }, "notification: order processing")
       break
 
     case "fulfilled":
       // Notify patient that order has shipped/ready for pickup
-      console.log(`[notification] Order ${orderId}: Fulfilled`)
+      logger.info({ order_id: orderId }, "notification: order fulfilled")
       break
 
     case "delivered":
       // Notify patient of delivery, request confirmation
-      console.log(`[notification] Order ${orderId}: Delivered`)
+      logger.info({ order_id: orderId }, "notification: order delivered")
       break
 
     case "cancelled":
       // Notify patient of cancellation
-      console.log(`[notification] Order ${orderId}: Cancelled`)
+      logger.info({ order_id: orderId }, "notification: order cancelled")
       break
 
     case "refunded":
       // Notify patient of refund
-      console.log(`[notification] Order ${orderId}: Refunded`)
+      logger.info({ order_id: orderId }, "notification: order refunded")
       break
 
     default:

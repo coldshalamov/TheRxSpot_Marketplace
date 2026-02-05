@@ -5,6 +5,7 @@ import { BUSINESS_MODULE } from "../modules/business"
 import { FINANCIALS_MODULE } from "../modules/financials"
 import { orderStatusTransitionWorkflow } from "../workflows/order-lifecycle"
 import { runWorkflowOrThrow } from "../utils/workflow"
+import { getLogger } from "../utils/logger"
 
 /**
  * Handler for consultation.completed event
@@ -21,6 +22,7 @@ export default async function consultationCompletedHandler({
   const consultationService = container.resolve(CONSULTATION_MODULE)
   const businessService = container.resolve(BUSINESS_MODULE)
   const financialsService = container.resolve(FINANCIALS_MODULE)
+  const logger = getLogger()
 
   try {
     // Fetch consultation
@@ -29,14 +31,21 @@ export default async function consultationCompletedHandler({
     const { order_id: orderId, outcome, business_id: businessId } = consultation
 
     if (!orderId) {
-      console.log(
-        `[consultation-completed] Consultation ${consultationId} has no linked order`
+      logger.warn(
+        { consultation_id: consultationId, tenant_id: businessId },
+        "consultation-completed: consultation has no linked order"
       )
       return
     }
 
-    console.log(
-      `[consultation-completed] Processing consultation ${consultationId} for order ${orderId}, outcome: ${outcome}`
+    logger.info(
+      {
+        consultation_id: consultationId,
+        order_id: orderId,
+        tenant_id: businessId,
+        outcome,
+      },
+      "consultation-completed: processing consultation"
     )
 
     if (outcome === "approved") {
@@ -45,7 +54,10 @@ export default async function consultationCompletedHandler({
       const order = await orderService.retrieveOrder(orderId)
 
       if (!order) {
-        console.error(`[consultation-completed] Order not found: ${orderId}`)
+        logger.error(
+          { order_id: orderId, consultation_id: consultationId, tenant_id: businessId },
+          "consultation-completed: order not found"
+        )
         return
       }
 
@@ -85,8 +97,13 @@ export default async function consultationCompletedHandler({
         const patient = await consultationService.getPatientOrThrow(consultation.patient_id).catch(() => null)
         const customerId = patient?.customer_id ?? null
         if (!customerId) {
-          console.warn(
-            `[consultation-completed] Consultation ${consultationId} patient ${consultation.patient_id} has no customer_id; skipping consult approval creation`
+          logger.warn(
+            {
+              consultation_id: consultationId,
+              patient_id: consultation.patient_id,
+              tenant_id: businessId,
+            },
+            "consultation-completed: patient has no customer_id; skipping consult approval creation"
           )
           continue
         }
@@ -125,8 +142,14 @@ export default async function consultationCompletedHandler({
         })
       }
 
-      console.log(
-        `[consultation-completed] Order ${orderId} approved, created earnings and ${approvedMedications.length} consult approvals`
+      logger.info(
+        {
+          order_id: orderId,
+          consultation_id: consultationId,
+          tenant_id: businessId,
+          approvals_created: approvedMedications.length,
+        },
+        "consultation-completed: order approved, earnings + consult approvals created"
       )
     } else if (outcome === "rejected") {
       // Reject order - update status to consult_rejected
@@ -134,7 +157,10 @@ export default async function consultationCompletedHandler({
       const order = await orderService.retrieveOrder(orderId)
 
       if (!order) {
-        console.error(`[consultation-completed] Order not found: ${orderId}`)
+        logger.error(
+          { order_id: orderId, consultation_id: consultationId, tenant_id: businessId },
+          "consultation-completed: order not found"
+        )
         return
       }
 
@@ -155,18 +181,23 @@ export default async function consultationCompletedHandler({
       // Note: Actual refund would be handled by a separate refund workflow
       // triggered by the order status change to consult_rejected
 
-      console.log(
-        `[consultation-completed] Order ${orderId} rejected due to consultation outcome`
+      logger.info(
+        { order_id: orderId, consultation_id: consultationId, tenant_id: businessId },
+        "consultation-completed: order rejected due to consultation outcome"
       )
     } else {
-      console.log(
-        `[consultation-completed] Consultation ${consultationId} has outcome: ${outcome}, no order action taken`
+      logger.info(
+        { consultation_id: consultationId, order_id: orderId, tenant_id: businessId, outcome },
+        "consultation-completed: no order action taken"
       )
     }
   } catch (error) {
-    console.error(
-      `[consultation-completed] Error processing consultation ${consultationId}:`,
-      error instanceof Error ? error.message : error
+    logger.error(
+      {
+        consultation_id: consultationId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+      "consultation-completed: error processing consultation"
     )
   }
 }

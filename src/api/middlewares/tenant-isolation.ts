@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse, MedusaNextFunction } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../modules/compliance/service"
+import { getLogger } from "../../utils/logger"
 
 /**
  * Tenant Context from authentication
@@ -32,6 +33,7 @@ export async function logSecurityEvent(
     target_business_id?: string
   }
 ): Promise<void> {
+  const logger = getLogger()
   try {
     const complianceService: ComplianceModuleService = req.scope.resolve(
       "complianceModuleService"
@@ -64,19 +66,25 @@ export async function logSecurityEvent(
       flagged: true,
     })
     
-    // Also log to console for immediate visibility
-    console.warn(`[SECURITY] ${eventType}:`, {
-      resource: details.resource,
-      resource_id: details.resource_id,
-      attempted_by_business: details.attempted_by_business,
-      target_business_id: details.target_business_id,
-      user_id: userId,
-      ip_address: ipAddress,
-      timestamp: new Date().toISOString(),
-    })
+    logger.warn(
+      {
+        tenant_id: details.attempted_by_business,
+        resource: details.resource,
+        resource_id: details.resource_id,
+        attempted_by_business: details.attempted_by_business,
+        target_business_id: details.target_business_id,
+        user_id: userId,
+        ip_address: ipAddress,
+        security_event: eventType,
+      },
+      "security event"
+    )
   } catch (error) {
     // Don't fail the request if logging fails, but log the error
-    console.error("Failed to log security event:", error)
+    logger.error(
+      { error: error instanceof Error ? error.message : String(error) },
+      "failed to log security event"
+    )
   }
 }
 

@@ -1,6 +1,7 @@
 import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../modules/business"
+import { getLogger } from "../utils/logger"
 
 /**
  * Subscriber: Handle order.placed event
@@ -20,9 +21,9 @@ export default async function orderPlacedHandler({
   const orderService = container.resolve(Modules.ORDER)
   const businessService = container.resolve(BUSINESS_MODULE)
   const notificationService = container.resolve(Modules.NOTIFICATION)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
-  logger.info(`Processing order.placed event for order ${data.id}`)
+  logger.info({ order_id: data.id }, "order-placed: processing event")
   
   try {
     // Retrieve the full order with relations
@@ -31,7 +32,7 @@ export default async function orderPlacedHandler({
     })
     
     if (!order) {
-      logger.warn(`Order ${data.id} not found`)
+      logger.warn({ order_id: data.id }, "order-placed: order not found")
       return
     }
     
@@ -39,7 +40,7 @@ export default async function orderPlacedHandler({
     const businessId = order.metadata?.business_id as string
     
     if (!businessId) {
-      logger.warn(`Order ${data.id} has no associated business`)
+      logger.warn({ order_id: data.id }, "order-placed: no associated business")
       return
     }
     
@@ -47,7 +48,7 @@ export default async function orderPlacedHandler({
     const business = await businessService.retrieveBusiness(businessId)
     
     if (!business) {
-      logger.warn(`Business ${businessId} not found for order ${data.id}`)
+      logger.warn({ order_id: data.id, tenant_id: businessId }, "order-placed: business not found")
       return
     }
     
@@ -63,9 +64,12 @@ export default async function orderPlacedHandler({
     // 4. Send notification to business
     await sendBusinessNotification(container, order, business)
     
-    logger.info(`Successfully processed order.placed for order ${data.id}`)
+    logger.info({ order_id: data.id, tenant_id: businessId }, "order-placed: processed successfully")
   } catch (error) {
-    logger.error(`Error processing order.placed for order ${data.id}: ${error.message}`)
+    logger.error(
+      { order_id: data.id, error: error instanceof Error ? error.message : String(error) },
+      "order-placed: error processing event"
+    )
     throw error
   }
 }
@@ -78,7 +82,7 @@ async function createEarningsEntry(
   order: any,
   business: any
 ) {
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     // Calculate platform fee
@@ -101,11 +105,17 @@ async function createEarningsEntry(
       created_at: new Date(),
     }
     
-    logger.info(`Created earnings entry ${earningsRecord.id} for order ${order.id}`)
+    logger.info(
+      { order_id: order.id, tenant_id: business.id, earnings_id: earningsRecord.id },
+      "order-placed: earnings entry created"
+    )
     
     return earningsRecord
   } catch (error) {
-    logger.error(`Failed to create earnings entry: ${error.message}`)
+    logger.error(
+      { order_id: order.id, tenant_id: business.id, error: error instanceof Error ? error.message : String(error) },
+      "order-placed: failed to create earnings entry"
+    )
     throw error
   }
 }
@@ -119,7 +129,7 @@ async function updateBusinessStatistics(
   order: any
 ) {
   const businessService = container.resolve(BUSINESS_MODULE)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     const currentSettings = (business.settings ?? {}) as Record<string, any>
@@ -141,9 +151,12 @@ async function updateBusinessStatistics(
     
     await businessService.updateBusinesses({ id: business.id, settings: nextSettings } as any)
     
-    logger.info(`Updated statistics for business ${business.id}`)
+    logger.info({ tenant_id: business.id }, "order-placed: updated business statistics")
   } catch (error) {
-    logger.error(`Failed to update business statistics: ${error.message}`)
+    logger.error(
+      { tenant_id: business.id, error: error instanceof Error ? error.message : String(error) },
+      "order-placed: failed to update business statistics"
+    )
     // Don't throw - statistics update failure shouldn't fail order processing
   }
 }
@@ -157,13 +170,13 @@ async function sendCustomerConfirmation(
   business: any
 ) {
   const notificationService = container.resolve(Modules.NOTIFICATION)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     const customerEmail = order.email || order.customer?.email
     
     if (!customerEmail) {
-      logger.warn(`No customer email found for order ${order.id}`)
+      logger.warn({ order_id: order.id }, "order-placed: no customer email")
       return
     }
     
@@ -191,9 +204,12 @@ async function sendCustomerConfirmation(
       },
     })
     
-    logger.info(`Sent order confirmation to ${customerEmail}`)
+    logger.info({ order_id: order.id, email: customerEmail }, "order-placed: customer confirmation sent")
   } catch (error) {
-    logger.error(`Failed to send customer confirmation: ${error.message}`)
+    logger.error(
+      { order_id: order.id, error: error instanceof Error ? error.message : String(error) },
+      "order-placed: failed to send customer confirmation"
+    )
     // Don't throw - notification failure shouldn't fail order processing
   }
 }
@@ -207,13 +223,13 @@ async function sendBusinessNotification(
   business: any
 ) {
   const notificationService = container.resolve(Modules.NOTIFICATION)
-  const logger = container.resolve("logger")
+  const logger = getLogger()
   
   try {
     const businessEmail = business.contact_email || business.email
     
     if (!businessEmail) {
-      logger.warn(`No business email found for business ${business.id}`)
+      logger.warn({ tenant_id: business.id }, "order-placed: no business email found")
       return
     }
     
@@ -240,9 +256,12 @@ async function sendBusinessNotification(
       },
     })
     
-    logger.info(`Sent business notification to ${businessEmail}`)
+    logger.info({ tenant_id: business.id, email: businessEmail }, "order-placed: business notification sent")
   } catch (error) {
-    logger.error(`Failed to send business notification: ${error.message}`)
+    logger.error(
+      { tenant_id: business.id, error: error instanceof Error ? error.message : String(error) },
+      "order-placed: failed to send business notification"
+    )
     // Don't throw - notification failure shouldn't fail order processing
   }
 }

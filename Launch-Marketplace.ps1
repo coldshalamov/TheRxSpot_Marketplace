@@ -10,6 +10,9 @@ Write-Host '===================================================
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot ".")).Path
 $storefrontRoot = Join-Path $repoRoot "TheRxSpot_Marketplace-storefront"
 $launcherHtml = Join-Path $repoRoot "Marketplace-Launcher.html"
+$preferredBackendPort = 9000
+$fallbackBackendPort = 9001
+$backendPort = $preferredBackendPort
 
 # Step 0: Check Dependencies
 Write-Host '[0/4] Checking dependencies...' -ForegroundColor Yellow
@@ -56,11 +59,11 @@ Write-Host ''
 # Step 1: Kill any existing processes on ports 9000 and 8000
 Write-Host '[1/5] Checking for running services...' -ForegroundColor Yellow
 
-$port9000 = Get-NetTCPConnection -LocalPort 9000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+$port9000 = Get-NetTCPConnection -LocalPort $preferredBackendPort -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
 $port8000 = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
 
 if ($port9000) {
-    Write-Host "⚠️  Port 9000 is in use. Stopping existing process..." -ForegroundColor Yellow
+    Write-Host "⚠️  Port $preferredBackendPort is in use. Stopping existing process..." -ForegroundColor Yellow
     Stop-Process -Id $port9000 -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 2
     Write-Host '✅ Stopped existing backend process' -ForegroundColor Green
@@ -75,6 +78,16 @@ if ($port8000) {
 
 if (-not $port9000 -and -not $port8000) {
     Write-Host '✅ Ports are available' -ForegroundColor Green
+}
+
+$port9000InUseAfterStop = Get-NetTCPConnection -LocalPort $preferredBackendPort -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($port9000InUseAfterStop) {
+    $ownerPid = $port9000InUseAfterStop.OwningProcess
+    $ownerProcess = Get-Process -Id $ownerPid -ErrorAction SilentlyContinue
+    $ownerName = if ($ownerProcess) { $ownerProcess.ProcessName } else { "PID $ownerPid" }
+
+    Write-Host "⚠️  Port $preferredBackendPort is still occupied by $ownerName. Using fallback port $fallbackBackendPort for Medusa." -ForegroundColor Yellow
+    $backendPort = $fallbackBackendPort
 }
 Write-Host ''
 
@@ -105,19 +118,36 @@ if (-not (Test-Path $adminPath)) {
 Write-Host ''
 
 # Step 3: Start Medusa Backend
-Write-Host '[3/5] Launching Medusa Backend (:9000)...' -ForegroundColor Green
-$backendProcess = Start-Process powershell -ArgumentList '-NoExit', '-Command', "cd `"$repoRoot`"; npm run dev" -PassThru
+Write-Host "[3/5] Launching Medusa Backend (:$backendPort)..." -ForegroundColor Green
+
+$backendUrl = "http://localhost:$backendPort"
+$adminCors = "http://localhost:5173,http://localhost:9000,http://localhost:8000,http://localhost:$backendPort,https://docs.medusajs.com"
+$authCors = "http://localhost:5173,http://localhost:9000,http://localhost:8000,http://localhost:$backendPort,https://docs.medusajs.com"
+
+$backendCommand = @"
+`$env:PORT='$backendPort'
+`$env:MEDUSA_BACKEND_URL='$backendUrl'
+`$env:ADMIN_CORS='$adminCors'
+`$env:AUTH_CORS='$authCors'
+cd `"$repoRoot`"
+npm run dev
+"@
+
+$backendProcess = Start-Process powershell -ArgumentList '-NoExit', '-Command', $backendCommand -PassThru
 
 # Wait for Backend to be ready
 Write-Host '⏳ Waiting for backend to be ready...' -ForegroundColor Gray
 
 function Wait-ForBackend {
+    param(
+        [int]$Port
+    )
+
     $maxAttempts = 120  # 2 minutes max
     $attempt = 0
     while ($attempt -lt $maxAttempts) {
         try {
-            # Check root endpoint since /health might not be loaded yet
-            $response = Invoke-WebRequest -Uri "http://localhost:9000/" -TimeoutSec 1 -UseBasicParsing -ErrorAction SilentlyContinue
+            $response = Invoke-WebRequest -Uri "http://localhost:$Port/health" -TimeoutSec 1 -UseBasicParsing -ErrorAction SilentlyContinue
             if ($response.StatusCode -eq 200) {
                 Write-Host "✅ Backend is ready!" -ForegroundColor Green
                 return $true
@@ -137,7 +167,7 @@ function Wait-ForBackend {
     return $false
 }
 
-if (-not (Wait-ForBackend)) {
+if (-not (Wait-ForBackend -Port $backendPort)) {
     Write-Host "Backend did not respond. Check the terminal window for errors." -ForegroundColor Red
     pause
     exit 1
@@ -150,7 +180,8 @@ Start-Process powershell -ArgumentList '-NoExit', '-Command', "cd `"$storefrontR
 # Step 5: Open the Control Center
 Write-Host '[5/5] Opening Command Center Interface...' -ForegroundColor Green
 Start-Sleep -Seconds 3
-Start-Process $launcherHtml
+$launcherUri = "file:///" + (($launcherHtml -replace '\\', '/') -replace ' ', '%20') + "?backendPort=$backendPort"
+Start-Process $launcherUri
 
 Write-Host '
 ===================================================' -ForegroundColor Cyan
@@ -159,6 +190,7 @@ Write-Host '===================================================
 ' -ForegroundColor Cyan
 Write-Host '📊 Monitor the PowerShell windows for startup logs' -ForegroundColor Yellow
 Write-Host '🌐 Command Center opening in your browser...' -ForegroundColor Yellow
+Write-Host "🔐 Admin URL: $backendUrl/app" -ForegroundColor Yellow
 Write-Host '
 ⏳ Services may take 30-60 seconds to fully initialize' -ForegroundColor Gray
 Write-Host ''

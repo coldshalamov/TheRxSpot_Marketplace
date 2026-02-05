@@ -1,5 +1,8 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import { getLogger } from "../../../utils/logger"
+
+const logger = getLogger()
 
 /**
  * Store Carts API Extension
@@ -47,7 +50,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     
     res.status(200).json({ cart })
   } catch (error) {
-    console.error("Error creating cart:", error)
+    logger.error({ error }, "store-carts: failed to create cart")
     res.status(500).json({
       code: "CART_CREATE_ERROR",
       message: error.message,
@@ -156,7 +159,7 @@ export async function validateCartConsultApprovals(
       errors: errors.length > 0 ? errors : undefined,
     }
   } catch (error) {
-    console.error("Error validating cart consult approvals:", error)
+    logger.error({ error }, "store-carts: failed to validate consult approvals")
     return {
       valid: false,
       errors: [{

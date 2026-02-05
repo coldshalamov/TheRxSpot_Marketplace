@@ -9,6 +9,9 @@ import {
   MedusaResponse,
 } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../../../modules/compliance/service"
+import { getLogger } from "../../../../utils/logger"
+
+const logger = getLogger()
 
 /**
  * GET /store/documents/:id
@@ -68,7 +71,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       },
     })
   } catch (error) {
-    console.error("Error getting patient document:", error)
+    logger.error({ error }, "store-documents: failed to get patient document")
     
     if (error.message?.includes("not found")) {
       return res.status(404).json({

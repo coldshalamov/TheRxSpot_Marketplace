@@ -2,6 +2,7 @@ import { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { Modules } from "@medusajs/framework/utils"
 import { FINANCIALS_MODULE } from "../modules/financials"
 import { BUSINESS_MODULE } from "../modules/business"
+import { getLogger } from "../utils/logger"
 
 /**
  * Handler for order.created event
@@ -18,6 +19,7 @@ export default async function orderCreatedHandler({
 
   const orderService = container.resolve(Modules.ORDER)
   const businessService = container.resolve(BUSINESS_MODULE)
+  const logger = getLogger()
 
   try {
     // Fetch order with items
@@ -26,7 +28,7 @@ export default async function orderCreatedHandler({
     })
 
     if (!order) {
-      console.error(`[order-created] Order not found: ${orderId}`)
+      logger.error({ order_id: orderId }, "order-created: order not found")
       return
     }
 
@@ -68,8 +70,9 @@ export default async function orderCreatedHandler({
     // Create OrderStatusEvent record
     const businessId = String((nextMetadata as any).business_id ?? "")
     if (!businessId) {
-      console.error(
-        `[order-created] Missing order.metadata.business_id for order ${orderId}; skipping OrderStatusEvent creation`
+      logger.error(
+        { order_id: orderId },
+        "order-created: missing metadata.business_id; skipping OrderStatusEvent creation"
       )
       return
     }
@@ -88,13 +91,14 @@ export default async function orderCreatedHandler({
       },
     })
 
-    console.log(
-      `[order-created] Order ${orderId} initialized with status: ${initialStatus}`
+    logger.info(
+      { order_id: orderId, tenant_id: businessId, status: initialStatus },
+      "order-created: order initialized"
     )
   } catch (error) {
-    console.error(
-      `[order-created] Error processing order ${orderId}:`,
-      error instanceof Error ? error.message : error
+    logger.error(
+      { order_id: orderId, error: error instanceof Error ? error.message : String(error) },
+      "order-created: error processing order"
     )
   }
 }

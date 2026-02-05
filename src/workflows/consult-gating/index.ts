@@ -8,6 +8,7 @@ import {
 import { Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../../modules/business"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { getLogger } from "../../utils/logger"
 
 /**
  * Input type for consult approval validation workflow
@@ -309,7 +310,11 @@ const validateCartConsultApprovalsStep = createStep(
         errors: errors.length > 0 ? errors : undefined,
       })
     } catch (error) {
-      console.error("[validateCartConsultApprovalsStep] Error:", error)
+      const logger = getLogger()
+      logger.error(
+        { error },
+        "validateCartConsultApprovalsStep: failed to validate consult approvals"
+      )
       return new StepResponse({
         valid: false,
         errors: [{

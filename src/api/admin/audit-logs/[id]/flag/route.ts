@@ -9,6 +9,9 @@ import {
   MedusaResponse,
 } from "@medusajs/framework/http"
 import ComplianceModuleService from "../../../../../modules/compliance/service"
+import { getLogger } from "../../../../../utils/logger"
+
+const logger = getLogger()
 
 /**
  * POST /admin/audit-logs/:id/flag
@@ -55,7 +58,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         : "Audit log unflagged successfully",
     })
   } catch (error) {
-    console.error("Error flagging audit log:", error)
+    logger.error({ error }, "admin-audit-logs: failed to flag audit log")
     
     if (error.message?.includes("not found")) {
       return res.status(404).json({
