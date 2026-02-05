@@ -16,6 +16,7 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../../../../../../modules/business"
 import { FINANCIALS_MODULE } from "../../../../../../modules/financials"
+import { assertConsultApprovedForFulfillment } from "../../../../../../utils/order-consult-guard"
 import {
   derivePlanStatusFromOrder,
   getOptionalTenantBusinessId,
@@ -85,6 +86,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         code: "INVALID_STATE_TRANSITION",
         message: `Invalid transition from ${from} to ${next}`,
       })
+    }
+
+    // Hard guard: never allow fulfillment progression unless consult is approved (when required).
+    if (["in_production", "shipped", "delivered"].includes(next)) {
+      await assertConsultApprovedForFulfillment(req.scope, order)
     }
 
     if (next === "shipped" && !trackingNumber) {

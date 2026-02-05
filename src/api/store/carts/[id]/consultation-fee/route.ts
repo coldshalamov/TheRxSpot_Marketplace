@@ -2,13 +2,65 @@ import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../../../../../modules/business"
 import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import { createHash } from "crypto"
+import { z } from "zod"
 
-function asCents(value: any): number {
+function isUniqueViolation(err: unknown): boolean {
+  if (!err) return false
+  if (typeof err === "object") {
+    const maybeCode =
+      "code" in err && typeof (err as { code?: unknown }).code === "string"
+        ? (err as { code: string }).code
+        : null
+    if (maybeCode === "23505") return true
+
+    const maybeType =
+      "type" in err && typeof (err as { type?: unknown }).type === "string"
+        ? (err as { type: string }).type
+        : null
+    if (maybeType === "duplicate_error") return true
+  }
+  const msg = err instanceof Error ? err.message : String(err)
+  return (
+    msg.includes("duplicate key value violates unique constraint") ||
+    msg.toLowerCase().includes("unique constraint") ||
+    msg.toLowerCase().includes("already exists")
+  )
+}
+
+function asCents(value: unknown): number {
   if (value == null) return 0
   if (typeof value === "number") return Math.trunc(value)
   if (typeof value === "string") return parseInt(value, 10) || 0
-  if (typeof value === "object" && typeof value.value === "string") return parseInt(value.value, 10) || 0
+  if (typeof value === "object" && value && "value" in value) {
+    const v = (value as { value?: unknown }).value
+    if (typeof v === "string") return parseInt(v, 10) || 0
+  }
   return Number(value) || 0
+}
+
+const ConsultationFeeBodySchema = z
+  .object({
+    consultation_id: z.string().min(1),
+  })
+  .strict()
+
+function asRecord(v: unknown): Record<string, unknown> | null {
+  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null
+}
+
+function getLineItemMetadata(item: unknown): Record<string, unknown> | null {
+  const obj = asRecord(item)
+  if (!obj) return null
+  return asRecord(obj.metadata)
+}
+
+function getConsultationFeeLineItemId(cartId: string, consultationId: string): string {
+  const digest = createHash("sha256")
+    .update(`${cartId}:${consultationId}`)
+    .digest("hex")
+    .slice(0, 24)
+  return `item_cfee_${digest}`
 }
 
 /**
@@ -36,8 +88,14 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   }
 
   const cartId = req.params.id
-  const body = (req.body ?? {}) as Record<string, any>
-  const consultationId = typeof body.consultation_id === "string" ? body.consultation_id.trim() : ""
+  const parsed = ConsultationFeeBodySchema.safeParse(req.body ?? {})
+  if (!parsed.success) {
+    return res.status(400).json({
+      code: "INVALID_INPUT",
+      message: "consultation_id is required",
+    })
+  }
+  const consultationId = parsed.data.consultation_id.trim()
 
   if (!consultationId) {
     return res.status(400).json({
@@ -64,10 +122,11 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     return res.status(404).json({ code: "NOT_FOUND", message: "Cart not found" })
   }
 
-  const existing = (cart.items || []).find((it: any) => {
-    const meta = it?.metadata
+  const itemsUnknown = Array.isArray(cart.items) ? (cart.items as unknown[]) : []
+  const existing = itemsUnknown.find((it) => {
+    const meta = getLineItemMetadata(it)
     return meta?.type === "consultation_fee" && meta?.consultation_id === consultationId
-  })
+  }) as { id?: string } | undefined
   if (existing) {
     return res.json({ added: false, line_item_id: existing.id })
   }
@@ -122,7 +181,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   let feeCents = 0
   if (consultation.originating_submission_id) {
     const submission = await businessService
-      .retrieveConsultSubmission(consultation.originating_submission_id)
+      .retrieveConsultSubmissionDecrypted(consultation.originating_submission_id)
       .catch(() => null)
     feeCents = asCents(submission?.consult_fee)
   }
@@ -133,23 +192,54 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const title = productId ? `Consultation fee` : "Consultation fee"
 
-  await cartService.addLineItems(cartId, [
-    {
-      cart_id: cartId,
-      title,
-      quantity: 1,
-      unit_price: feeCents,
-      is_custom_price: true,
-      requires_shipping: false,
-      is_discountable: false,
-      metadata: {
-        type: "consultation_fee",
-        consultation_id: consultationId,
-        product_id: productId,
-        expires_at: expiresAt,
+  const lineItemId = getConsultationFeeLineItemId(cartId, consultationId)
+
+  try {
+    await cartService.addLineItems(cartId, [
+      {
+        id: lineItemId,
+        cart_id: cartId,
+        title,
+        quantity: 1,
+        unit_price: feeCents,
+        is_custom_price: true,
+        requires_shipping: false,
+        is_discountable: false,
+        metadata: {
+          type: "consultation_fee",
+          consultation_id: consultationId,
+          product_id: productId,
+          expires_at: expiresAt,
+        },
       },
-    } as any,
-  ])
+    ])
+  } catch (e) {
+    if (!isUniqueViolation(e)) throw e
+
+    // Concurrency: another request created the line item with the same deterministic id.
+    const { data: cartsAfter } = await query.graph({
+      entity: "cart",
+      fields: ["id", "items.id", "items.metadata"],
+      filters: { id: cartId },
+    })
+    const cartAfter = cartsAfter?.[0]
+    const itemsAfter = Array.isArray(cartAfter?.items) ? (cartAfter.items as unknown[]) : []
+    const existing2 = itemsAfter.find((it) => asRecord(it)?.id === lineItemId) as { id?: string } | undefined
+    if (existing2) {
+      return res.json({ added: false, line_item_id: existing2.id })
+    }
+
+    // Fallback to metadata-based lookup (best-effort, should be unnecessary with deterministic id).
+    const existingMeta = itemsAfter.find((it) => {
+      const meta = getLineItemMetadata(it)
+      return meta?.type === "consultation_fee" && meta?.consultation_id === consultationId
+    }) as { id?: string } | undefined
+    if (existingMeta) {
+      return res.json({ added: false, line_item_id: existingMeta.id })
+    }
+
+    throw e
+  }
 
   return res.json({ added: true, fee_cents: feeCents })
 }

@@ -1,6 +1,15 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { authenticate } from "@medusajs/framework"
 import { CONSULTATION_MODULE } from "../../../modules/consultation"
+import { z } from "zod"
+
+const ListQuerySchema = z
+  .object({
+    status: z.string().min(1).optional(),
+    limit: z.string().optional(),
+    offset: z.string().optional(),
+  })
+  .passthrough()
 
 /**
  * GET /store/consultations
@@ -10,7 +19,7 @@ import { CONSULTATION_MODULE } from "../../../modules/consultation"
 export const GET = [
   authenticate("customer", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
-    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
+    const consultationService = req.scope.resolve(CONSULTATION_MODULE) as any
 
     // Get customer ID from auth context
     const customerId = (req as any).auth_context?.actor_id
@@ -18,38 +27,29 @@ export const GET = [
       return res.status(401).json({ message: "Not authenticated" })
     }
 
-    // Parse query parameters
-    const { status, limit = "20", offset = "0" } = req.query as Record<
-      string,
-      string | undefined
-    >
-
-    // Build filters
-    const filters: Record<string, any> = {
-      patient_id: customerId, // Assuming patient_id maps to customer_id
+    const business = (req as any).context?.business as { id?: string } | undefined
+    if (!business?.id) {
+      return res.status(400).json({ message: "Business context not found" })
     }
 
-    if (status) {
-      filters.status = status
-    }
-
-    // Pagination
-    const take = parseInt(limit, 10)
-    const skip = parseInt(offset, 10)
+    const q = ListQuerySchema.parse(req.query ?? {})
+    const status = q.status
+    const take = Math.min(Math.max(parseInt(q.limit ?? "20", 10) || 20, 1), 100)
+    const skip = Math.max(parseInt(q.offset ?? "0", 10) || 0, 0)
 
     try {
-      // Get patient by customer_id first
-      const patients = await consultationService.listPatients(
-        { customer_id: customerId },
-        { take: 1 }
-      )
+      const patient = await consultationService
+        .getPatientByCustomerId(business.id, customerId)
+        .catch(() => null)
 
-      if (!patients[0].length) {
+      if (!patient) {
         return res.json({ consultations: [], count: 0, limit: take, offset: skip })
       }
 
-      const patientId = patients[0][0].id
-      filters.patient_id = patientId
+      const filters: Record<string, unknown> = { patient_id: patient.id }
+      if (status) {
+        filters.status = status
+      }
 
       const [consultations, count] = await consultationService.listConsultations(
         filters,
@@ -88,64 +88,12 @@ export const GET = [
 export const POST = [
   authenticate("customer", ["session", "bearer"]),
   async (req: MedusaRequest, res: MedusaResponse) => {
-    const consultationService = req.scope.resolve(CONSULTATION_MODULE)
-    const body = (req.body ?? {}) as Record<string, any>
-
-    // Get customer ID from auth context
-    const customerId = (req as any).auth_context?.actor_id
-    if (!customerId) {
-      return res.status(401).json({ message: "Not authenticated" })
-    }
-
-    // Get business from tenant context
-    const business = (req as any).context?.business
-    if (!business) {
-      return res.status(400).json({ message: "Business context not found" })
-    }
-
-    try {
-      // Get or create patient record for this customer
-      let patient = await consultationService.getPatientByEmail(
-        business.id,
-        (req as any).auth_context?.actor_email || ""
-      )
-
-      if (!patient) {
-        // Create patient record from customer data
-        patient = await consultationService.createPatient({
-          business_id: business.id,
-          customer_id: customerId,
-          first_name: body.patient_first_name || "",
-          last_name: body.patient_last_name || "",
-          email: (req as any).auth_context?.actor_email || "",
-          phone: body.patient_phone || null,
-          date_of_birth: body.patient_date_of_birth
-            ? new Date(body.patient_date_of_birth)
-            : null,
-          gender: body.patient_gender || null,
-        })
-      }
-
-      // Create consultation
-      const consultation = await consultationService.createConsultation({
-        business_id: business.id,
-        patient_id: patient.id,
-        mode: body.mode || "async_form",
-        status: "draft",
-        chief_complaint: body.chief_complaint || null,
-        medical_history: body.medical_history || null,
-        originating_submission_id: body.submission_id || null,
-      })
-
-      res.status(201).json({
-        consultation: sanitizeConsultationForPatient(consultation),
-      })
-    } catch (error) {
-      res.status(400).json({
-        message: "Failed to create consultation",
-        error: error instanceof Error ? error.message : "Unknown error",
-      })
-    }
+    // Single source of truth for consult intake is:
+    // POST /store/businesses/:slug/consult
+    return res.status(410).json({
+      code: "ENDPOINT_DEPRECATED",
+      message: "Use POST /store/businesses/:slug/consult for consultation intake",
+    })
   },
 ]
 

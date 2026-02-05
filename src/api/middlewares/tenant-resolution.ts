@@ -1,20 +1,45 @@
 import { MedusaRequest, MedusaResponse, MedusaNextFunction } from "@medusajs/framework/http"
 import { BUSINESS_MODULE } from "../../modules/business"
+import { setTenantInLogContext } from "./request-context"
 
-const PLATFORM_DOMAINS = (process.env.PLATFORM_DOMAINS || "localhost,127.0.0.1")
+/**
+ * Platform hostnames (exact matches only).
+ *
+ * IMPORTANT:
+ * - We intentionally do NOT suffix-match (no `endsWith(.therxspot.com)`), otherwise
+ *   `tenant.therxspot.com` would be incorrectly classified as a platform host.
+ * - This middleware is used behind Vercel/Render rewrites where the backend host
+ *   may be `api.therxspot.com`, but the tenant host is passed via `x-tenant-host`.
+ */
+const PLATFORM_HOSTNAMES = (
+  process.env.PLATFORM_HOSTNAMES ||
+  // Backward-compat: older env name; treat as exact hostnames too.
+  process.env.PLATFORM_DOMAINS ||
+  "localhost,127.0.0.1"
+)
   .split(",")
   .map((d) => d.trim().toLowerCase())
+  .filter(Boolean)
 
-function extractHostname(host: string | undefined): string | null {
-  if (!host) return null
-  // Strip port
-  return host.split(":")[0].toLowerCase()
+function normalizeHostHeaderValue(value: string | string[] | undefined): string | null {
+  if (!value) return null
+  const raw = Array.isArray(value) ? value[0] : value
+  if (!raw) return null
+
+  // May be comma-separated, may include port.
+  const first = raw.split(",")[0]?.trim()
+  if (!first) return null
+
+  // Strip port (IPv6-safe enough for our use: treat bracketed host as-is).
+  const withoutPort = first.includes("]")
+    ? first
+    : first.split(":")[0]
+
+  return withoutPort.toLowerCase()
 }
 
-function isPlatformDomain(hostname: string): boolean {
-  return PLATFORM_DOMAINS.some(
-    (pd) => hostname === pd || hostname.endsWith(`.${pd}`)
-  )
+function isPlatformHostname(hostname: string): boolean {
+  return PLATFORM_HOSTNAMES.includes(hostname)
 }
 
 export const tenantResolutionMiddleware = async (
@@ -26,15 +51,19 @@ export const tenantResolutionMiddleware = async (
 
   let business: any = null
 
-  // 1. Host header -> BusinessDomain table lookup
-  const host = req.headers["host"] as string | undefined
-  const hostname = extractHostname(host)
+  // 1. Tenant host header -> BusinessDomain table lookup
+  // Preferred: x-tenant-host (forwarded by storefront)
+  // Fallbacks: x-forwarded-host, host
+  const tenantHost =
+    normalizeHostHeaderValue(req.headers["x-tenant-host"] as any) ||
+    normalizeHostHeaderValue(req.headers["x-forwarded-host"] as any) ||
+    normalizeHostHeaderValue(req.headers["host"] as any)
 
-  if (hostname && !isPlatformDomain(hostname)) {
-    business = await businessModuleService.getBusinessByDomainFromTable(hostname)
+  if (tenantHost && !isPlatformHostname(tenantHost)) {
+    business = await businessModuleService.getBusinessByDomainFromTable(tenantHost)
     if (!business) {
       // Also try the legacy domain field on Business
-      business = await businessModuleService.getBusinessByDomain(hostname)
+      business = await businessModuleService.getBusinessByDomain(tenantHost)
     }
   }
 
@@ -68,6 +97,7 @@ export const tenantResolutionMiddleware = async (
   if (business) {
     ;(req as any).context = (req as any).context || {}
     ;(req as any).context.business = business
+    setTenantInLogContext(req)
   }
 
   next()

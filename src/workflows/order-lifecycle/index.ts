@@ -8,6 +8,23 @@ import {
 import { Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../../modules/business"
 import { FINANCIALS_MODULE } from "../../modules/financials"
+import { assertConsultApprovedForFulfillment, orderRequiresConsultation } from "../../utils/order-consult-guard"
+
+function deriveCurrentCustomStatus(order: any): OrderStatus {
+  const meta = (order?.metadata ?? {}) as Record<string, unknown>
+  const raw = typeof meta.custom_status === "string" ? meta.custom_status.trim() : ""
+  if (raw && (VALID_TRANSITIONS as any)[raw]) return raw as OrderStatus
+
+  const requires = orderRequiresConsultation(order)
+  return requires ? "consult_pending" : "pending"
+}
+
+async function assertFulfillmentAllowedForOrder(container: any, order: any, toStatus: OrderStatus) {
+  if (!["processing", "fulfilled", "delivered"].includes(toStatus)) {
+    return
+  }
+  await assertConsultApprovedForFulfillment(container, order)
+}
 
 // Valid status transitions
 const VALID_TRANSITIONS: Record<string, string[]> = {
@@ -60,15 +77,17 @@ const validateTransitionStep = createStep(
 
     // Get current order status from OrderModule
     const orderService = container.resolve(Modules.ORDER)
-    const order = await orderService.retrieveOrder(orderId)
+    const order = await orderService.retrieveOrder(orderId, {
+      relations: ["items"],
+    })
 
     if (!order) {
       throw new Error(`Order not found: ${orderId}`)
     }
 
     // Check if the fromStatus matches current order status
-    const currentStatus = (order.metadata?.custom_status as string) || fromStatus
-    if (currentStatus !== fromStatus) {
+    const currentStatus = deriveCurrentCustomStatus(order)
+    if (currentStatus !== (fromStatus as any)) {
       throw new Error(
         `Status mismatch: expected ${fromStatus}, but order is ${currentStatus}`
       )
@@ -81,6 +100,8 @@ const validateTransitionStep = createStep(
         `Invalid status transition from '${fromStatus}' to '${toStatus}'. Allowed: ${allowedTransitions.join(", ")}`
       )
     }
+
+    await assertFulfillmentAllowedForOrder(container, order, toStatus as OrderStatus)
 
     return new StepResponse({ valid: true, order })
   }

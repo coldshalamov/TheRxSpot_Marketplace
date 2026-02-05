@@ -69,11 +69,27 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
         env:
+          DATABASE_URL: postgres://medusa:medusa@localhost:5432/medusa_test
+          REDIS_URL: redis://localhost:6379
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_that_is_at_least_64_characters_long_for_testing_purposes_only' }}
           COOKIE_SECRET: ${{ secrets.COOKIE_SECRET || 'test_cookie_secret_that_is_at_least_64_characters_long_for_testing_purposes_only' }}
+          STORE_CORS: http://localhost:8000
+          ADMIN_CORS: http://localhost:5173,http://localhost:9000
+          AUTH_CORS: http://localhost:5173,http://localhost:9000,http://localhost:8000
       
       - name: Run integration tests
         run: npm run test:integration:http
+        env:
+          DATABASE_URL: postgres://medusa:medusa@localhost:5432/medusa_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_that_is_at_least_64_characters_long_for_testing_purposes_only' }}
+          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET || 'test_cookie_secret_that_is_at_least_64_characters_long_for_testing_purposes_only' }}
+          STORE_CORS: http://localhost:8000
+          ADMIN_CORS: http://localhost:5173,http://localhost:9000
+          AUTH_CORS: http://localhost:5173,http://localhost:9000,http://localhost:8000
+
+      - name: Run custom integration suite
+        run: npm run test:integration:custom
         env:
           DATABASE_URL: postgres://medusa:medusa@localhost:5432/medusa_test
           REDIS_URL: redis://localhost:6379
@@ -162,6 +178,20 @@ jobs:
           NODE_ENV: production
           JWT_SECRET: dummy_jwt_secret_for_build_that_is_at_least_64_chars_long_dummy
           COOKIE_SECRET: dummy_cookie_secret_for_build_that_is_at_least_64_chars_dummy
+          DATABASE_URL: postgres://medusa:medusa@localhost:5432/medusa_test
+          REDIS_URL: redis://localhost:6379
+          STORE_CORS: http://localhost:8000
+          ADMIN_CORS: http://localhost:5173,http://localhost:9000
+          AUTH_CORS: http://localhost:5173,http://localhost:9000,http://localhost:8000
+
+      - name: Build storefront
+        run: |
+          npm -C TheRxSpot_Marketplace-storefront ci
+          npm -C TheRxSpot_Marketplace-storefront run build
+        env:
+          NODE_ENV: production
+          MEDUSA_BACKEND_URL: http://localhost:9000
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: dummy_publishable_key_for_build
       
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3

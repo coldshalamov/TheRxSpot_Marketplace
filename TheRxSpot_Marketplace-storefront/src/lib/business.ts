@@ -85,7 +85,7 @@ export async function resolveBusiness(
 async function fetchBusinessByHostname(hostname: string): Promise<Business | null> {
   try {
     const res = await fetch(`${MEDUSA_BACKEND_URL}/store/tenant-config`, {
-      headers: { host: hostname },
+      headers: { "x-tenant-host": hostname },
       next: { revalidate: 60 },
     })
     if (!res.ok) return null

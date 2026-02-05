@@ -3,6 +3,7 @@ import { tenantResolutionMiddleware } from "./middlewares/tenant-resolution"
 import { tenantAdminAuthMiddleware } from "./middlewares/tenant-admin-auth"
 import { consultGatingMiddleware } from "./middlewares/consult-gating"
 import { autoLogoffMiddleware } from "./middlewares/auto-logoff"
+import { requestContextMiddleware } from "./middlewares/request-context"
 import {
   authRateLimiter,
   consultSubmissionRateLimiter,
@@ -22,6 +23,11 @@ import { auditLoggingMiddleware, documentAuditMiddleware } from "./middlewares/a
  */
 export default defineMiddlewares({
   routes: [
+    // Request context (request_id / tenant_id / user_id) for structured logging
+    {
+      matcher: "/*",
+      middlewares: [requestContextMiddleware],
+    },
     // Tenant resolution for multi-tenant support
     {
       matcher: "/store/*",

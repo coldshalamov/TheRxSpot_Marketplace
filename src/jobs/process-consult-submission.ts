@@ -1,214 +1,234 @@
-import { Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../modules/business"
 import { CONSULTATION_MODULE } from "../modules/consultation"
 
-/**
- * Job: Process new consult submissions
- * 
- * Purpose:
- * - Send email notification to business admins
- * - Create notification for tenant admin dashboard
- * - Auto-assign to available clinician if configured
- * - Update submission status
- * 
- * Schedule: Runs every 2 minutes to process pending submissions
- */
+function isUniqueViolation(err: unknown): boolean {
+  if (!err) return false
 
-export default async function processConsultSubmissionJob(container: any) {
-  const businessService = container.resolve(BUSINESS_MODULE)
-  const consultationService = container.resolve(CONSULTATION_MODULE)
-  const notificationService = container.resolve(Modules.NOTIFICATION)
-  const logger = container.resolve("logger")
-  
-  logger.info("Starting consult submission processing job")
-  
-  try {
-    // Find all pending consult submissions
-    const pendingSubmissions = await businessService.listConsultSubmissions(
-      { status: "pending" },
-      { 
-        order: { created_at: "ASC" },
-        take: 50, // Process in batches
-      }
-    )
-    
-    if (pendingSubmissions.length === 0) {
-      logger.info("No pending consult submissions to process")
-      return
-    }
-    
-    logger.info(`Processing ${pendingSubmissions.length} pending consult submissions`)
-    
-    for (const submission of pendingSubmissions) {
-      await processSubmission(container, submission)
-    }
-    
-    logger.info(`Successfully processed ${pendingSubmissions.length} consult submissions`)
-  } catch (error) {
-    logger.error(`Error processing consult submissions: ${error.message}`)
-    throw error
+  if (typeof err === "object") {
+    const maybeCode =
+      "code" in err && typeof (err as { code?: unknown }).code === "string"
+        ? (err as { code: string }).code
+        : null
+    if (maybeCode === "23505") return true
+
+    const maybeType =
+      "type" in err && typeof (err as { type?: unknown }).type === "string"
+        ? (err as { type: string }).type
+        : null
+    if (maybeType === "duplicate_error") return true
   }
+
+  const msg = err instanceof Error ? err.message : String(err)
+  return (
+    msg.includes("duplicate key value violates unique constraint") ||
+    msg.toLowerCase().includes("unique constraint") ||
+    msg.toLowerCase().includes("already exists")
+  )
 }
 
-/**
- * Process a single consult submission
- */
-async function processSubmission(container: any, submission: any) {
-  const businessService = container.resolve(BUSINESS_MODULE)
-  const consultationService = container.resolve(CONSULTATION_MODULE)
-  const notificationService = container.resolve(Modules.NOTIFICATION)
-  const logger = container.resolve("logger")
-  
-  logger.info(`Processing submission ${submission.id} for business ${submission.business_id}`)
-  
+async function ensurePatient(container: any, input: { businessId: string; customerId?: string | null; email: string; firstName: string; lastName: string; phone?: string | null; dob?: string | null }) {
+  const consultationService = container.resolve(CONSULTATION_MODULE) as any
+
+  if (input.customerId) {
+    const existingByCustomer = await consultationService
+      .getPatientByCustomerId(input.businessId, input.customerId)
+      .catch(() => null)
+    if (existingByCustomer) return existingByCustomer
+  }
+
+  const existingByEmail = await consultationService
+    .getPatientByEmail(input.businessId, input.email)
+    .catch(() => null)
+  if (existingByEmail) return existingByEmail
+
   try {
-    // 1. Get business details
-    const business = await businessService.retrieveBusiness(submission.business_id)
-    
-    if (!business) {
-      logger.warn(`Business not found for submission ${submission.id}`)
-      return
-    }
-    
-    // 2. Send email notification to business
-    await sendBusinessNotification(notificationService, submission, business)
-    
-    // 3. Check if auto-assignment is enabled for this business
-    const settings = business.settings || {}
-    const autoAssignEnabled = settings.auto_assign_clinician === true
-    
-    if (autoAssignEnabled) {
-      await autoAssignClinician(container, submission, business)
-    }
-    
-    // 4. Create notification record for tenant admin dashboard
-    await createDashboardNotification(container, submission, business)
-    
-    // 5. Update submission status to 'processing'
-    await businessService.updateConsultSubmissions(submission.id, {
-      status: "processing",
+    return await consultationService.createPatient({
+      business_id: input.businessId,
+      customer_id: input.customerId ?? null,
+      email: input.email,
+      first_name: input.firstName,
+      last_name: input.lastName,
+      phone: input.phone ?? null,
+      date_of_birth: input.dob ?? null,
     })
-    
-    logger.info(`Successfully processed submission ${submission.id}`)
-  } catch (error) {
-    logger.error(`Error processing submission ${submission.id}: ${error.message}`)
-    // Don't throw, continue processing other submissions
+  } catch (e) {
+    if (!isUniqueViolation(e)) throw e
+    // Race: another worker created it.
+    if (input.customerId) {
+      const byCustomer = await consultationService.getPatientByCustomerId(input.businessId, input.customerId)
+      if (byCustomer) return byCustomer
+    }
+    return await consultationService.getPatientByEmail(input.businessId, input.email)
   }
 }
 
-/**
- * Send email notification to business admins
- */
-async function sendBusinessNotification(
-  notificationService: any,
-  submission: any,
-  business: any
-) {
+async function ensureConsultation(container: any, input: { businessId: string; patientId: string; submissionId: string; productId: string; chiefComplaint?: string | null; medicalHistory?: unknown; notes?: string | null }) {
+  const consultationService = container.resolve(CONSULTATION_MODULE) as any
+
+  const [existing] = await consultationService
+    .listConsultations({ originating_submission_id: input.submissionId }, { take: 1 })
+    .catch(() => [[], 0])
+
+  if (existing?.[0]) return existing[0]
+
   try {
-    await notificationService.createNotifications({
-      to: business.contact_email || business.email,
-      channel: "email",
-      template: "consult-submission-received",
-      data: {
-        business_name: business.name,
-        customer_name: `${submission.customer_first_name} ${submission.customer_last_name}`,
-        customer_email: submission.customer_email,
-        submission_id: submission.id,
-        product_id: submission.product_id,
-        submission_date: submission.created_at,
-        dashboard_url: `${business.settings?.storefront_url || ""}/admin/consults`,
-      },
+    return await consultationService.createConsultation({
+      business_id: input.businessId,
+      patient_id: input.patientId,
+      clinician_id: null,
+      mode: "async_form",
+      status: "draft",
+      chief_complaint: input.chiefComplaint ?? null,
+      medical_history:
+        input.medicalHistory && typeof input.medicalHistory === "object" ? input.medicalHistory : null,
+      notes: input.notes ?? null,
+      admin_notes: null,
+      outcome: null,
+      rejection_reason: null,
+      approved_medications: [input.productId],
+      originating_submission_id: input.submissionId,
+      order_id: null,
     })
-  } catch (error) {
-    // Log but don't fail the job
-    console.error(`Failed to send notification for submission ${submission.id}:`, error)
+  } catch (e) {
+    if (!isUniqueViolation(e)) throw e
+    const [again] = await consultationService.listConsultations(
+      { originating_submission_id: input.submissionId },
+      { take: 1 }
+    )
+    if (!again?.[0]) throw e
+    return again[0]
   }
 }
 
-/**
- * Auto-assign submission to an available clinician
- */
-async function autoAssignClinician(
-  container: any,
-  submission: any,
-  business: any
-) {
-  const consultationService = container.resolve(CONSULTATION_MODULE)
-  const logger = container.resolve("logger")
-  
-  try {
-    // Get available clinicians for this business
-    const clinicians = await consultationService.listCliniciansByBusiness(business.id)
-    const availableClinician = clinicians.find(c => c.status === "active")
-    
-    if (!availableClinician) {
-      logger.warn(`No available clinician found for business ${business.id}`)
-      return
-    }
-    
-    // Create patient record if not exists
-    const existingPatient = await consultationService.getPatientByEmail(
-      business.id,
-      submission.customer_email
-    )
-    
-    let patientId = existingPatient?.id
-    
-    if (!patientId) {
-      const newPatient = await consultationService.createPatients({
-        business_id: business.id,
-        email: submission.customer_email,
-        first_name: submission.customer_first_name,
-        last_name: submission.customer_last_name,
-        phone: submission.customer_phone,
-        date_of_birth: submission.customer_dob,
-      })
-      patientId = newPatient.id
-    }
-    
-    // Create consultation
-    const consultation = await consultationService.createConsultations({
-      business_id: business.id,
-      patient_id: patientId,
-      clinician_id: availableClinician.id,
-      consult_submission_id: submission.id,
-      product_id: submission.product_id,
+async function ensurePendingApproval(container: any, input: { businessId: string; customerId: string; productId: string; consultationId: string }) {
+  const businessService = container.resolve(BUSINESS_MODULE) as any
+
+  const approvals = await businessService.listConsultApprovals(
+    {
+      business_id: input.businessId,
+      customer_id: input.customerId,
+      product_id: input.productId,
       status: "pending",
-      consult_fee: submission.consult_fee,
-      notes: submission.notes,
+    },
+    { take: 1, order: { created_at: "DESC" } }
+  )
+  const existing = approvals?.[0]
+  if (existing) {
+    if (!existing.consultation_id) {
+      await businessService.updateConsultApprovals({
+        id: existing.id,
+        consultation_id: input.consultationId,
+      })
+      const updated = await businessService.retrieveConsultApproval(existing.id).catch(() => null)
+      return updated ?? existing
+    }
+    return existing
+  }
+
+  try {
+    return await businessService.createConsultApprovals({
+      customer_id: input.customerId,
+      product_id: input.productId,
+      business_id: input.businessId,
+      status: "pending",
+      consultation_id: input.consultationId,
+      approved_by: null,
+      approved_at: null,
+      expires_at: null,
     })
-    
-    logger.info(`Auto-assigned submission ${submission.id} to clinician ${availableClinician.id}`)
-    
-    // Update submission with consultation reference
-    const businessService = container.resolve(BUSINESS_MODULE)
-    await businessService.updateConsultSubmissions(submission.id, {
-      consultation_id: consultation.id,
-    })
-  } catch (error) {
-    logger.error(`Failed to auto-assign clinician: ${error.message}`)
-    // Don't fail the job
+  } catch (e) {
+    if (!isUniqueViolation(e)) throw e
+    const approvals2 = await businessService.listConsultApprovals(
+      {
+        business_id: input.businessId,
+        customer_id: input.customerId,
+        product_id: input.productId,
+        status: "pending",
+      },
+      { take: 1, order: { created_at: "DESC" } }
+    )
+    if (!approvals2?.[0]) throw e
+    return approvals2[0]
   }
 }
 
 /**
- * Create notification for tenant admin dashboard
+ * process-consult-submission
+ *
+ * Week 1 ("Chaos Monkey") hardening:
+ * This job is a reconciliation / repair loop that makes consult intake crash-safe.
+ *
+ * If the API crashed after persisting consult_submission but before creating:
+ * - Patient
+ * - Consultation
+ * - ConsultApproval
+ *
+ * ...this job can be retried safely without duplicating records due to DB uniqueness guards.
  */
-async function createDashboardNotification(
-  container: any,
-  submission: any,
-  business: any
-) {
-  // This would typically create a notification record in a notifications table
-  // For now, we log it - implement based on your notification infrastructure
+export default async function processConsultSubmissionJob(container: any) {
   const logger = container.resolve("logger")
-  logger.info(`Dashboard notification created for submission ${submission.id}`)
+  const businessService = container.resolve(BUSINESS_MODULE) as any
+
+  const pending = await businessService.listConsultSubmissionsDecrypted(
+    { status: "pending", deleted_at: null },
+    { take: 100, order: { created_at: "ASC" } }
+  )
+
+  for (const submission of pending) {
+    try {
+      const businessId = submission.business_id as string
+      const productId = submission.product_id as string
+      const customerId = (typeof submission.customer_id === "string" ? submission.customer_id : "")?.trim()
+      const email = (submission.customer_email || "").trim().toLowerCase()
+      const firstName = (submission.customer_first_name || "").trim()
+      const lastName = (submission.customer_last_name || "").trim()
+
+      if (!businessId || !productId || !email || !firstName || !lastName) {
+        logger?.warn?.(`[process-consult-submission] skipping invalid submission ${submission.id}`)
+        continue
+      }
+
+      if (!customerId) {
+        // Without a customer_id we can still create a Patient by email, but we can't reliably link approvals
+        // to a store session. Keep it conservative.
+        logger?.warn?.(`[process-consult-submission] submission missing customer_id: ${submission.id}`)
+        continue
+      }
+
+      const patient = await ensurePatient(container, {
+        businessId,
+        customerId,
+        email,
+        firstName,
+        lastName,
+        phone: typeof submission.customer_phone === "string" ? submission.customer_phone : null,
+        dob: typeof submission.customer_dob === "string" ? submission.customer_dob : null,
+      })
+
+      const consultation = await ensureConsultation(container, {
+        businessId,
+        patientId: patient.id,
+        submissionId: submission.id,
+        productId,
+        chiefComplaint: typeof submission.chief_complaint === "string" ? submission.chief_complaint : null,
+        medicalHistory: submission.medical_history ?? null,
+        notes: typeof submission.notes === "string" ? submission.notes : null,
+      })
+
+      await ensurePendingApproval(container, {
+        businessId,
+        customerId,
+        productId,
+        consultationId: consultation.id,
+      })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      logger?.warn?.(`[process-consult-submission] failed for ${submission.id}: ${msg}`)
+    }
+  }
 }
 
-/**
- * Job configuration
- */
 export const config = {
-  name: "process-consult-submissions",
-  schedule: "*/2 * * * *", // Every 2 minutes
+  name: "process-consult-submission",
+  schedule: "*/1 * * * *", // Every minute
 }

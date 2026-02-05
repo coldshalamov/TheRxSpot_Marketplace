@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
 import { BUSINESS_MODULE } from "../../../../../modules/business"
+import { z } from "zod"
 
 type PlanStatus = "pending" | "scheduled" | "completed" | "approved" | "rejected"
 
@@ -58,10 +59,22 @@ function getPlanStatus(consultation: any): PlanStatus {
  */
 export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const { id } = req.params
-  const body = (req.body ?? {}) as Record<string, any>
+  const BodySchema = z
+    .object({
+      status: z.enum(["pending", "scheduled", "completed", "approved", "rejected"]),
+      reason: z.string().optional(),
+    })
+    .strict()
 
-  const requestedStatus = typeof body.status === "string" ? body.status.trim() : ""
-  const nextStatus = requestedStatus as PlanStatus
+  const parsed = BodySchema.safeParse(req.body ?? {})
+  if (!parsed.success) {
+    return res.status(400).json({
+      code: "INVALID_INPUT",
+      message: "Invalid request payload",
+    })
+  }
+
+  const nextStatus = parsed.data.status as PlanStatus
 
   if (!["pending", "scheduled", "completed", "approved", "rejected"].includes(nextStatus)) {
     return res.status(400).json({
@@ -71,7 +84,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     })
   }
 
-  const reason = typeof body.reason === "string" ? body.reason.trim() : ""
+  const reason = typeof parsed.data.reason === "string" ? parsed.data.reason.trim() : ""
   if (nextStatus === "rejected" && !reason) {
     return res.status(400).json({
       code: "REJECTION_REASON_REQUIRED",
@@ -192,6 +205,26 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
         approved_at: now,
         expires_at: new Date(now.getTime() + ninetyDaysMs),
       })
+
+      // Durable dispatch outbox event (best-effort).
+      // This guarantees external partner dispatch can be retried and reconciled even if downstream calls fail.
+      await businessService.createOutboxEventOnce({
+        business_id: consultation.business_id,
+        type: "consult.approved",
+        dedupe_key: `consult_approval:${approval.id}:approved`,
+        payload: {
+          consult_approval_id: approval.id,
+          consultation_id: id,
+          customer_id: approval.customer_id,
+          product_id: approval.product_id,
+          approved_at: now.toISOString(),
+          expires_at: new Date(now.getTime() + ninetyDaysMs).toISOString(),
+        },
+        metadata: {
+          source: "admin.consultations.status",
+          actor_id: actorId,
+        },
+      }).catch(() => null)
 
       await consultationService.createConsultationStatusEvents({
         consultation_id: id,

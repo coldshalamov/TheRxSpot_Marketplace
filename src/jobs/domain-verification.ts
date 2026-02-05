@@ -7,7 +7,7 @@ import { promisify } from "util"
  * 
  * Purpose:
  * - Check if CNAME/A record points to platform
- * - Update domain status in database
+ * - Update domain verification fields in database
  * - Send notification on status changes
  * 
  * Schedule: Runs every 5 minutes
@@ -17,9 +17,15 @@ const dnsLookup = promisify(dns.lookup)
 const dnsResolveCname = promisify(dns.resolveCname)
 const dnsResolve4 = promisify(dns.resolve4)
 
-// Platform target domain - should be configured via environment variable
-const PLATFORM_TARGET_DOMAIN = process.env.PLATFORM_TARGET_DOMAIN || "therxspot.app"
-const PLATFORM_IPS = (process.env.PLATFORM_IPS || "").split(",").filter(Boolean)
+const PLATFORM_BASE_DOMAIN = (process.env.TENANT_PLATFORM_BASE_DOMAIN || "therxspot.com")
+  .trim()
+  .toLowerCase()
+
+// Optional A-record verification (only if your platform uses fixed IPs).
+const PLATFORM_IPS = (process.env.PLATFORM_IPS || "").split(",").map((v) => v.trim()).filter(Boolean)
+
+// Optional: allow verifying when a domain CNAMEs directly to Vercel.
+const ALLOW_VERCEL_CNAME = (process.env.ALLOW_VERCEL_CNAME || "").toLowerCase() === "true"
 
 export default async function domainVerificationJob(container: any) {
   const businessService = container.resolve(BUSINESS_MODULE)
@@ -28,15 +34,11 @@ export default async function domainVerificationJob(container: any) {
   logger.info("Starting domain verification job")
   
   try {
-    // Get all domains that need verification
-    // Status: pending, active, or error
-    const domains = await businessService.listBusinessDomains({
-      $or: [
-        { status: "pending" },
-        { status: "active" },
-        { status: "error" },
-      ],
-    })
+    // Verify only unverified domains.
+    const domains = await businessService.listBusinessDomains(
+      { is_verified: false },
+      { take: 200, order: { created_at: "ASC" } }
+    )
     
     if (domains.length === 0) {
       logger.info("No domains to verify")
@@ -68,73 +70,78 @@ async function verifyDomain(container: any, domain: any) {
   try {
     let isVerified = false
     let dnsError: string | null = null
+    const checkedAt = new Date()
+
+    const candidate = String(domain.domain || "").trim().toLowerCase()
+    if (!candidate) {
+      dnsError = "Missing domain value"
+    } else if (candidate.endsWith(`.${PLATFORM_BASE_DOMAIN}`) || candidate === PLATFORM_BASE_DOMAIN) {
+      // Platform-managed domains are considered verified.
+      isVerified = true
+    }
     
     // Check CNAME record
-    try {
-      const cnameRecords = await dnsResolveCname(domain.domain)
-      
-      // Check if any CNAME points to our platform
-      isVerified = cnameRecords.some(record => 
-        record.toLowerCase().includes(PLATFORM_TARGET_DOMAIN.toLowerCase()) ||
-        record.toLowerCase().endsWith(`.${PLATFORM_TARGET_DOMAIN.toLowerCase()}`)
-      )
-      
-      if (!isVerified) {
-        dnsError = `CNAME record points to ${cnameRecords[0]}, expected ${PLATFORM_TARGET_DOMAIN}`
-      }
-    } catch (cnameError) {
-      // No CNAME found, try A record
+    if (!isVerified && !dnsError) {
       try {
-        const aRecords = await dnsResolve4(domain.domain)
-        
-        if (PLATFORM_IPS.length > 0) {
-          isVerified = aRecords.some(ip => PLATFORM_IPS.includes(ip))
-          
-          if (!isVerified) {
-            dnsError = `A record points to ${aRecords.join(", ")}, expected one of ${PLATFORM_IPS.join(", ")}`
-          }
-        } else {
-          // If no platform IPs configured, assume any A record is valid
-          isVerified = aRecords.length > 0
+        const cnameRecords = await dnsResolveCname(candidate)
+      
+        // Check if any CNAME points into our platform base domain
+        isVerified = cnameRecords.some((record) => {
+          const r = String(record || "").toLowerCase()
+          if (r.endsWith(`.${PLATFORM_BASE_DOMAIN}`) || r === PLATFORM_BASE_DOMAIN) return true
+          if (ALLOW_VERCEL_CNAME && r.includes("vercel-dns.com")) return true
+          return false
+        })
+      
+        if (!isVerified) {
+          dnsError = `CNAME does not point to ${PLATFORM_BASE_DOMAIN}`
         }
-      } catch (aRecordError) {
-        dnsError = "No valid CNAME or A record found"
+      } catch {
+        // No CNAME found, try A record
+        try {
+          const aRecords = await dnsResolve4(candidate)
+        
+          if (PLATFORM_IPS.length > 0) {
+            isVerified = aRecords.some((ip) => PLATFORM_IPS.includes(ip))
+          
+            if (!isVerified) {
+              dnsError = `A record points to ${aRecords.join(", ")}, expected one of ${PLATFORM_IPS.join(", ")}`
+            }
+          } else {
+            dnsError = "No CNAME record found (A record checks not configured)"
+          }
+        } catch {
+          dnsError = "No valid CNAME or A record found"
+        }
       }
     }
     
-    // Update domain status
-    const previousStatus = domain.status
-    
     if (isVerified) {
       await businessService.updateBusinessDomains(domain.id, {
-        status: "active",
-        verified_at: new Date(),
-        last_verified_at: new Date(),
+        is_verified: true,
+        verified_at: domain.verified_at ?? checkedAt,
+        last_checked_at: checkedAt,
         dns_error: null,
       })
       
-      if (previousStatus !== "active") {
-        logger.info(`Domain ${domain.domain} verified successfully`)
-        await notifyDomainVerified(container, domain)
-      }
+      logger.info(`Domain ${domain.domain} verified successfully`)
+      await notifyDomainVerified(container, domain)
     } else {
       await businessService.updateBusinessDomains(domain.id, {
-        status: previousStatus === "active" ? "error" : "pending",
-        last_verified_at: new Date(),
+        is_verified: false,
+        last_checked_at: checkedAt,
         dns_error: dnsError,
       })
       
-      if (previousStatus === "active") {
-        logger.warn(`Domain ${domain.domain} verification failed: ${dnsError}`)
-        await notifyDomainError(container, domain, dnsError)
-      }
+      logger.warn(`Domain ${domain.domain} verification failed: ${dnsError}`)
+      await notifyDomainError(container, domain, dnsError)
     }
   } catch (error) {
     logger.error(`Error verifying domain ${domain.domain}: ${error.message}`)
     
     await businessService.updateBusinessDomains(domain.id, {
-      status: "error",
-      last_verified_at: new Date(),
+      is_verified: false,
+      last_checked_at: new Date(),
       dns_error: error.message,
     })
   }

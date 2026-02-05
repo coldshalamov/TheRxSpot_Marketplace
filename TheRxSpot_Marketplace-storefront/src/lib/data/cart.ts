@@ -376,7 +376,7 @@ export async function submitPromotionForm(
   }
 }
 
-// TODO: Pass a POJO instead of a form entity here
+// Note: This currently builds a POJO from FormData for server actions.
 export async function setAddresses(currentState: unknown, formData: FormData) {
   try {
     if (!formData) {

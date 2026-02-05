@@ -7,5 +7,6 @@ import { ConsultApproval } from "./consult-approval"
 import { BusinessDomain } from "./business-domain"
 import { BusinessUser } from "./business-user"
 import { OrderStatusEvent } from "./order-status-event"
+import { OutboxEvent } from "./outbox-event"
 
-export default [Business, Location, ProductCategory, LocationProduct, ConsultSubmission, ConsultApproval, BusinessDomain, BusinessUser, OrderStatusEvent]
+export default [Business, Location, ProductCategory, LocationProduct, ConsultSubmission, ConsultApproval, BusinessDomain, BusinessUser, OrderStatusEvent, OutboxEvent]

@@ -40,7 +40,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
       })
   }
 
-  // TODO: Update this to grab the actual max inventory
+  // Inventory cap fallback (replace with real inventory when available).
   const maxQtyFromInventory = 10
   const maxQuantity = item.variant?.manage_inventory ? 10 : maxQtyFromInventory
 
@@ -82,7 +82,7 @@ const Item = ({ item, type = "full", currencyCode }: ItemProps) => {
               className="w-14 h-10 p-4"
               data-testid="product-select-button"
             >
-              {/* TODO: Update this with the v2 way of managing inventory */}
+              {/* Inventory options placeholder (replace with inventory-aware list). */}
               {Array.from(
                 {
                   length: Math.min(maxQuantity, 10),

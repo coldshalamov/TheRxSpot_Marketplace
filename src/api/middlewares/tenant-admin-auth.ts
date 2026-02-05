@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse, MedusaNextFunction } from "@medusajs/framework/http"
 import { BUSINESS_MODULE } from "../../modules/business"
+import { setUserInLogContext } from "./request-context"
 
 export const tenantAdminAuthMiddleware = async (
   req: MedusaRequest,
@@ -33,6 +34,7 @@ export const tenantAdminAuthMiddleware = async (
     business_id: businessUser.business_id,
     business_user: businessUser,
   }
+  setUserInLogContext(req)
 
   next()
 }

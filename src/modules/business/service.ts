@@ -8,6 +8,8 @@ import { ConsultApproval } from "./models/consult-approval"
 import { BusinessDomain } from "./models/business-domain"
 import { BusinessUser } from "./models/business-user"
 import { OrderStatusEvent } from "./models/order-status-event"
+import { OutboxEvent } from "./models/outbox-event"
+import { decryptFields, encryptFields } from "../../utils/encryption"
 
 class BusinessModuleService extends MedusaService({
   Business,
@@ -19,7 +21,24 @@ class BusinessModuleService extends MedusaService({
   BusinessDomain,
   BusinessUser,
   OrderStatusEvent,
+  OutboxEvent,
 }) {
+  private static readonly CONSULT_SUBMISSION_PHI_FIELDS = [
+    "customer_email",
+    "customer_first_name",
+    "customer_last_name",
+    "customer_phone",
+    "customer_dob",
+    "eligibility_answers",
+    "chief_complaint",
+    "medical_history",
+    "notes",
+  ] as const
+
+  private static isPhiEncryptionEnabled(): boolean {
+    return (process.env.PHI_ENCRYPTION_ENABLED || "").toLowerCase() === "true"
+  }
+
   async getBusinessBySlug(slug: string) {
     const businesses = await this.listBusinesses({ slug }, { take: 1 })
     return businesses[0] ?? null
@@ -31,7 +50,7 @@ class BusinessModuleService extends MedusaService({
   }
 
   async getBusinessByDomainFromTable(domain: string) {
-    const domains = await this.listBusinessDomains({ domain }, { take: 1 })
+    const domains = await this.listBusinessDomains({ domain, is_verified: true }, { take: 1 })
     if (!domains.length) return null
     const businesses = await this.listBusinesses(
       { id: domains[0].business_id },
@@ -59,10 +78,35 @@ class BusinessModuleService extends MedusaService({
   }
 
   async listConsultSubmissionsByBusiness(businessId: string) {
-    return await this.listConsultSubmissions(
+    return await this.listConsultSubmissionsDecrypted(
       { business_id: businessId },
       { order: { created_at: "DESC" } }
     )
+  }
+
+  /**
+   * Returns consult submissions for a business that match an email address.
+   * When PHI encryption is enabled, this does an in-memory match after decryption.
+   */
+  async listConsultSubmissionsByEmail(businessId: string, email: string) {
+    const needle = (email || "").trim().toLowerCase()
+    if (!needle) {
+      return []
+    }
+
+    if (!BusinessModuleService.isPhiEncryptionEnabled()) {
+      return await this.listConsultSubmissionsDecrypted({
+        business_id: businessId,
+        customer_email: needle,
+      })
+    }
+
+    const submissions = await this.listConsultSubmissionsDecrypted(
+      { business_id: businessId },
+      { take: 250, order: { created_at: "DESC" } }
+    )
+
+    return (submissions as any[]).filter((s) => (s?.customer_email || "").toLowerCase() === needle)
   }
 
   async approveConsultSubmission(submissionId: string, reviewedBy: string) {
@@ -82,6 +126,47 @@ class BusinessModuleService extends MedusaService({
       reviewed_at: new Date(),
       notes,
     } as any)
+  }
+
+  // ==========================================
+  // Consult submission PHI helpers
+  // ==========================================
+
+  async createConsultSubmission(input: Record<string, any>): Promise<any> {
+    if (!BusinessModuleService.isPhiEncryptionEnabled()) {
+      return await this.createConsultSubmissions(input)
+    }
+
+    const encrypted = encryptFields(
+      input as any,
+      BusinessModuleService.CONSULT_SUBMISSION_PHI_FIELDS as any
+    )
+
+    const created = await this.createConsultSubmissions(encrypted)
+
+    return decryptFields(
+      created as any,
+      BusinessModuleService.CONSULT_SUBMISSION_PHI_FIELDS as any
+    ) as any
+  }
+
+  async listConsultSubmissionsDecrypted(filters: any = {}, config: any = {}): Promise<any[]> {
+    const list = (await this.listConsultSubmissions(filters, config)) as any[]
+
+    if (!BusinessModuleService.isPhiEncryptionEnabled()) return list
+
+    return list.map((s) =>
+      decryptFields(s as any, BusinessModuleService.CONSULT_SUBMISSION_PHI_FIELDS as any)
+    )
+  }
+
+  async retrieveConsultSubmissionDecrypted(id: string, config?: any): Promise<any> {
+    const submission = await this.retrieveConsultSubmission(id, config)
+    if (!BusinessModuleService.isPhiEncryptionEnabled()) return submission
+    return decryptFields(
+      submission as any,
+      BusinessModuleService.CONSULT_SUBMISSION_PHI_FIELDS as any
+    ) as any
   }
 
   // Order Status Event methods
@@ -118,6 +203,48 @@ class BusinessModuleService extends MedusaService({
       { order: { created_at: "DESC" }, take: 1 }
     )
     return events[0] ?? null
+  }
+
+  // =========================
+  // Outbox (dispatch) methods
+  // =========================
+
+  async createOutboxEventOnce(input: {
+    business_id: string
+    type: string
+    dedupe_key: string
+    payload: Record<string, any>
+    metadata?: Record<string, any>
+    next_attempt_at?: Date | null
+  }) {
+    const existing = await this.listOutboxEvents(
+      { dedupe_key: input.dedupe_key },
+      { take: 1 }
+    )
+    if (existing?.[0]) {
+      return existing[0]
+    }
+
+    try {
+      return await this.createOutboxEvents({
+        business_id: input.business_id,
+        type: input.type,
+        dedupe_key: input.dedupe_key,
+        status: "pending",
+        attempts: 0,
+        next_attempt_at: input.next_attempt_at ?? null,
+        delivered_at: null,
+        last_error: null,
+        payload: input.payload ?? {},
+        metadata: input.metadata ?? {},
+      } as any)
+    } catch {
+      const again = await this.listOutboxEvents(
+        { dedupe_key: input.dedupe_key },
+        { take: 1 }
+      )
+      return again?.[0] ?? null
+    }
   }
 
   // Category hierarchy methods

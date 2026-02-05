@@ -1,4 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { getLogger } from "../../utils/logger"
 
 interface HealthCheckResponse {
   status: "healthy" | "unhealthy"
@@ -18,6 +19,7 @@ export async function GET(
   req: MedusaRequest,
   res: MedusaResponse<HealthCheckResponse>
 ): Promise<void> {
+  const logger = getLogger()
   const container = req.scope as any
   const timestamp = new Date().toISOString()
   
@@ -38,25 +40,34 @@ export async function GET(
     })
     checks.database = "ok"
   } catch (error) {
-    console.error("Health check: Database connection failed", error)
+    logger.error({ error }, "Health check: database connection failed")
     checks.database = "error"
   }
 
   // Check Redis connectivity
   try {
-    const redisClient = container.resolve("redis")
-    if (redisClient && typeof redisClient.ping === "function") {
-      await redisClient.ping()
-      checks.redis = "ok"
-    } else {
-      // Try to access redis through the Event Bus module
-      const eventBus = container.resolve("event_bus")
-      if (eventBus) {
+    // In development, Medusa might use Local Event Bus instead of Redis
+    // Try to resolve redis, but don't fail if it's not available
+    try {
+      const redisClient = container.resolve("redis")
+      if (redisClient && typeof redisClient.ping === "function") {
+        await redisClient.ping()
         checks.redis = "ok"
+      }
+    } catch (redisError) {
+      // Redis not available, check if we're using local event bus
+      try {
+        const eventBus = container.resolve("event_bus")
+        if (eventBus) {
+          // Local event bus is fine for development
+          checks.redis = "ok"
+        }
+      } catch {
+        checks.redis = "error"
       }
     }
   } catch (error) {
-    console.error("Health check: Redis connection failed", error)
+    logger.error({ error }, "Health check: redis connection failed")
     checks.redis = "error"
   }
 

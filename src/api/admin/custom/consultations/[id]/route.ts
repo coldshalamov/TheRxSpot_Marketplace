@@ -37,7 +37,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
 
       const submission = consultation.originating_submission_id
         ? await businessService
-            .listConsultSubmissions({ id: consultation.originating_submission_id }, { take: 1 })
+            .listConsultSubmissionsDecrypted({ id: consultation.originating_submission_id }, { take: 1 })
             .then((list: any[]) => list?.[0] ?? null)
             .catch(() => null)
         : null

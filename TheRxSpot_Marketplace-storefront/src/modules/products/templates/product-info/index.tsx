@@ -1,5 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
-import { Heading, Text } from "@medusajs/ui"
+import { Heading, Text, Badge } from "@medusajs/ui"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 type ProductInfoProps = {
@@ -7,6 +7,9 @@ type ProductInfoProps = {
 }
 
 const ProductInfo = ({ product }: ProductInfoProps) => {
+  const requiresConsult = product.metadata?.requires_consult === true
+  const consultFee = product.metadata?.consult_fee
+
   return (
     <div id="product-info">
       <div className="flex flex-col gap-y-4 lg:max-w-[500px] mx-auto">
@@ -18,13 +21,27 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
             {product.collection.title}
           </LocalizedClientLink>
         )}
-        <Heading
-          level="h2"
-          className="text-3xl leading-10 text-ui-fg-base"
-          data-testid="product-title"
-        >
-          {product.title}
-        </Heading>
+        <div className="flex flex-col gap-y-2">
+          <Heading
+            level="h2"
+            className="text-3xl leading-10 text-ui-fg-base"
+            data-testid="product-title"
+          >
+            {product.title}
+          </Heading>
+          {requiresConsult && (
+            <div className="flex items-center gap-2">
+              <Badge size="small" color="orange">
+                Consultation Required
+              </Badge>
+              {consultFee && (
+                <Text className="text-small text-ui-fg-muted">
+                  Consultation Fee: ${Number(consultFee) / 100}
+                </Text>
+              )}
+            </div>
+          )}
+        </div>
 
         <Text
           className="text-medium text-ui-fg-subtle whitespace-pre-line"

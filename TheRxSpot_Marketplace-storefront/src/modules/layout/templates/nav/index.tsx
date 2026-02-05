@@ -1,19 +1,25 @@
-import { Suspense } from "react"
+"use client"
 
-import { listRegions } from "@lib/data/regions"
-import { listLocales } from "@lib/data/locales"
-import { getLocale } from "@lib/data/locale-actions"
-import { StoreRegion } from "@medusajs/types"
+import { useBusiness } from "@/components/business-provider"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import CartButton from "@modules/layout/components/cart-button"
-import SideMenu from "@modules/layout/components/side-menu"
+import SideMenuWrapper from "./side-menu-wrapper"
+import Image from "next/image"
 
-export default async function Nav() {
-  const [regions, locales, currentLocale] = await Promise.all([
-    listRegions().then((regions: StoreRegion[]) => regions),
-    listLocales(),
-    getLocale(),
-  ])
+export default function Nav() {
+  let business = null
+  let tenantConfig = null
+
+  try {
+    const context = useBusiness()
+    business = context.business
+    tenantConfig = context.tenantConfig
+  } catch (e) {
+    // Not in tenant context, use defaults
+  }
+
+  const displayName = business?.name || "Medusa Store"
+  const logoUrl = tenantConfig?.branding?.logo_url || business?.logo_url
+  const tagline = business?.tagline
 
   return (
     <div className="sticky top-0 inset-x-0 z-50 group">
@@ -21,17 +27,35 @@ export default async function Nav() {
         <nav className="content-container txt-xsmall-plus text-ui-fg-subtle flex items-center justify-between w-full h-full text-small-regular">
           <div className="flex-1 basis-0 h-full flex items-center">
             <div className="h-full">
-              <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} />
+              <SideMenuWrapper />
             </div>
           </div>
 
-          <div className="flex items-center h-full">
+          <div className="flex items-center gap-3 h-full">
             <LocalizedClientLink
               href="/"
-              className="txt-compact-xlarge-plus hover:text-ui-fg-base uppercase"
+              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
               data-testid="nav-store-link"
             >
-              Medusa Store
+              {logoUrl && (
+                <Image
+                  src={logoUrl}
+                  alt={displayName}
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+              )}
+              <div className="flex flex-col">
+                <span className="txt-compact-xlarge-plus uppercase">
+                  {displayName}
+                </span>
+                {tagline && (
+                  <span className="txt-xsmall text-ui-fg-muted">
+                    {tagline}
+                  </span>
+                )}
+              </div>
             </LocalizedClientLink>
           </div>
 
@@ -45,19 +69,6 @@ export default async function Nav() {
                 Account
               </LocalizedClientLink>
             </div>
-            <Suspense
-              fallback={
-                <LocalizedClientLink
-                  className="hover:text-ui-fg-base flex gap-2"
-                  href="/cart"
-                  data-testid="nav-cart-link"
-                >
-                  Cart (0)
-                </LocalizedClientLink>
-              }
-            >
-              <CartButton />
-            </Suspense>
           </div>
         </nav>
       </header>

@@ -106,7 +106,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
           .join("\n")}
       </tbody>
     </table>
-    <div class="meta muted" style="margin-top: 16px;">TODO: Replace with true PDF generation when needed.</div>
+    <div class="meta muted" style="margin-top: 16px;">Placeholder export: replace with PDF generation if needed.</div>
   </body>
 </html>`
 
@@ -120,4 +120,3 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     })
   }
 }
-

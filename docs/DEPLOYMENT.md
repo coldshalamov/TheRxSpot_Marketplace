@@ -29,10 +29,11 @@ Complete deployment instructions for TheRxSpot Medusa.js Telehealth Marketplace.
 
 ### External Services
 
-- **AWS Account** (or MinIO for self-hosted S3)
-- **Stripe Account** (for payments and payouts)
-- **SendGrid Account** (for email)
-- **Domain Name** (for production)
+- **Domain Name** (for production; wildcard `*.therxspot.com` recommended)
+- **Render** (backend + managed Postgres + Redis) or equivalent hosting
+- **Vercel** (storefront) or equivalent hosting
+- **SendGrid** (optional, for email fallback on dispatch failures)
+- **S3-compatible storage** (optional, for documents/uploads if enabled)
 
 ---
 
@@ -73,32 +74,54 @@ REDIS_CACHE_URL=redis://localhost:6379/1
 REDIS_JOB_URL=redis://localhost:6379/2
 
 # =============================================================================
-# Security Configuration
+# Security + CORS Configuration
 # =============================================================================
 
 # JWT Secret (generate with: openssl rand -hex 64)
-# Must be at least 128 characters
+# Must be at least 64 characters (see src/utils/env-validator.ts)
 JWT_SECRET=your_super_secret_jwt_key_at_least_128_characters_long_here...
 
 # Cookie Secret (generate with: openssl rand -hex 64)
 COOKIE_SECRET=your_super_secret_cookie_key_at_least_128_characters_long...
 
-# CORS settings
-CORS_ORIGIN=https://yourdomain.com
+# CORS settings (comma-separated lists are allowed)
+STORE_CORS=https://*.therxspot.com
+ADMIN_CORS=https://admin.therxspot.com
+AUTH_CORS=https://*.therxspot.com
+
+# Optional: admin UI backlink
+MEDUSA_BACKEND_URL=https://api.therxspot.com
 
 # =============================================================================
-# Stripe Configuration
+# Multi-tenant hostnames
 # =============================================================================
 
-# Stripe API Keys
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_PUBLISHABLE_KEY=pk_live_...
+# Exact-match only; do NOT suffix-match.
+# Examples: api/admin/root domains and localhost entries.
+PLATFORM_HOSTNAMES=therxspot.com,api.therxspot.com,admin.therxspot.com,localhost,127.0.0.1
 
-# Stripe Connect (for marketplace payouts)
-STRIPE_CONNECT_CLIENT_ID=ca_...
+# Used for auto-provisioning default tenant domains via Hub provisioning.
+TENANT_PLATFORM_BASE_DOMAIN=therxspot.com
 
-# Stripe Webhook Secret
-STRIPE_WEBHOOK_SECRET=whsec_...
+# =============================================================================
+# Hub provisioning bridge (PHP Hub → Marketplace)
+# =============================================================================
+
+# Shared secret used to sign POST /admin/hub/provision requests.
+HUB_PROVISIONING_SECRET=replace_me_with_a_long_random_secret
+
+# =============================================================================
+# PHI encryption (recommended in production)
+# =============================================================================
+
+# Enable field-level encryption for selected PHI/PII values at rest.
+PHI_ENCRYPTION_ENABLED=true
+
+# 32-byte key (hex or base64). Required when PHI_ENCRYPTION_ENABLED=true.
+ENCRYPTION_KEY_CURRENT=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+
+# Optional key rotation list (JSON array or comma-separated)
+# ENCRYPTION_KEY_OLD=["...","..."]
 
 # =============================================================================
 # Document Storage Configuration (AWS S3)
@@ -126,6 +149,22 @@ FROM_EMAIL=noreply@therxspot.com
 FROM_NAME="TheRxSpot"
 
 # =============================================================================
+# Fulfillment dispatch (Outbox → webhook + email fallback)
+# =============================================================================
+
+# Default partner endpoint (can be overridden per-business via business.settings.fulfillment_webhook_url)
+DEFAULT_FULFILLMENT_WEBHOOK_URL=https://partner.example.com/webhooks/rxspot
+
+# Optional signing secret for webhook requests
+OUTBOX_SIGNING_SECRET=replace_me_with_a_long_random_secret
+
+# Email fallback recipient (can be overridden per-business via business.settings.fulfillment_email / ops_email)
+DEFAULT_FULFILLMENT_EMAIL=ops@therxspot.com
+
+# Optional: secret for partner → RxSpot status callbacks (POST /webhooks/partner/status)
+PARTNER_STATUS_WEBHOOK_SECRET=replace_me_with_a_long_random_secret
+
+# =============================================================================
 # Logging Configuration
 # =============================================================================
 
@@ -143,6 +182,9 @@ AUDIT_LOG_RETENTION_DAYS=2555
 ENABLE_CONSULT_GATING=true
 ENABLE_AUTO_PAYOUTS=true
 ENABLE_DOMAIN_VERIFICATION=true
+
+# Checkout is intentionally out-of-scope for MVP.
+CHECKOUT_ENABLED=false
 
 # =============================================================================
 # Performance Tuning
@@ -219,6 +261,13 @@ The server will be available at `http://localhost:9000`
 ---
 
 ## Production Deployment
+
+### Target deployment shape (MVP)
+
+- Storefront: Vercel (`TheRxSpot_Marketplace-storefront/`)
+- Backend: Render (Docker + managed Postgres + Redis recommended)
+- Domain routing: wildcard `*.therxspot.com` → Vercel; platform hostnames (e.g. `api.therxspot.com`) → backend
+- Vercel rewrite: `TheRxSpot_Marketplace-storefront/vercel.json` rewrites `/api/*` → `https://api.therxspot.com/*`
 
 ### 1. Prepare Server
 

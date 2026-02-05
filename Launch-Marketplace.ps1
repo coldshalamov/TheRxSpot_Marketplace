@@ -7,21 +7,31 @@ Write-Host '   TheRxSpot Marketplace | Service Orchestrator' -ForegroundColor Cy
 Write-Host '===================================================
 ' -ForegroundColor Cyan
 
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot ".")).Path
+$storefrontRoot = Join-Path $repoRoot "TheRxSpot_Marketplace-storefront"
+$launcherHtml = Join-Path $repoRoot "Marketplace-Launcher.html"
+
 # Step 0: Check Dependencies
 Write-Host '[0/4] Checking dependencies...' -ForegroundColor Yellow
 
-$pgReady = $false
-$redisReady = $false
+# Fast port check function (Test-NetConnection is too slow)
+function Test-Port {
+    param($Port)
+    try {
+        $tcpClient = New-Object System.Net.Sockets.TcpClient
+        $tcpClient.ReceiveTimeout = 1000
+        $tcpClient.SendTimeout = 1000
+        $result = $tcpClient.BeginConnect("127.0.0.1", $Port, $null, $null)
+        $success = $result.AsyncWaitHandle.WaitOne(1000, $false)
+        $tcpClient.Close()
+        return $success
+    } catch {
+        return $false
+    }
+}
 
-try {
-    $testPg = Test-NetConnection -ComputerName localhost -Port 5432 -WarningAction SilentlyContinue -ErrorAction SilentlyContinue -InformationLevel Quiet
-    $pgReady = $testPg
-} catch { }
-
-try {
-    $testRedis = Test-NetConnection -ComputerName localhost -Port 6379 -WarningAction SilentlyContinue -ErrorAction SilentlyContinue -InformationLevel Quiet
-    $redisReady = $testRedis
-} catch { }
+$pgReady = Test-Port 5432
+$redisReady = Test-Port 6379
 
 if (-not $pgReady) {
     Write-Host '❌ PostgreSQL is not running on port 5432' -ForegroundColor Red
@@ -43,17 +53,43 @@ Write-Host '✅ PostgreSQL: Ready' -ForegroundColor Green
 Write-Host '✅ Redis: Ready' -ForegroundColor Green
 Write-Host ''
 
-# Step 1: Check if build exists
-Write-Host '[1/4] Validating backend build...' -ForegroundColor Yellow
-$buildPath = 'd:\GitHub\TheRxSpot_Marketplace\.medusa\server\dist'
-if (-not (Test-Path $buildPath)) {
+# Step 1: Kill any existing processes on ports 9000 and 8000
+Write-Host '[1/5] Checking for running services...' -ForegroundColor Yellow
+
+$port9000 = Get-NetTCPConnection -LocalPort 9000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+$port8000 = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+
+if ($port9000) {
+    Write-Host "⚠️  Port 9000 is in use. Stopping existing process..." -ForegroundColor Yellow
+    Stop-Process -Id $port9000 -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+    Write-Host '✅ Stopped existing backend process' -ForegroundColor Green
+}
+
+if ($port8000) {
+    Write-Host "⚠️  Port 8000 is in use. Stopping existing process..." -ForegroundColor Yellow
+    Stop-Process -Id $port8000 -Force -ErrorAction SilentlyContinue
+    Start-Sleep -Seconds 2
+    Write-Host '✅ Stopped existing storefront process' -ForegroundColor Green
+}
+
+if (-not $port9000 -and -not $port8000) {
+    Write-Host '✅ Ports are available' -ForegroundColor Green
+}
+Write-Host ''
+
+# Step 2: Check if build exists
+Write-Host '[2/5] Validating backend build...' -ForegroundColor Yellow
+$buildPath = Join-Path $repoRoot ".medusa\server"
+$adminPath = Join-Path $buildPath "public\admin\index.html"
+if (-not (Test-Path $adminPath)) {
     Write-Host '⚠️  First-time setup detected. Building backend...' -ForegroundColor Yellow
     Write-Host 'This may take 2-3 minutes...
 ' -ForegroundColor Gray
-    
-    Set-Location 'd:\GitHub\TheRxSpot_Marketplace'
+
+    Set-Location $repoRoot
     npm run build
-    
+
     if ($LASTEXITCODE -ne 0) {
         Write-Host '
 ❌ Build failed. Please check for errors above.' -ForegroundColor Red
@@ -68,22 +104,53 @@ if (-not (Test-Path $buildPath)) {
 }
 Write-Host ''
 
-# Step 2: Start Medusa Backend
-Write-Host '[2/4] Launching Medusa Backend (:9000)...' -ForegroundColor Green
-Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd d:\GitHub\TheRxSpot_Marketplace; npm run dev'
+# Step 3: Start Medusa Backend
+Write-Host '[3/5] Launching Medusa Backend (:9000)...' -ForegroundColor Green
+$backendProcess = Start-Process powershell -ArgumentList '-NoExit', '-Command', "cd `"$repoRoot`"; npm run dev" -PassThru
 
-# Wait for Backend to initialize
-Write-Host '⏳ Waiting for backend to initialize...' -ForegroundColor Gray
-Start-Sleep -Seconds 8
+# Wait for Backend to be ready
+Write-Host '⏳ Waiting for backend to be ready...' -ForegroundColor Gray
 
-# Step 3: Start Next.js Storefront
-Write-Host '[3/4] Launching Next.js Storefront (:8000)...' -ForegroundColor Green
-Start-Process powershell -ArgumentList '-NoExit', '-Command', 'cd d:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront; npm run dev'
+function Wait-ForBackend {
+    $maxAttempts = 120  # 2 minutes max
+    $attempt = 0
+    while ($attempt -lt $maxAttempts) {
+        try {
+            # Check root endpoint since /health might not be loaded yet
+            $response = Invoke-WebRequest -Uri "http://localhost:9000/" -TimeoutSec 1 -UseBasicParsing -ErrorAction SilentlyContinue
+            if ($response.StatusCode -eq 200) {
+                Write-Host "✅ Backend is ready!" -ForegroundColor Green
+                return $true
+            }
+        } catch {
+            # Not ready yet, keep waiting
+        }
+        Start-Sleep -Seconds 1
+        $attempt++
 
-# Step 4: Open the Control Center
-Write-Host '[4/4] Opening Command Center Interface...' -ForegroundColor Green
+        # Print progress every 10 seconds
+        if ($attempt % 10 -eq 0) {
+            Write-Host "⏳ Still waiting... ($attempt seconds)" -ForegroundColor Gray
+        }
+    }
+    Write-Host "❌ Backend failed to start after 2 minutes" -ForegroundColor Red
+    return $false
+}
+
+if (-not (Wait-ForBackend)) {
+    Write-Host "Backend did not respond. Check the terminal window for errors." -ForegroundColor Red
+    pause
+    exit 1
+}
+
+# Step 4: Start Next.js Storefront
+Write-Host '[4/5] Launching Next.js Storefront (:8000)...' -ForegroundColor Green
+Start-Process powershell -ArgumentList '-NoExit', '-Command', "cd `"$storefrontRoot`"; npm run dev"
+
+# Step 5: Open the Control Center
+Write-Host '[5/5] Opening Command Center Interface...' -ForegroundColor Green
 Start-Sleep -Seconds 3
-Start-Process 'd:\GitHub\TheRxSpot_Marketplace\Marketplace-Launcher.html'
+Start-Process $launcherHtml
 
 Write-Host '
 ===================================================' -ForegroundColor Cyan

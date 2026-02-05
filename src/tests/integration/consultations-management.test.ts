@@ -72,7 +72,7 @@ medusaIntegrationTestRunner({
 
         // Create a consult submission so we can derive "type=initial" and "state=FL"
         const businessService = container.resolve(BUSINESS_MODULE) as any
-        const submission = await businessService.createConsultSubmissions({
+        const submission = await businessService.createConsultSubmission({
           id: `sub_${Date.now()}`,
           business_id: business.id,
           location_id: null,
@@ -202,7 +202,7 @@ medusaIntegrationTestRunner({
         } as any)
 
         const businessService = container.resolve(BUSINESS_MODULE) as any
-        const submission = await businessService.createConsultSubmissions({
+        const submission = await businessService.createConsultSubmission({
           id: `sub_${Date.now()}_detail`,
           business_id: business.id,
           location_id: null,
@@ -358,7 +358,7 @@ medusaIntegrationTestRunner({
         } as any)
 
         const businessService = container.resolve(BUSINESS_MODULE) as any
-        const submission = await businessService.createConsultSubmissions({
+        const submission = await businessService.createConsultSubmission({
           id: `sub_${Date.now()}_docs`,
           business_id: business.id,
           location_id: null,

@@ -9,7 +9,6 @@ import {
   createSalesChannelsWorkflow,
   createApiKeysWorkflow,
   linkSalesChannelsToApiKeyWorkflow,
-  linkSalesChannelsToStockLocationWorkflow,
 } from "@medusajs/medusa/core-flows"
 import {
   ContainerRegistrationKeys,
@@ -29,15 +28,6 @@ const getBusinessStep = createStep(
     const businessService = container.resolve(BUSINESS_MODULE)
     const business = await businessService.retrieveBusiness(input.business_id)
     return new StepResponse(business)
-  }
-)
-
-const getDefaultStockLocationStep = createStep(
-  "get-default-stock-location",
-  async (_input: void, { container }) => {
-    const storeService = container.resolve(Modules.STORE)
-    const [store] = await storeService.listStores()
-    return new StepResponse(store.default_location_id)
   }
 )
 
@@ -100,7 +90,6 @@ export const provisionBusinessWorkflow = createWorkflow(
   "provision-business",
   (input: ProvisionInput) => {
     const business = getBusinessStep(input)
-    const defaultLocationId = getDefaultStockLocationStep()
 
     const salesChannelName = transform({ business }, (data) => {
       return `SC: ${data.business.name}`
@@ -143,13 +132,6 @@ export const provisionBusinessWorkflow = createWorkflow(
     linkSalesChannelsToApiKeyWorkflow.runAsStep({
       input: {
         id: apiKeyId,
-        add: [salesChannelId],
-      },
-    })
-
-    linkSalesChannelsToStockLocationWorkflow.runAsStep({
-      input: {
-        id: defaultLocationId,
         add: [salesChannelId],
       },
     })

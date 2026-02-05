@@ -88,7 +88,7 @@ Once launched, you can access:
 1. Make sure Node.js 20+ is installed: `node --version`
 2. Delete `node_modules` and reinstall: 
    ```bash
-   cd d:\GitHub\TheRxSpot_Marketplace
+   cd <repo-root>
    rm -rf node_modules
    npm install
    npm run build
@@ -102,12 +102,12 @@ If the launcher doesn't work, you can run manually:
 
 ```powershell
 # Terminal 1: Backend
-cd d:\GitHub\TheRxSpot_Marketplace
+cd <repo-root>
 npm run build  # First time only
 npm run dev
 
 # Terminal 2: Storefront
-cd d:\GitHub\TheRxSpot_Marketplace\TheRxSpot_Marketplace-storefront
+cd <repo-root>\TheRxSpot_Marketplace-storefront
 npm run dev
 ```
 

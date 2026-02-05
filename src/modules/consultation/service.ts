@@ -76,6 +76,16 @@ class ConsultationModuleService extends ConsultationBaseService {
     "emergency_contact_phone",
   ] as const
 
+  private static readonly CONSULTATION_PHI_FIELDS = [
+    "chief_complaint",
+    "medical_history",
+    "assessment",
+    "plan",
+    "notes",
+    "admin_notes",
+    "rejection_reason",
+  ] as const
+
   private static isPhiEncryptionEnabled(): boolean {
     return (process.env.PHI_ENCRYPTION_ENABLED || "").toLowerCase() === "true"
   }
@@ -98,7 +108,17 @@ class ConsultationModuleService extends ConsultationBaseService {
       take,
       order: order || { created_at: "DESC" },
     })
-    return await this.listAndCountConsultations(f, o)
+    const [consultations, count] = await this.listAndCountConsultations(f, o)
+
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return [consultations, count] as any
+    }
+
+    const decrypted = (consultations as any[]).map((c) =>
+      decryptFields(c as any, ConsultationModuleService.CONSULTATION_PHI_FIELDS as any)
+    )
+
+    return [decrypted, count] as any
   }
 
   async getConsultationOrThrow(id: string, relations: string[] = []) {
@@ -107,15 +127,53 @@ class ConsultationModuleService extends ConsultationBaseService {
     if (!consultations[0].length) {
       throw new Error(`Consultation not found: ${id}`)
     }
-    return consultations[0][0]
+
+    const consultation = consultations[0][0]
+
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return consultation
+    }
+
+    return decryptFields(
+      consultation as any,
+      ConsultationModuleService.CONSULTATION_PHI_FIELDS as any
+    ) as any
   }
 
   async createConsultation(data: Record<string, any>) {
-    return await this.createConsultations(data)
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return await this.createConsultations(data)
+    }
+
+    const encrypted = encryptFields(
+      data as any,
+      ConsultationModuleService.CONSULTATION_PHI_FIELDS as any
+    )
+
+    const created = await this.createConsultations(encrypted)
+
+    return decryptFields(
+      created as any,
+      ConsultationModuleService.CONSULTATION_PHI_FIELDS as any
+    ) as any
   }
 
   async updateConsultation(id: string, data: Record<string, any>) {
-    return await this.updateConsultations(id, data)
+    if (!ConsultationModuleService.isPhiEncryptionEnabled()) {
+      return await this.updateConsultations(id, data)
+    }
+
+    const encrypted = encryptFields(
+      data as any,
+      ConsultationModuleService.CONSULTATION_PHI_FIELDS as any
+    )
+
+    const updated = await this.updateConsultations(id, encrypted)
+
+    return decryptFields(
+      updated as any,
+      ConsultationModuleService.CONSULTATION_PHI_FIELDS as any
+    ) as any
   }
 
   async deleteConsultation(id: string) {
@@ -123,7 +181,7 @@ class ConsultationModuleService extends ConsultationBaseService {
   }
 
   async getConsultationById(consultationId: string) {
-    const consultations = await this.listConsultations(
+    const [consultations] = await this.listConsultations(
       { id: consultationId },
       { take: 1 }
     )
@@ -339,7 +397,7 @@ class ConsultationModuleService extends ConsultationBaseService {
   }
 
   async getClinicianById(clinicianId: string) {
-    const clinicians = await this.listClinicians({ id: clinicianId }, { take: 1 })
+    const [clinicians] = await this.listClinicians({ id: clinicianId }, { take: 1 })
     return clinicians[0] ?? null
   }
 
@@ -478,7 +536,11 @@ class ConsultationModuleService extends ConsultationBaseService {
       data as any,
       ConsultationModuleService.PATIENT_PHI_FIELDS as any
     )
-    return await this.createPatients(encrypted)
+    const created = await this.createPatients(encrypted)
+    return decryptFields(
+      created as any,
+      ConsultationModuleService.PATIENT_PHI_FIELDS as any
+    ) as any
   }
 
   async updatePatient(id: string, data: Record<string, any>) {
@@ -490,7 +552,11 @@ class ConsultationModuleService extends ConsultationBaseService {
       data as any,
       ConsultationModuleService.PATIENT_PHI_FIELDS as any
     )
-    return await this.updatePatients(id, encrypted)
+    const updated = await this.updatePatients(id, encrypted)
+    return decryptFields(
+      updated as any,
+      ConsultationModuleService.PATIENT_PHI_FIELDS as any
+    ) as any
   }
 
   async deletePatient(id: string) {
@@ -498,7 +564,18 @@ class ConsultationModuleService extends ConsultationBaseService {
   }
 
   async getPatientById(patientId: string) {
-    const patients = await this.listPatients({ id: patientId }, { take: 1 })
+    const [patients] = await this.listPatients({ id: patientId }, { take: 1 })
+    return patients[0] ?? null
+  }
+
+  async getPatientByCustomerId(businessId: string, customerId: string) {
+    const id = (customerId || "").trim()
+    if (!id) return null
+
+    const [patients] = await this.listPatients(
+      { business_id: businessId, customer_id: id },
+      { take: 1, order: { created_at: "DESC" } }
+    )
     return patients[0] ?? null
   }
 

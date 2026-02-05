@@ -4,6 +4,7 @@ export const Business = model.define("business", {
   id: model.id().primaryKey(),
   name: model.text(),
   slug: model.text().unique(),
+  contact_email: model.text().nullable(),
   logo_url: model.text().nullable(),
   primary_color: model.text().nullable(),
   secondary_color: model.text().nullable(),

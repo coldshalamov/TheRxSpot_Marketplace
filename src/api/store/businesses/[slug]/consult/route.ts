@@ -1,6 +1,64 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { BUSINESS_MODULE } from "../../../../../modules/business"
 import { CONSULTATION_MODULE } from "../../../../../modules/consultation"
+import { z } from "zod"
+
+function isUniqueViolation(err: unknown): boolean {
+  if (!err) return false
+  if (typeof err === "object") {
+    const maybeCode =
+      "code" in err && typeof (err as { code?: unknown }).code === "string"
+        ? (err as { code: string }).code
+        : null
+    if (maybeCode === "23505") return true
+
+    const maybeType =
+      "type" in err && typeof (err as { type?: unknown }).type === "string"
+        ? (err as { type: string }).type
+        : null
+    if (maybeType === "duplicate_error") return true
+  }
+  const msg = err instanceof Error ? err.message : String(err)
+  return (
+    msg.includes("duplicate key value violates unique constraint") ||
+    msg.toLowerCase().includes("unique constraint") ||
+    msg.toLowerCase().includes("already exists")
+  )
+}
+
+function asCents(value: unknown): number {
+  if (value == null) return 0
+  if (typeof value === "number") return Number.isFinite(value) ? Math.trunc(value) : 0
+  if (typeof value === "string") return parseInt(value, 10) || 0
+  if (typeof value === "object" && value && "value" in value) {
+    const v = (value as { value?: unknown }).value
+    if (typeof v === "string") return parseInt(v, 10) || 0
+  }
+  return 0
+}
+
+const ConsultRequestSchema = z
+  .object({
+    product_id: z.string().min(1),
+    location_id: z.string().min(1).nullable().optional(),
+
+    customer_first_name: z.string().min(1),
+    customer_last_name: z.string().min(1),
+    customer_email: z.string().email(),
+
+    customer_phone: z.string().min(1).nullable().optional(),
+    customer_dob: z.string().min(1).nullable().optional(),
+
+    eligibility_answers: z.record(z.unknown()).optional().default({}),
+
+    consult_fee: z.unknown().optional(),
+    consult_fee_cents: z.unknown().optional(),
+
+    chief_complaint: z.string().min(1).nullable().optional(),
+    medical_history: z.record(z.unknown()).nullable().optional(),
+    notes: z.string().nullable().optional(),
+  })
+  .strict()
 
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
@@ -25,91 +83,222 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     return res.status(404).json({ message: "Business not found" })
   }
   
-  const body = (req.body ?? {}) as Record<string, any>
-
-  const productId = typeof body.product_id === "string" ? body.product_id.trim() : ""
-  if (!productId) {
+  const parsed = ConsultRequestSchema.safeParse(req.body ?? {})
+  if (!parsed.success) {
     return res.status(400).json({
       code: "INVALID_INPUT",
-      message: "product_id is required",
+      message: "Invalid consultation request payload",
+      issues: parsed.error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
     })
   }
 
-  const firstName = typeof body.customer_first_name === "string" ? body.customer_first_name.trim() : ""
-  const lastName = typeof body.customer_last_name === "string" ? body.customer_last_name.trim() : ""
-  const email =
-    typeof body.customer_email === "string"
-      ? body.customer_email.trim().toLowerCase()
-      : (authContext?.actor_email ?? "").trim().toLowerCase()
+  const body = parsed.data
+  const productId = body.product_id.trim()
+  const firstName = body.customer_first_name.trim()
+  const lastName = body.customer_last_name.trim()
+  const email = body.customer_email.trim().toLowerCase()
 
-  if (!firstName || !lastName || !email) {
-    return res.status(400).json({
-      code: "INVALID_INPUT",
-      message: "customer_first_name, customer_last_name, and customer_email are required",
-    })
-  }
+  const consultFee =
+    asCents(body.consult_fee) ||
+    asCents(body.consult_fee_cents) ||
+    asCents((business?.settings as Record<string, unknown> | null | undefined)?.consult_fee_cents) ||
+    null
 
-  const consultFee = body.consult_fee ?? body.consult_fee_cents ?? business?.settings?.consult_fee_cents ?? null
+  const idempotencyKey =
+    typeof req.headers["idempotency-key"] === "string" ? req.headers["idempotency-key"].trim() : ""
 
   try {
-    const submission = await businessModuleService.createConsultSubmissions({
-      business_id: business.id,
-      location_id: typeof body.location_id === "string" ? body.location_id : null,
-      product_id: productId,
-      customer_email: email,
-      customer_first_name: firstName,
-      customer_last_name: lastName,
-      customer_phone: typeof body.customer_phone === "string" ? body.customer_phone : null,
-      customer_dob: typeof body.customer_dob === "string" ? body.customer_dob : null,
-      eligibility_answers: typeof body.eligibility_answers === "object" && body.eligibility_answers ? body.eligibility_answers : {},
-      consult_fee: consultFee,
-      notes: typeof body.notes === "string" ? body.notes : null,
-      status: "pending",
-    })
-
-    const existingPatient = await consultationService
-      .getPatientByEmail(business.id, email)
-      .catch(() => null)
-
-    const patient =
-      existingPatient ||
-      (await consultationService.createPatients({
+    // Concurrency guard: only one pending approval per (business, customer, product).
+    // This prevents duplicate consult requests under "50 submits at once" conditions.
+    const existingApprovals = await businessModuleService.listConsultApprovals(
+      {
         business_id: business.id,
         customer_id: customerId,
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        phone: typeof body.customer_phone === "string" ? body.customer_phone : null,
-        date_of_birth: typeof body.customer_dob === "string" ? body.customer_dob : null,
-      }))
+        product_id: productId,
+        status: "pending",
+      },
+      { take: 1, order: { created_at: "DESC" } }
+    )
+    const existingApproval = existingApprovals?.[0]
+    if (existingApproval?.consultation_id) {
+      const consultation = await consultationService
+        .getConsultationOrThrow(existingApproval.consultation_id)
+        .catch(() => null)
+      return res.status(200).json({
+        idempotent: true,
+        submission: null,
+        consultation: consultation ? { id: consultation.id, status: consultation.status } : { id: existingApproval.consultation_id, status: null },
+        approval: { id: existingApproval.id, status: existingApproval.status },
+      })
+    }
 
-    const consultation = await consultationService.createConsultations({
-      business_id: business.id,
-      patient_id: patient.id,
-      clinician_id: null,
-      mode: "async_form",
-      status: "draft",
-      chief_complaint: typeof body.chief_complaint === "string" ? body.chief_complaint : null,
-      medical_history: typeof body.medical_history === "object" ? body.medical_history : null,
-      notes: typeof body.notes === "string" ? body.notes : null,
-      admin_notes: null,
-      outcome: null,
-      rejection_reason: null,
-      approved_medications: [productId],
-      originating_submission_id: submission.id,
-      order_id: null,
-    })
+    // Idempotency (explicit): if an idempotency key is supplied, return the existing submission.
+    if (idempotencyKey) {
+      const existing = await businessModuleService.listConsultSubmissionsDecrypted(
+        { business_id: business.id, customer_id: customerId, idempotency_key: idempotencyKey, deleted_at: null },
+        { take: 1, order: { created_at: "DESC" } }
+      )
+      if (existing?.[0]) {
+        const submission = existing[0]
+        const [consultations] = await consultationService
+          .listConsultations({ originating_submission_id: submission.id }, { take: 1 })
+          .catch(() => [[], 0])
+        const consultation = consultations?.[0] ?? null
 
-    const approval = await businessModuleService.createConsultApprovals({
-      customer_id: customerId,
-      product_id: productId,
-      business_id: business.id,
-      status: "pending",
-      consultation_id: consultation.id,
-      approved_by: null,
-      approved_at: null,
-      expires_at: null,
-    })
+        const approvals = await businessModuleService.listConsultApprovals(
+          {
+            business_id: business.id,
+            customer_id: customerId,
+            product_id: productId,
+            status: "pending",
+          },
+          { take: 1, order: { created_at: "DESC" } }
+        )
+        const approval = approvals?.[0] ?? null
+
+        return res.status(200).json({
+          idempotent: true,
+          submission,
+          consultation: consultation ? { id: consultation.id, status: consultation.status } : null,
+          approval: approval ? { id: approval.id, status: approval.status } : null,
+        })
+      }
+    }
+
+    let submission: any = null
+    try {
+      submission = await businessModuleService.createConsultSubmission({
+        business_id: business.id,
+        location_id: body.location_id ?? null,
+        product_id: productId,
+        customer_id: customerId,
+        idempotency_key: idempotencyKey || null,
+        customer_email: email,
+        customer_first_name: firstName,
+        customer_last_name: lastName,
+        customer_phone: body.customer_phone ?? null,
+        customer_dob: body.customer_dob ?? null,
+        eligibility_answers: body.eligibility_answers ?? {},
+        consult_fee: consultFee,
+        chief_complaint: body.chief_complaint ?? null,
+        medical_history: body.medical_history ?? null,
+        notes: body.notes ?? null,
+        status: "pending",
+      })
+    } catch (e) {
+      if (!isUniqueViolation(e)) throw e
+
+      // Concurrency fallback: pending submission already exists.
+      const existing = await businessModuleService.listConsultSubmissionsDecrypted(
+        {
+          business_id: business.id,
+          customer_id: customerId,
+          product_id: productId,
+          status: "pending",
+          deleted_at: null,
+        },
+        { take: 1, order: { created_at: "DESC" } }
+      )
+      submission = existing?.[0] ?? null
+      if (!submission) throw e
+    }
+
+    // Crash-safety: if the request crashes after persisting `consult_submission` but before creating
+    // Patient/Consultation/Approval, the `process-consult-submission` job will reconcile it.
+    // We still do the happy-path creation here for UX latency.
+    const existingPatient =
+      (await consultationService.getPatientByCustomerId(business.id, customerId).catch(() => null)) ||
+      (await consultationService.getPatientByEmail(business.id, email).catch(() => null))
+
+    let patient: any = existingPatient
+    if (!patient) {
+      try {
+        patient = await consultationService.createPatient({
+          business_id: business.id,
+          customer_id: customerId,
+          email,
+          first_name: firstName,
+          last_name: lastName,
+          phone: body.customer_phone ?? null,
+          date_of_birth: body.customer_dob ?? null,
+        })
+      } catch (e) {
+        if (!isUniqueViolation(e)) throw e
+        patient =
+          (await consultationService.getPatientByCustomerId(business.id, customerId).catch(() => null)) ||
+          (await consultationService.getPatientByEmail(business.id, email).catch(() => null))
+        if (!patient) throw e
+      }
+    }
+
+    let consultation: any = null
+    const [existingConsults] = await consultationService
+      .listConsultations({ originating_submission_id: submission.id }, { take: 1 })
+      .catch(() => [[], 0])
+
+    if (existingConsults?.[0]) {
+      consultation = existingConsults[0]
+    } else {
+      try {
+        consultation = await consultationService.createConsultation({
+          business_id: business.id,
+          patient_id: patient.id,
+          clinician_id: null,
+          mode: "async_form",
+          status: "draft",
+          chief_complaint: body.chief_complaint ?? null,
+          medical_history: body.medical_history ?? null,
+          notes: body.notes ?? null,
+          admin_notes: null,
+          outcome: null,
+          rejection_reason: null,
+          approved_medications: [productId],
+          originating_submission_id: submission.id,
+          order_id: null,
+        })
+      } catch (e) {
+        if (!isUniqueViolation(e)) throw e
+        const [again] = await consultationService.listConsultations(
+          { originating_submission_id: submission.id },
+          { take: 1 }
+        )
+        consultation = again?.[0] ?? null
+        if (!consultation) throw e
+      }
+    }
+
+    let approval: any = null
+    try {
+      approval = await businessModuleService.createConsultApprovals({
+        customer_id: customerId,
+        product_id: productId,
+        business_id: business.id,
+        status: "pending",
+        consultation_id: consultation.id,
+        approved_by: null,
+        approved_at: null,
+        expires_at: null,
+      })
+    } catch (e) {
+      if (!isUniqueViolation(e)) throw e
+      const approvals = await businessModuleService.listConsultApprovals(
+        {
+          customer_id: customerId,
+          product_id: productId,
+          business_id: business.id,
+          status: "pending",
+        },
+        { take: 1, order: { created_at: "DESC" } }
+      )
+      approval = approvals?.[0] ?? null
+      if (!approval) throw e
+      if (!approval.consultation_id && consultation?.id) {
+        await businessModuleService.updateConsultApprovals({
+          id: approval.id,
+          consultation_id: consultation.id,
+        })
+      }
+    }
 
     return res.status(201).json({
       submission,

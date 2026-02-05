@@ -5,7 +5,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
   const { id } = req.params
   
-  const submission = await businessModuleService.retrieveConsultSubmission(id)
+  const submission = await businessModuleService.retrieveConsultSubmissionDecrypted(id)
   
   res.json({ submission })
 }

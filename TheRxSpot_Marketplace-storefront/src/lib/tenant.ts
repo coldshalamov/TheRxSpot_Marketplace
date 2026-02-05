@@ -41,7 +41,7 @@ export async function getTenantConfig(
   try {
     const res = await fetch(`${MEDUSA_BACKEND_URL}/store/tenant-config`, {
       headers: {
-        host: hostname,
+        "x-tenant-host": hostname,
       },
       cache: "no-store",
     })

@@ -5,7 +5,15 @@ const BACKEND_URL = process.env.MEDUSA_BACKEND_URL
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 const DEFAULT_REGION = process.env.NEXT_PUBLIC_DEFAULT_REGION || "us"
 
-const PLATFORM_DOMAINS = (process.env.PLATFORM_DOMAINS || "localhost,127.0.0.1")
+// Platform hostnames (exact matches only). Do NOT suffix-match, otherwise
+// `tenant.therxspot.com` would be misclassified as "platform" and tenant resolution
+// would be skipped.
+const PLATFORM_HOSTNAMES = (
+  process.env.PLATFORM_HOSTNAMES ||
+  // Backward-compat (older env name).
+  process.env.PLATFORM_DOMAINS ||
+  "localhost,127.0.0.1"
+)
   .split(",")
   .map((d) => d.trim().toLowerCase())
 
@@ -102,9 +110,7 @@ async function getCountryCode(
 }
 
 function isPlatformDomain(hostname: string): boolean {
-  return PLATFORM_DOMAINS.some(
-    (pd) => hostname === pd || hostname.endsWith(`.${pd}`)
-  )
+  return PLATFORM_HOSTNAMES.includes(hostname)
 }
 
 function hasCountryCode(pathname: string): boolean {
@@ -124,7 +130,7 @@ async function resolveTenantFromHostname(
 
   try {
     const res = await fetch(`${BACKEND_URL}/store/tenant-config`, {
-      headers: { host: hostname },
+      headers: { "x-tenant-host": hostname },
       cache: "no-store",
     })
     if (!res.ok) return null
@@ -139,6 +145,29 @@ export async function middleware(request: NextRequest) {
   
   // Skip static files and API
   if (isStaticFile(pathname)) return NextResponse.next()
+
+  // Checkout is intentionally out-of-scope for the MVP.
+  const checkoutEnabled = (process.env.CHECKOUT_ENABLED || "").toLowerCase() === "true"
+  if (!checkoutEnabled) {
+    const segments = pathname.split("/").filter(Boolean)
+    const maybeCountry = segments[0] || ""
+    const restFirst = segments[1] || ""
+
+    // Handle both /cart and /{country}/cart
+    const isCartOrCheckout =
+      restFirst === "cart" ||
+      restFirst === "checkout" ||
+      maybeCountry === "cart" ||
+      maybeCountry === "checkout"
+
+    if (isCartOrCheckout) {
+      const countryCode = /^[a-z]{2}$/i.test(maybeCountry) ? maybeCountry.toLowerCase() : DEFAULT_REGION
+      const url = request.nextUrl.clone()
+      url.pathname = `/${countryCode}`
+      url.search = ""
+      return NextResponse.redirect(url)
+    }
+  }
   
   // Resolve tenant from hostname
   const hostname = request.headers.get('host')?.split(':')[0]?.toLowerCase() || ''

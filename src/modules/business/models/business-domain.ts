@@ -7,4 +7,6 @@ export const BusinessDomain = model.define("business_domain", {
   is_primary: model.boolean().default(false),
   is_verified: model.boolean().default(false),
   verified_at: model.dateTime().nullable(),
+  last_checked_at: model.dateTime().nullable(),
+  dns_error: model.text().nullable(),
 })

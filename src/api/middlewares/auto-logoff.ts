@@ -63,6 +63,7 @@ function isAuthenticatedRoute(req: MedusaRequest): boolean {
     { pattern: /^\/store\/product-categories/, methods: ["GET"] },
     // Health check
     { pattern: /^\/health/, methods: ["GET"] },
+    { pattern: /^\/ready/, methods: ["GET"] },
   ]
   
   // Check if this is a public endpoint

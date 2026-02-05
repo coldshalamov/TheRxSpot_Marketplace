@@ -53,7 +53,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
     return res.status(501).json({
       code: "NOT_IMPLEMENTED",
-      message: "Refunds require payment provider integration (TODO: Stripe/PaymentProvider).",
+      message: "Refunds require payment provider integration (Stripe/PaymentProvider not enabled).",
     })
   } catch (error) {
     return res.status(500).json({

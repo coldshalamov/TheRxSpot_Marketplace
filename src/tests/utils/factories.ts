@@ -734,14 +734,18 @@ export type SubmissionStatus = "pending" | "approved" | "rejected"
 export interface ConsultSubmissionOverrides {
   id?: string
   business_id: string
-  customer_id: string
-  patient_data?: Record<string, any>
-  questionnaire_responses?: Record<string, any>
+  product_id: string
+  customer_email: string
+  customer_first_name: string
+  customer_last_name: string
+  customer_phone?: string | null
+  customer_dob?: string | null
+  eligibility_answers?: Record<string, any>
+  consult_fee?: number | string | { value: string } | null
   status?: SubmissionStatus
   reviewed_by?: string
   reviewed_at?: Date
   notes?: string
-  order_id?: string
 }
 
 export async function createTestConsultSubmission(
@@ -755,21 +759,31 @@ export async function createTestConsultSubmission(
   if (!overrides.business_id) {
     throw new Error("business_id is required to create a consult submission")
   }
-  if (!overrides.customer_id) {
-    throw new Error("customer_id is required to create a consult submission")
+  if (!overrides.product_id) {
+    throw new Error("product_id is required to create a consult submission")
+  }
+  if (!overrides.customer_email) {
+    throw new Error("customer_email is required to create a consult submission")
+  }
+  if (!overrides.customer_first_name || !overrides.customer_last_name) {
+    throw new Error("customer_first_name and customer_last_name are required to create a consult submission")
   }
   
-  return await business.createConsultSubmissions({
+  return await business.createConsultSubmission({
     id,
     business_id: overrides.business_id,
-    customer_id: overrides.customer_id,
-    patient_data: overrides.patient_data || {},
-    questionnaire_responses: overrides.questionnaire_responses || {},
+    product_id: overrides.product_id,
+    customer_email: overrides.customer_email,
+    customer_first_name: overrides.customer_first_name,
+    customer_last_name: overrides.customer_last_name,
+    customer_phone: overrides.customer_phone ?? null,
+    customer_dob: overrides.customer_dob ?? null,
+    eligibility_answers: overrides.eligibility_answers || {},
+    consult_fee: overrides.consult_fee ?? null,
     status: overrides.status || "pending",
     reviewed_by: overrides.reviewed_by || null,
     reviewed_at: overrides.reviewed_at || null,
     notes: overrides.notes || null,
-    order_id: overrides.order_id || null,
   })
 }
 

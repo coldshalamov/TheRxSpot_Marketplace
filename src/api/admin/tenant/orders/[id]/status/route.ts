@@ -1,6 +1,8 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { orderStatusTransitionWorkflow } from "../../../../../../workflows/order-lifecycle"
+import { z } from "zod"
+import { runWorkflowOrThrow } from "../../../../../../utils/workflow"
 
 interface StatusUpdateBody {
   status: string
@@ -35,7 +37,20 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     }
 
     const { id } = req.params
-    const { status: newStatus, reason } = req.body as StatusUpdateBody
+
+    const BodySchema = z
+      .object({
+        status: z.string().min(1),
+        reason: z.string().optional(),
+      })
+      .strict()
+
+    const parsed = BodySchema.safeParse(req.body ?? {})
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid request body" })
+    }
+
+    const { status: newStatus, reason } = parsed.data as StatusUpdateBody
 
     // Validate status
     if (!newStatus || !VALID_STATUSES.includes(newStatus)) {
@@ -86,7 +101,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const changedBy = (req as any).auth_context?.auth_identity_id ?? null
 
     // Execute workflow
-    const result = (await orderStatusTransitionWorkflow(req.scope).run({
+    const result = (await runWorkflowOrThrow(orderStatusTransitionWorkflow(req.scope), {
       input: {
         orderId: id,
         fromStatus: currentStatus,

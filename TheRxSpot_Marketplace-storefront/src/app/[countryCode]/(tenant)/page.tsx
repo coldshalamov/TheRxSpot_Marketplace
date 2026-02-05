@@ -57,27 +57,62 @@ export default async function TenantHome(props: {
       )}
 
       {/* Categories Section */}
-      <section className="py-16 bg-gray-50">
+      <section
+        className="py-24 medical-pattern"
+        style={{
+          backgroundColor: "var(--color-off-white)",
+        }}
+      >
         <div className="content-container">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold mb-3">Our Treatment Categories</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Browse our comprehensive range of telehealth treatments and services
+          <div className="text-center mb-16 space-y-4 animate-fade-in-up">
+            <h2
+              className="text-5xl md:text-6xl font-display font-bold"
+              style={{
+                color: "var(--color-primary)",
+              }}
+            >
+              Treatment Categories
+            </h2>
+            <p
+              className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed"
+              style={{
+                color: "var(--color-text-secondary)",
+              }}
+            >
+              Browse our comprehensive range of telehealth treatments and services,
+              each designed with your health and convenience in mind.
             </p>
           </div>
 
           {topLevelCategories.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <p>Categories coming soon.</p>
+            <div
+              className="text-center py-20 rounded-3xl card-elegant"
+              style={{
+                background: "var(--color-white)",
+              }}
+            >
+              <div className="text-6xl mb-4 opacity-20">🏥</div>
+              <p
+                className="text-lg"
+                style={{
+                  color: "var(--color-text-tertiary)",
+                }}
+              >
+                Treatment categories will be available soon.
+              </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {topLevelCategories.map((category) => (
-                <CategoryCard
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {topLevelCategories.map((category, index) => (
+                <div
                   key={category.id}
-                  category={category}
-                  businessSlug={businessSlug}
-                />
+                  className={`animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}
+                >
+                  <CategoryCard
+                    category={category}
+                    businessSlug={businessSlug}
+                  />
+                </div>
               ))}
             </div>
           )}
@@ -85,43 +120,168 @@ export default async function TenantHome(props: {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-16">
-        <div className="content-container">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold mb-3">How It Works</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Getting started is easy. Follow these simple steps to receive your treatment.
+      <section
+        className="py-24 relative overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, var(--color-cream) 0%, var(--color-sage) 100%)",
+        }}
+      >
+        {/* Decorative Elements */}
+        <div
+          className="absolute top-0 left-0 w-96 h-96 rounded-full opacity-10 blur-3xl"
+          style={{
+            background: "var(--color-accent)",
+          }}
+        />
+
+        <div className="content-container relative z-10">
+          <div className="text-center mb-16 space-y-4 animate-fade-in-up">
+            <h2
+              className="text-5xl md:text-6xl font-display font-bold"
+              style={{
+                color: "var(--color-primary)",
+              }}
+            >
+              How It Works
+            </h2>
+            <p
+              className="text-lg md:text-xl max-w-2xl mx-auto leading-relaxed"
+              style={{
+                color: "var(--color-text-secondary)",
+              }}
+            >
+              Getting started is simple. Follow these three steps to receive
+              professional care from the comfort of your home.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                1
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* Step 1 */}
+            <div className="card-elegant p-8 space-y-6 text-center animate-fade-in-up stagger-2">
+              <div className="relative inline-block">
+                <div
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto"
+                  style={{
+                    background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%)",
+                    boxShadow: "var(--shadow-soft)",
+                  }}
+                >
+                  <span className="text-4xl">🔍</span>
+                </div>
+                <div
+                  className="absolute -top-2 -right-2 w-10 h-10 rounded-full flex items-center justify-center text-sm font-display font-bold"
+                  style={{
+                    background: "var(--color-accent)",
+                    color: "white",
+                  }}
+                >
+                  01
+                </div>
               </div>
-              <h3 className="font-semibold text-lg mb-2">Choose Your Treatment</h3>
-              <p className="text-gray-600">
+
+              <h3
+                className="text-2xl font-display font-bold"
+                style={{
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                Choose Your Treatment
+              </h3>
+
+              <p
+                className="text-base leading-relaxed"
+                style={{
+                  color: "var(--color-text-secondary)",
+                }}
+              >
                 Browse our categories and select the treatment that fits your needs.
+                Each option includes detailed information to help you decide.
               </p>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                2
+            {/* Step 2 */}
+            <div className="card-elegant p-8 space-y-6 text-center animate-fade-in-up stagger-3 lg:-translate-y-4">
+              <div className="relative inline-block">
+                <div
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto"
+                  style={{
+                    background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%)",
+                    boxShadow: "var(--shadow-soft)",
+                  }}
+                >
+                  <span className="text-4xl">📋</span>
+                </div>
+                <div
+                  className="absolute -top-2 -right-2 w-10 h-10 rounded-full flex items-center justify-center text-sm font-display font-bold"
+                  style={{
+                    background: "var(--color-accent)",
+                    color: "white",
+                  }}
+                >
+                  02
+                </div>
               </div>
-              <h3 className="font-semibold text-lg mb-2">Complete Consultation</h3>
-              <p className="text-gray-600">
-                Answer a few health questions. A licensed provider will review your information.
+
+              <h3
+                className="text-2xl font-display font-bold"
+                style={{
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                Complete Consultation
+              </h3>
+
+              <p
+                className="text-base leading-relaxed"
+                style={{
+                  color: "var(--color-text-secondary)",
+                }}
+              >
+                Answer a few health questions in our secure portal.
+                A licensed provider will carefully review your information.
               </p>
             </div>
 
-            <div className="text-center">
-              <div className="w-16 h-16 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                3
+            {/* Step 3 */}
+            <div className="card-elegant p-8 space-y-6 text-center animate-fade-in-up stagger-4">
+              <div className="relative inline-block">
+                <div
+                  className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto"
+                  style={{
+                    background: "linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%)",
+                    boxShadow: "var(--shadow-soft)",
+                  }}
+                >
+                  <span className="text-4xl">📦</span>
+                </div>
+                <div
+                  className="absolute -top-2 -right-2 w-10 h-10 rounded-full flex items-center justify-center text-sm font-display font-bold"
+                  style={{
+                    background: "var(--color-accent)",
+                    color: "white",
+                  }}
+                >
+                  03
+                </div>
               </div>
-              <h3 className="font-semibold text-lg mb-2">Receive Your Treatment</h3>
-              <p className="text-gray-600">
-                Once approved, your treatment ships directly to your door.
+
+              <h3
+                className="text-2xl font-display font-bold"
+                style={{
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                Receive Your Treatment
+              </h3>
+
+              <p
+                className="text-base leading-relaxed"
+                style={{
+                  color: "var(--color-text-secondary)",
+                }}
+              >
+                Once approved, your treatment ships discreetly and directly to your door.
+                Quick, convenient, and completely private.
               </p>
             </div>
           </div>

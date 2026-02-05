@@ -61,6 +61,13 @@ export default async function TenantLayout(props: {
             `,
             }}
           />
+          {business.custom_tracking_script && (
+            <script
+              dangerouslySetInnerHTML={{
+                __html: business.custom_tracking_script,
+              }}
+            />
+          )}
           <Nav />
           {customer && cart && (
             <CartMismatchBanner customer={customer} cart={cart} />

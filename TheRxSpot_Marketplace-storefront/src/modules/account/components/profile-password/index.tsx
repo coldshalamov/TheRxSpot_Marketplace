@@ -13,7 +13,7 @@ type MyInformationProps = {
 const ProfilePassword: React.FC<MyInformationProps> = ({ customer }) => {
   const [successState, setSuccessState] = React.useState(false)
 
-  // TODO: Add support for password updates
+  // Password updates are not supported in this storefront MVP.
   const updatePassword = async () => {
     toast.info("Password update is not implemented")
   }

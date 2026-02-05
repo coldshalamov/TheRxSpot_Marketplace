@@ -486,6 +486,18 @@ medusaIntegrationTestRunner({
             product_id: product.id,
           })
 
+          // Outbox event created for durable dispatch (no lost approvals)
+          const outbox = await businessService.listOutboxEvents(
+            { dedupe_key: `consult_approval:${approvals[0].id}:approved` },
+            { take: 1 }
+          )
+
+          expect(outbox[0]).toMatchObject({
+            business_id: business.id,
+            type: "consult.approved",
+            status: "pending",
+          })
+
           // Store approval endpoint reflects approval status
           const customerToken = signCustomerToken(customer.id)
           const storeRes = await api

@@ -38,28 +38,44 @@ function isCartModificationEndpoint(req: MedusaRequest): boolean {
  * Extract all product/variant IDs from cart creation request body
  * Handles both direct items array and nested metadata
  */
-function extractProductIdsFromCartBody(body: any): Array<{ productId?: string; variantId?: string; quantity?: number }> {
-  const items: Array<{ productId?: string; variantId?: string; quantity?: number }> = []
+type ExtractedCartItem = { productId?: string; variantId?: string; quantity?: number }
+
+function asString(v: unknown): string | undefined {
+  return typeof v === "string" && v.trim() ? v.trim() : undefined
+}
+
+function asNumber(v: unknown): number | undefined {
+  return typeof v === "number" && Number.isFinite(v) ? v : undefined
+}
+
+function extractProductIdsFromCartBody(body: unknown): ExtractedCartItem[] {
+  const items: ExtractedCartItem[] = []
   
   if (!body) return items
+  if (typeof body !== "object") return items
   
+  const obj = body as Record<string, unknown>
+
   // Direct items array in cart creation (bypass attack vector)
-  if (body.items && Array.isArray(body.items)) {
-    for (const item of body.items) {
+  const maybeItems = obj.items
+  if (Array.isArray(maybeItems)) {
+    for (const item of maybeItems) {
+      if (!item || typeof item !== "object") continue
+      const it = item as Record<string, unknown>
       items.push({
-        productId: item.product_id,
-        variantId: item.variant_id,
-        quantity: item.quantity,
+        productId: asString(it.product_id),
+        variantId: asString(it.variant_id),
+        quantity: asNumber(it.quantity),
       })
     }
   }
   
   // Single item in body
-  if (body.product_id || body.variant_id) {
+  if (obj.product_id || obj.variant_id) {
     items.push({
-      productId: body.product_id,
-      variantId: body.variant_id,
-      quantity: body.quantity,
+      productId: asString(obj.product_id),
+      variantId: asString(obj.variant_id),
+      quantity: asNumber(obj.quantity),
     })
   }
   
@@ -92,7 +108,7 @@ export const consultGatingMiddleware = async (
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
   
   // Get the request body
-  const body = req.body as any
+  const body = req.body as unknown
   
   // Extract all product/variant IDs from request
   const items = extractProductIdsFromCartBody(body)
@@ -159,10 +175,10 @@ export const consultGatingMiddleware = async (
 export async function validateCartItemsForConsult(
   req: MedusaRequest,
   items: Array<{ product_id?: string; variant_id?: string; quantity?: number }>
-): Promise<{ valid: boolean; errors?: any[] }> {
+): Promise<{ valid: boolean; errors?: Array<{ code: string; product_id?: string; message: string }> }> {
   const productModuleService = req.scope.resolve(Modules.PRODUCT)
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
-  const errors: any[] = []
+  const errors: Array<{ code: string; product_id?: string; message: string }> = []
   
   const customerId = await getCustomerId(req)
   

@@ -185,7 +185,8 @@ async function processPayoutWithProvider(
   payout: any,
   financialsService: any
 ): Promise<any> {
-  // TODO: Integrate with Stripe Connect
+  // Stripe Connect integration is not enabled in this MVP.
+  // This job uses a deterministic simulation unless explicitly configured for chaos testing.
   // 1. Get the business's Stripe Connect account ID
   // 2. Create a transfer to their connected account
   // 3. Handle any errors from Stripe
@@ -195,9 +196,12 @@ async function processPayoutWithProvider(
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 100))
 
-    // Simulate occasional failures (5% failure rate for testing)
-    if (Math.random() < 0.05) {
-      throw new Error("Simulated Stripe API error")
+    const failureRate = parseFloat(process.env.PAYOUT_SIM_FAILURE_RATE || "0")
+    if (Number.isFinite(failureRate) && failureRate > 0) {
+      // Optional chaos knob for pre-launch hardening.
+      if (Math.random() < Math.min(failureRate, 1)) {
+        throw new Error("Simulated payout provider API error")
+      }
     }
 
     return {
