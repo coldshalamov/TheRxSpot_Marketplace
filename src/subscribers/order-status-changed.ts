@@ -44,16 +44,25 @@ export default async function orderStatusChangedHandler({
 
     // If no recent event exists for this transition, create one
     if (recentEvents.length === 0) {
+      const businessId = String(order.metadata?.business_id ?? "")
+      if (!businessId) {
+        console.error(
+          `[order-status-changed] Missing order.metadata.business_id for order ${orderId}; skipping OrderStatusEvent creation`
+        )
+        return
+      }
+
       await businessService.createOrderStatusEvents({
         order_id: orderId,
+        business_id: businessId,
         from_status: previousStatus || "unknown",
         to_status: customStatus,
-        changed_by: "system",
+        triggered_by: "system",
         reason: "Status change detected",
         metadata: {
           medusa_status: order.status,
-          payment_status: order.payment_status,
-          fulfillment_status: order.fulfillment_status,
+          payment_status: (order as any).payment_status,
+          fulfillment_status: (order as any).fulfillment_status,
         },
       })
     }
@@ -62,12 +71,12 @@ export default async function orderStatusChangedHandler({
     await triggerNotifications(container, orderId, customStatus, order)
 
     // Update previous_status in metadata
-    await orderService.updateOrders(orderId, {
-      metadata: {
-        ...order.metadata,
-        previous_status: customStatus,
-      },
-    })
+    const nextMetadata = {
+      ...(order.metadata ?? {}),
+      previous_status: customStatus,
+    }
+
+    await orderService.updateOrders({ id: orderId, metadata: nextMetadata } as any)
 
     console.log(
       `[order-status-changed] Order ${orderId} status: ${previousStatus} -> ${customStatus}`

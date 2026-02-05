@@ -3,6 +3,7 @@ import {
   WorkflowResponse,
   createStep,
   StepResponse,
+  transform,
 } from "@medusajs/framework/workflows-sdk"
 import { Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../../modules/business"
@@ -52,7 +53,17 @@ export type ValidateCartCheckoutOutput = {
 /**
  * Step to check if product requires consultation
  */
-const checkProductRequiresConsultStep = createStep(
+type CheckProductRequiresConsultOutput = {
+  valid: boolean
+  requires_consult: boolean
+  message?: string
+}
+
+const checkProductRequiresConsultStep = createStep<
+  ValidateConsultApprovalInput,
+  CheckProductRequiresConsultOutput,
+  CheckProductRequiresConsultOutput
+>(
   "check-product-requires-consult",
   async (
     input: ValidateConsultApprovalInput,
@@ -64,7 +75,7 @@ const checkProductRequiresConsultStep = createStep(
       const product = await productService.retrieveProduct(input.product_id)
       
       if (!product) {
-        return new StepResponse({
+        return new StepResponse<CheckProductRequiresConsultOutput>({
           valid: false,
           requires_consult: false,
           message: "Product not found",
@@ -76,13 +87,13 @@ const checkProductRequiresConsultStep = createStep(
       const requiresConsult = metadata.requires_consult === true || 
                               metadata.requires_consult === "true"
       
-      return new StepResponse({
+      return new StepResponse<CheckProductRequiresConsultOutput>({
         valid: true,
         requires_consult: requiresConsult,
         message: "OK",
       })
     } catch (error) {
-      return new StepResponse({
+      return new StepResponse<CheckProductRequiresConsultOutput>({
         valid: false,
         requires_consult: false,
         message: `Error checking product: ${error.message}`,
@@ -94,14 +105,18 @@ const checkProductRequiresConsultStep = createStep(
 /**
  * Step to check for valid consult approval
  */
-const checkConsultApprovalStep = createStep(
+const checkConsultApprovalStep = createStep<
+  ValidateConsultApprovalInput & { requires_consult: boolean },
+  ValidateConsultApprovalOutput,
+  ValidateConsultApprovalOutput
+>(
   "check-consult-approval",
   async (
     input: ValidateConsultApprovalInput & { requires_consult: boolean },
     { container }
   ) => {
     if (!input.requires_consult) {
-      return new StepResponse<ValidateConsultApprovalOutput>({
+      return new StepResponse<ValidateConsultApprovalOutput, ValidateConsultApprovalOutput>({
         valid: true,
         message: "Product does not require consultation",
       })
@@ -128,7 +143,7 @@ const checkConsultApprovalStep = createStep(
       )
       
       if (!approvals.length) {
-        return new StepResponse<ValidateConsultApprovalOutput>({
+        return new StepResponse<ValidateConsultApprovalOutput, ValidateConsultApprovalOutput>({
           valid: false,
           message: "No valid consultation approval found for this product",
         })
@@ -140,21 +155,21 @@ const checkConsultApprovalStep = createStep(
       if (approval.expires_at) {
         const expiresAt = new Date(approval.expires_at)
         if (expiresAt < new Date()) {
-          return new StepResponse<ValidateConsultApprovalOutput>({
+          return new StepResponse<ValidateConsultApprovalOutput, ValidateConsultApprovalOutput>({
             valid: false,
             message: "Consultation approval has expired. Please request a new consultation.",
           })
         }
       }
       
-      return new StepResponse<ValidateConsultApprovalOutput>({
+      return new StepResponse<ValidateConsultApprovalOutput, ValidateConsultApprovalOutput>({
         valid: true,
         approval_id: approval.id,
-        expires_at: approval.expires_at,
+        expires_at: approval.expires_at ?? undefined,
         message: "Valid consultation approval found",
       })
     } catch (error) {
-      return new StepResponse<ValidateConsultApprovalOutput>({
+      return new StepResponse<ValidateConsultApprovalOutput, ValidateConsultApprovalOutput>({
         valid: false,
         message: `Error checking approval: ${error.message}`,
       })
@@ -231,8 +246,8 @@ const validateCartConsultApprovalsStep = createStep(
       const customerId = input.customer_id || cart.customer_id || cart.email
       
       // Validate each cart item
-      for (const item of cart.items) {
-        const product = item.product
+      for (const item of (cart.items ?? []) as any[]) {
+        const product = item?.product as any
         
         if (!product) continue
         
@@ -310,7 +325,24 @@ const validateCartConsultApprovalsStep = createStep(
 /**
  * Step to create a new consult approval (for internal use)
  */
-const createConsultApprovalStep = createStep(
+type CreateConsultApprovalOutput = {
+  success: boolean
+  approval_id: string
+  message: string
+}
+
+const createConsultApprovalStep = createStep<
+  {
+    customer_id: string
+    product_id: string
+    business_id: string
+    consultation_id?: string
+    approved_by?: string
+    expires_at?: Date
+  },
+  CreateConsultApprovalOutput,
+  CreateConsultApprovalOutput
+>(
   "create-consult-approval",
   async (
     input: {
@@ -337,15 +369,15 @@ const createConsultApprovalStep = createStep(
         expires_at: input.expires_at,
       })
       
-      return new StepResponse({
+      return new StepResponse<CreateConsultApprovalOutput>({
         success: true,
         approval_id: approval.id,
         message: "OK",
       })
     } catch (error) {
-      return new StepResponse({
+      return new StepResponse<CreateConsultApprovalOutput>({
         success: false,
-        approval_id: null,
+        approval_id: "",
         message: `Failed to create approval: ${error.message}`,
       })
     }
@@ -359,11 +391,13 @@ export const validateConsultApprovalWorkflow = createWorkflow(
   "validate-consult-approval",
   (input: ValidateConsultApprovalInput) => {
     const productCheck = checkProductRequiresConsultStep(input)
-    
-    const approvalCheck = checkConsultApprovalStep({
-      ...input,
-      requires_consult: productCheck.requires_consult,
-    })
+
+    const approvalInput = transform({ input, productCheck }, (d) => ({
+      ...d.input,
+      requires_consult: d.productCheck.requires_consult,
+    }))
+
+    const approvalCheck = checkConsultApprovalStep(approvalInput)
     
     return new WorkflowResponse(approvalCheck)
   }

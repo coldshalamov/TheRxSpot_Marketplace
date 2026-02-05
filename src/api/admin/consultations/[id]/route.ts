@@ -103,7 +103,8 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
         return res.status(notFound.status).json(notFound.body)
       }
       
-      const consultation = await consultationService.updateConsultation(id, req.body)
+      const update = (req.body ?? {}) as Record<string, any>
+      const consultation = await consultationService.updateConsultation(id, update)
       res.json({ consultation })
     } catch (error) {
       if (error instanceof Error && error.message.includes("not found")) {

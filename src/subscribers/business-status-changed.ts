@@ -245,11 +245,11 @@ async function activateApiKey(
   const logger = container.resolve("logger")
   
   try {
-    await apiKeyService.updateApiKeys(apiKeyId, {
-      revoked_at: null,
-      revoked_by: null,
-    })
-    logger.info(`Activated API key ${apiKeyId}`)
+    // Medusa's API Key module doesn't support "un-revoking" a key.
+    // If a business is re-activated, the safest approach is to create/rotate a new key.
+    logger.info(
+      `[business-status-changed] Business re-activated; API key ${apiKeyId} cannot be un-revoked automatically`
+    )
   } catch (error) {
     logger.error(`Failed to activate API key: ${error.message}`)
   }
@@ -266,12 +266,8 @@ async function revokeApiKey(
   const logger = container.resolve("logger")
   
   try {
-    await apiKeyService.revokeApiKeys({
-      selector: { id: apiKeyId },
-      revoke: {
-        revoked_at: new Date(),
-        // Note: revoked_by should be set by the system
-      },
+    await apiKeyService.revoke(apiKeyId, {
+      revoked_by: "system",
     })
     logger.info(`Revoked API key ${apiKeyId}`)
   } catch (error) {
@@ -290,17 +286,10 @@ async function activateDomains(
   const logger = container.resolve("logger")
   
   try {
+    // The BusinessDomain model doesn't have an explicit status field; domain activation is
+    // handled by verification (`is_verified` + `verified_at`) and the domain-verification job.
     const domains = await businessService.listBusinessDomainsByBusiness(businessId)
-    
-    for (const domain of domains) {
-      if (domain.status === "suspended") {
-        await businessService.updateBusinessDomains(domain.id, {
-          status: "active",
-        })
-      }
-    }
-    
-    logger.info(`Activated domains for business ${businessId}`)
+    logger.info(`Business ${businessId} has ${domains.length} domains; verification job will manage activation`)
   } catch (error) {
     logger.error(`Failed to activate domains: ${error.message}`)
   }
@@ -320,11 +309,13 @@ async function suspendDomains(
     const domains = await businessService.listBusinessDomainsByBusiness(businessId)
     
     for (const domain of domains) {
-      if (domain.status === "active") {
-        await businessService.updateBusinessDomains(domain.id, {
-          status: "suspended",
-        })
-      }
+      if (!domain.is_verified) continue
+
+      await businessService.updateBusinessDomains({
+        id: domain.id,
+        is_verified: false,
+        verified_at: null,
+      } as any)
     }
     
     logger.info(`Suspended domains for business ${businessId}`)
@@ -347,9 +338,13 @@ async function deactivateDomains(
     const domains = await businessService.listBusinessDomainsByBusiness(businessId)
     
     for (const domain of domains) {
-      await businessService.updateBusinessDomains(domain.id, {
-        status: "inactive",
-      })
+      if (!domain.is_verified && !domain.verified_at) continue
+
+      await businessService.updateBusinessDomains({
+        id: domain.id,
+        is_verified: false,
+        verified_at: null,
+      } as any)
     }
     
     logger.info(`Deactivated domains for business ${businessId}`)
@@ -367,14 +362,20 @@ async function clearSuspensionFlags(
 ) {
   const businessService = container.resolve(BUSINESS_MODULE)
   
-  await businessService.updateBusinesses({
-    selector: { id: business.id },
-    data: {
+  const currentSettings = (business.settings ?? {}) as Record<string, any>
+  const suspension = (currentSettings.suspension ?? {}) as Record<string, any>
+
+  const nextSettings = {
+    ...currentSettings,
+    suspension: {
+      ...suspension,
       suspended_at: null,
       suspended_reason: null,
       suspended_by: null,
     },
-  })
+  }
+
+  await businessService.updateBusinesses({ id: business.id, settings: nextSettings } as any)
 }
 
 /**
@@ -387,13 +388,19 @@ async function recordSuspensionDetails(
 ) {
   const businessService = container.resolve(BUSINESS_MODULE)
   
-  await businessService.updateBusinesses({
-    selector: { id: business.id },
-    data: {
+  const currentSettings = (business.settings ?? {}) as Record<string, any>
+  const suspension = (currentSettings.suspension ?? {}) as Record<string, any>
+
+  const nextSettings = {
+    ...currentSettings,
+    suspension: {
+      ...suspension,
       suspended_at: new Date(),
       suspended_reason: reason || "Compliance violation",
     },
-  })
+  }
+
+  await businessService.updateBusinesses({ id: business.id, settings: nextSettings } as any)
 }
 
 /**

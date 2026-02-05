@@ -122,24 +122,24 @@ async function updateBusinessStatistics(
   const logger = container.resolve("logger")
   
   try {
-    // Get current statistics
-    const currentStats = business.statistics || {}
+    const currentSettings = (business.settings ?? {}) as Record<string, any>
+    const currentStats = (currentSettings.statistics ?? {}) as Record<string, any>
     
     // Calculate new statistics
     const orderCount = (currentStats.order_count || 0) + 1
     const totalRevenue = (currentStats.total_revenue || 0) + (order.total || 0)
-    
-    await businessService.updateBusinesses({
-      selector: { id: business.id },
-      data: {
-        statistics: {
-          ...currentStats,
-          order_count: orderCount,
-          total_revenue: totalRevenue,
-          last_order_at: new Date(),
-        },
+
+    const nextSettings = {
+      ...currentSettings,
+      statistics: {
+        ...currentStats,
+        order_count: orderCount,
+        total_revenue: totalRevenue,
+        last_order_at: new Date(),
       },
-    })
+    }
+    
+    await businessService.updateBusinesses({ id: business.id, settings: nextSettings } as any)
     
     logger.info(`Updated statistics for business ${business.id}`)
   } catch (error) {

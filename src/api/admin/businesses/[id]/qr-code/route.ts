@@ -17,8 +17,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
 
   const business = await businessModuleService.retrieveBusiness(id)
-  const storefrontUrl =
-    business.settings?.storefront_url || `http://localhost:8000`
+
+  const storefrontUrl = String(
+    (business.settings as any)?.storefront_url ?? "http://localhost:8000"
+  )
 
   const qrCodeDataUrl = await QRCode.toDataURL(storefrontUrl, {
     width: 300,
@@ -26,12 +28,10 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     color: { dark: "#000000", light: "#ffffff" },
   })
 
-  const settings = { ...(business.settings as object), qr_code_data_url: qrCodeDataUrl }
+  const existingSettings = (business.settings ?? {}) as Record<string, any>
+  const settings = { ...existingSettings, qr_code_data_url: qrCodeDataUrl }
 
-  await businessModuleService.updateBusinesses({
-    selector: { id },
-    data: { settings },
-  })
+  await businessModuleService.updateBusinesses({ id, settings } as any)
 
   res.json({ qr_code_data_url: qrCodeDataUrl })
 }

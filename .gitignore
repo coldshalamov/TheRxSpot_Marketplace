@@ -27,3 +27,7 @@ build
 !.yarn/versions
 
 .medusa
+
+/progress.txt
+/PLAN.txt
+/PRD_CHECKLIST.md

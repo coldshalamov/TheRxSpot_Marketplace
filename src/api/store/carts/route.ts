@@ -71,8 +71,6 @@ export async function validateCartConsultApprovals(
   req: MedusaRequest,
   cartId: string
 ): Promise<{ valid: boolean; errors?: any[] }> {
-  const cartService = req.scope.resolve(Modules.CART)
-  const productService = req.scope.resolve(Modules.PRODUCT)
   const businessService = req.scope.resolve("businessModuleService")
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   
@@ -91,8 +89,8 @@ export async function validateCartConsultApprovals(
     const errors: any[] = []
     
     // Check each cart item
-    for (const item of cart.items) {
-      const product = item.product
+    for (const item of (cart.items ?? []) as any[]) {
+      const product = item?.product
       
       if (!product) continue
       
@@ -108,7 +106,7 @@ export async function validateCartConsultApprovals(
       
       if (!customerId) {
         errors.push({
-          item_id: item.id,
+          item_id: item?.id,
           product_id: product.id,
           code: "AUTH_REQUIRED",
           message: "Authentication required for prescription products",
@@ -128,7 +126,7 @@ export async function validateCartConsultApprovals(
       
       if (approvals.length === 0) {
         errors.push({
-          item_id: item.id,
+          item_id: item?.id,
           product_id: product.id,
           product_title: product.title,
           code: "CONSULT_REQUIRED",
@@ -143,7 +141,7 @@ export async function validateCartConsultApprovals(
         const expiresAt = new Date(approval.expires_at)
         if (expiresAt < new Date()) {
           errors.push({
-            item_id: item.id,
+            item_id: item?.id,
             product_id: product.id,
             product_title: product.title,
             code: "CONSULT_EXPIRED",

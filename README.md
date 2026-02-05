@@ -1,23 +1,53 @@
 # TheRxSpot Marketplace
 
-**White-Label Telehealth Platform** - Replace partner with our own multi-tenant marketplace
+**Telehealth Commerce + Operations Platform**
+
+> **The System of Record for Multi-Tenant Telehealth**
+> Replacing the legacy operational engine (VSDH) to provide a reliable, white-label commerce and fulfillment backbone.
 
 ---
 
-## 🎯 Project Vision
+## 🎯 The New Mandate
 
-Build a **white-label telehealth platform** to replace our partner's service. We'll own the tech stack and provide:
+We are transitioning from a simple "Go-To-Market" layer to becoming the **Telehealth Engine** itself.
 
-1. **Admin Dashboard** - Manage tenants, orders, consultations, earnings
-2. **Customer Storefronts** - Personalized per business (domain-based routing)
-3. **Product Catalog** - Medications with consult-gating
-4. **Order Management** - Track orders through fulfillment
-5. **Commission System** - Track earnings and process payouts
+**Our Goal:** Replace the brittle upstream provider (VSDH) with a robust, owned platform that controls the entire operational lifecycle:
+1.  **System of Record:** We own the order book, tenant configurations, and state.
+2.  **Operational Integrity:** No lost orders, full auditability, reliable state management.
+3.  **Delegated Clinical Actions:** We facilitate the workflow but delegate the specific clinical act to licensed providers. We do **not** provide medical services directly; we provide the *platform* for them.
 
-**What We DON'T Handle** (Partner/Offsite):
-- ❌ Doctor consultations (offsite providers)
-- ❌ Prescription fulfillment (pharmacy partner)
-- ❌ Video call infrastructure (third-party)
+### What We Built vs. What We Delegate
+
+| We Own (The Rx Spot) | We Delegate (Partners/Provider Layer) |
+| :--- | :--- |
+| ✅ **Tenant Management:** Provisioning, config, branding | ❌ **Clinical Consultations:** Licensed MDs/DOs |
+| ✅ **Order Lifecycle:** System of record for all orders | ❌ **Pharmacy Fulfillment:** Physical dispensing |
+| ✅ **Storefronts:** White-label operational sites | ❌ **Video Infrastructure:** 3rd party tools |
+| ✅ **Financials:** Payouts, commissions, fees | |
+
+---
+
+## 🌍 The Ecosystem
+
+To understand how this repository fits into the broader business, we operate with three distinct components:
+
+### 1. The Platform (This Repository)
+**The Engine.**
+- **Role:** Central Backoffice, API, and Multi-Tenant Storefront host.
+- **Responsibility:** Manages all data, orders, users, and logic.
+- **Tech:** Medusa.js (Backend), Next.js (Admin + Storefront), PostgreSQL, Redis.
+
+### 2. The Front Site (Separate Repository)
+**The Business Face.**
+- **Role:** Marketing and Sales for The Rx Spot itself.
+- **Responsibility:** Explaining our value prop to potential B2B partners/tenants.
+- **Relation:** Feeds leads into the Platform; does not process patients.
+
+### 3. Website Templates (External Asset Library)
+**The Look & Feel.**
+- **Role:** A collection of high-quality designs for tenant storefronts.
+- **Responsibility:** Provides the visual identity (HTML/CSS/Config) that the Platform consumes to generate unique, white-labeled sites for each partner.
+- **Mechanism:** The Platform loads these templates/configs to dynamically brand the customer experience based on the active Tenant.
 
 ---
 
@@ -25,203 +55,73 @@ Build a **white-label telehealth platform** to replace our partner's service. We
 
 ```
 TheRxSpot_Marketplace/
-├── src/                              # Medusa Backend
-│   ├── modules/                      # Custom business logic
-│   │   ├── business/                 # Multi-tenant management
-│   │   ├── consultation/             # Consultation tracking
-│   │   ├── financials/               # Earnings & payouts
-│   │   └── compliance/               # Documents & audit logs
+├── src/                              # Medusa Backend (The Engine)
+│   ├── modules/                      # Custom business logic (Business, Consults, Financials)
 │   ├── api/                          # REST API routes
-│   ├── workflows/                    # Business process flows
-│   ├── jobs/                         # Background tasks
-│   └── admin/routes/                 # Admin UI pages
-├── TheRxSpot_Marketplace-storefront/ # Next.js Customer Site
+│   └── admin/routes/                 # Operational Dashboard (Backoffice)
+├── TheRxSpot_Marketplace-storefront/ # Multi-Tenant Customer App
+│   └── src/app/[countryCode]/(tenant)/ # Dynamic Template Renderer
 ├── docs/                             # Documentation
-│   ├── IMPLEMENTATION_PLAN.md        # Step-by-step build plan
-│   ├── FEATURES.md                   # Feature specifications
-│   ├── ARCHITECTURE.md               # System architecture
-│   └── API_REFERENCE.md              # API documentation
+│   ├── ARCHITECTURE.md               # System design & Ecosystem map
+│   ├── IMPLEMENTATION_PLAN.md        # Build roadmap
+│   └── FEATURES.md                   # Spec details
 └── README.md                         # This file
 ```
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Key capabilities
+
+### 1. Operations Engine
+- **Tenant Provisioning:** Rapid onboarding of new partners (influencers, clinics).
+- **Order Book:** Canonical source of truth for every order's status and history.
+- **Commission System:** Automated tracking of platform fees vs. tenant revenue.
+
+### 2. Clinical Workflow Support
+- **Consult-Gating:** Products can be locked behind a "Consult Required" flag.
+- **Intake Flow:** Digital forms and scheduling for patient data collection.
+- **Provider Routing:** Orders move to a "Ready for Review" state for external clinicians.
+
+### 3. Reliability & Compliance
+- **Audit Logging:** Every action (especially PHI access) is logged immutably.
+- **Tenant Isolation:** Strict data scoping ensuring Partner A cannot see Partner B's data.
+- **Resiliency:** Designed to survive unreliable external partners by holding state locally.
+
+---
+
+## 🛠️ Quick Start
 
 ### Prerequisites
 - Node.js 20+
 - PostgreSQL 15+
-- Redis (for rate limiting)
+- Redis
 
 ### Backend Setup
 ```bash
-# Install dependencies
 npm install
-
-# Configure environment
 cp .env.template .env
-# Edit .env with your database credentials
-
-# Run migrations
 npm run build
-
-# Start development server
 npm run dev
+# Backend runs on http://localhost:9000
 ```
-
-Backend runs on `http://localhost:9000`
 
 ### Storefront Setup
 ```bash
 cd TheRxSpot_Marketplace-storefront
 npm install
 cp .env.local.template .env.local
-# Edit .env.local with backend URL
 npm run dev
+# Storefront runs on http://localhost:8000
 ```
-
-Storefront runs on `http://localhost:8000`
-
----
-
-## 📋 Key Features
-
-### Multi-Tenant Management
-- Create businesses with custom domains
-- Brand customization (logo, colors, tagline)
-- Location-based serviceable states
-- Per-tenant product catalogs
-
-### User Management
-- Client accounts with roles
-- Phone verification
-- Status tracking (Active/Inactive)
-
-### Consultation Tracking
-- Link consultations to orders
-- Track status (Scheduled, Completed, etc.)
-- Support multiple modes (Video, Audio, Form)
-- Clinician assignment
-
-### Order Management
-- Shopping cart with consult-gating
-- Order status tracking
-- Product types (Initial, Refill)
-- Delivery status
-
-### Earnings & Payouts
-- Commission tracking per order
-- Platform fee calculation
-- Payout requests
-- Balance management
-
-### Coupons & Discounts
-- Fixed amount discounts
-- Active/Inactive status
-- Usage tracking
-
----
-
-## 🔧 Implementation Status
-
-**Current Phase:** Foundation Complete ✅
-
-| Component | Status | Next Steps |
-|-----------|--------|------------|
-| Backend API | ✅ Complete | Deploy to staging |
-| Admin Dashboard | 🟡 Partial | Build remaining pages |
-| Storefront | 🟡 Template | Customize for tenants |
-| Payment Integration | ⏳ Pending | Integrate Stripe |
-| Custom Domains | ⏳ Pending | DNS automation |
-
-See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for detailed roadmap.
 
 ---
 
 ## 📚 Documentation
-
-- **[Implementation Plan](docs/IMPLEMENTATION_PLAN.md)** - Step-by-step build plan
-- **[Features](docs/FEATURES.md)** - Feature specifications
-- **[Architecture](docs/ARCHITECTURE.md)** - System design & data models
-- **[API Reference](docs/API_REFERENCE.md)** - REST API documentation
-- **[Deployment](docs/DEPLOYMENT.md)** - Production deployment guide
-
----
-
-## 🧪 Testing
-
-```bash
-# Run all tests
-npm test
-
-# Run specific test suite
-npm run test:consultation
-npm run test:earnings
-npm run test:documents
-```
-
-7 integration tests covering:
-- Consultation lifecycle
-- Consult-gating workflow
-- Earnings calculation
-- Document security
-- Audit logging
-- Rate limiting
-- Order workflow
-
----
-
-## 🔒 Security & Compliance
-
-### Built-in Security Features
-- ✅ Redis-based rate limiting
-- ✅ Virus scanning on file uploads (ClamAV)
-- ✅ MIME type validation
-- ✅ Auto-logoff after inactivity
-- ✅ Tenant data isolation
-- ✅ Audit logging for PHI access
-- ✅ Document encryption at rest
-- ✅ Role-based access control
-
-### HIPAA Compliance
-- PHI access logging with 7-year retention
-- Encrypted document storage
-- Secure file upload with validation
-- Tenant-scoped data access
-
----
-
-## 🛠️ Tech Stack
-
-### Backend
-- **Medusa.js 2.13.1** - Headless commerce framework
-- **PostgreSQL** - Primary database
-- **Redis** - Rate limiting & caching
-- **TypeScript** - Type safety
-- **Jest** - Testing framework
-
-### Storefront
-- **Next.js 15** - React framework
-- **Tailwind CSS** - Styling
-- **Medusa JS SDK** - Backend integration
-
-### Infrastructure
-- **Docker** - Containerization
-- **AWS S3** - Document storage
-- **Stripe** - Payment processing
-- **SendGrid** - Email notifications
-
----
-
-## 📞 Support
-
-For questions or issues:
-1. Check [docs/](docs/) for documentation
-2. Review [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)
-3. Contact the development team
+- **[Architecture & Ecosystem](docs/ARCHITECTURE.md)** - Detailed system map.
+- **[Implementation Plan](docs/IMPLEMENTATION_PLAN.md)** - Status and roadmap.
+- **[Feature Specs](docs/FEATURES.md)** - Detailed behavior definitions.
 
 ---
 
 ## 📝 License
-
 Proprietary - TheRxSpot Internal Use Only

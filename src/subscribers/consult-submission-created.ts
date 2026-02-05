@@ -149,20 +149,21 @@ async function logSubmissionAnalytics(
   try {
     // Update business statistics
     const businessService = container.resolve(BUSINESS_MODULE)
-    const currentStats = business.statistics || {}
+    const currentSettings = (business.settings ?? {}) as Record<string, any>
+    const currentStats = (currentSettings.statistics ?? {}) as Record<string, any>
     
     const submissionCount = (currentStats.consult_submission_count || 0) + 1
     
-    await businessService.updateBusinesses({
-      selector: { id: business.id },
-      data: {
-        statistics: {
-          ...currentStats,
-          consult_submission_count: submissionCount,
-          last_consult_submission_at: new Date(),
-        },
+    const nextSettings = {
+      ...currentSettings,
+      statistics: {
+        ...currentStats,
+        consult_submission_count: submissionCount,
+        last_consult_submission_at: new Date(),
       },
-    })
+    }
+
+    await businessService.updateBusinesses({ id: business.id, settings: nextSettings } as any)
     
     logger.info(`Logged analytics for submission ${submission.id}`)
   } catch (error) {

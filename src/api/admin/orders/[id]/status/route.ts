@@ -134,8 +134,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       order_id: id,
       current_status: currentStatus,
       medusa_status: order.status,
-      payment_status: order.payment_status,
-      fulfillment_status: order.fulfillment_status,
+      payment_status: (order as any).payment_status,
+      fulfillment_status: (order as any).fulfillment_status,
     })
   } catch (error) {
     if (error instanceof Error && error.message.includes("not found")) {

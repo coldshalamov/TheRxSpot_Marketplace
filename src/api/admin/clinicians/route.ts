@@ -70,7 +70,8 @@ export const POST = [
     const consultationService = req.scope.resolve(CONSULTATION_MODULE)
 
     try {
-      const clinician = await consultationService.createClinician(req.body)
+      const body = (req.body ?? {}) as Record<string, any>
+      const clinician = await consultationService.createClinician(body)
       res.status(201).json({ clinician })
     } catch (error) {
       res.status(400).json({

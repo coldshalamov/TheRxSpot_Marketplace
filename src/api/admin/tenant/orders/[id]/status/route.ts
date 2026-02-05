@@ -48,12 +48,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
     const { data: orders } = await query.graph({
       entity: "order",
-      fields: ["id", "status", "metadata"],
+      fields: ["id", "status", "metadata", "business.id"],
       filters: {
         id,
-        business: {
-          id: tenantContext.business_id,
-        },
       },
     })
 
@@ -62,6 +59,9 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
     }
 
     const order = orders[0]
+    if (order.business?.id !== tenantContext.business_id) {
+      return res.status(404).json({ message: "Order not found" })
+    }
 
     // Get current custom status
     const currentStatus =
@@ -134,12 +134,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
     const { data: orders } = await query.graph({
       entity: "order",
-      fields: ["id", "status", "payment_status", "fulfillment_status", "metadata"],
+      fields: ["id", "status", "metadata", "business.id"],
       filters: {
         id,
-        business: {
-          id: tenantContext.business_id,
-        },
       },
     })
 
@@ -148,6 +145,9 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     }
 
     const order = orders[0]
+    if (order.business?.id !== tenantContext.business_id) {
+      return res.status(404).json({ message: "Order not found" })
+    }
     const currentStatus =
       (order.metadata?.custom_status as string) || getStatusFromOrder(order)
 
@@ -155,8 +155,6 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       order_id: id,
       current_status: currentStatus,
       medusa_status: order.status,
-      payment_status: order.payment_status,
-      fulfillment_status: order.fulfillment_status,
     })
   } catch (error) {
     res.status(500).json({

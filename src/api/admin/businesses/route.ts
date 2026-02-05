@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { BUSINESS_MODULE } from "../../../modules/business"
+import { provisionBusinessWorkflow } from "../../../workflows/provision-business"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
@@ -19,10 +20,20 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
   const body = (req.body ?? {}) as Record<string, any>
 
-  const business = await businessModuleService.createBusiness({
+  // 1. Create the business in pending state
+  const business = await businessModuleService.createBusinesses({
     ...body,
     status: "pending",
+  } as any)
+
+  // 2. Provision the business (Sales Channel, API Key, Stock Location)
+  const { result } = await provisionBusinessWorkflow(req.scope).run({
+    input: {
+      business_id: business.id,
+      storefront_base_url: body.storefront_url, // Allow passing this in
+    },
   })
 
-  res.status(201).json({ business })
+  res.status(201).json({ business: result })
 }
+

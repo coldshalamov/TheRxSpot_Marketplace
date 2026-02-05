@@ -31,12 +31,23 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   }
 
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
-  const { email, role } = req.body as { email: string; role?: string }
+  const body = (req.body ?? {}) as { email?: string; role?: string }
+  const email = body.email
+  const roleInput = body.role
+
+  if (!email) {
+    return res.status(400).json({ message: "email is required" })
+  }
+
+  const role: "owner" | "staff" | "viewer" =
+    roleInput === "owner" || roleInput === "staff" || roleInput === "viewer"
+      ? roleInput
+      : "staff"
 
   const user = await businessModuleService.createBusinessUsers({
     business_id: tenantContext.business_id,
     email,
-    role: role || "staff",
+    role,
   })
 
   res.status(201).json({ user })

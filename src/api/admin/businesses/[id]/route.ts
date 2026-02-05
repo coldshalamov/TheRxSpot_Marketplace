@@ -16,19 +16,22 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
   const { id } = req.params
   
+  const body = (req.body ?? {}) as Record<string, any>
+  const { id: _ignored, ...data } = body
+
   const business = await businessModuleService.updateBusinesses({
-    selector: { id },
-    data: req.body,
-  })
+    id,
+    ...data,
+  } as any)
   
-  res.json({ business: business[0] })
+  res.json({ business })
 }
 
 export const DELETE = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
   const { id } = req.params
   
-  await (businessModuleService as any).softDeleteBusinesses(id)
+  await businessModuleService.softDeleteBusinesses(id)
   
   res.status(204).send()
 }

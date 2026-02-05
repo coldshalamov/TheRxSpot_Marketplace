@@ -1,0 +1,1150 @@
+{
+  "business": {
+    "name": "The Rx Spot",
+    "slug": "the-rx-spot",
+    "status": "active"
+  },
+  "categories": [
+    {
+      "name": "Appetite Suppressant",
+      "rank": 1,
+      "products": [
+        {
+          "name": "Sermorelin Troche",
+          "startingPrice": 108,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Sublingual",
+              "dosage": "500mcg",
+              "description": "500mcg sublingually 5 days a week",
+              "costToBusiness": 102.73,
+              "sellingPrice": 108
+            },
+            {
+              "form": "Sublingual",
+              "dosage": "1000mcg",
+              "description": "1000mcg sublingually 5 days a week",
+              "costToBusiness": 110.4,
+              "sellingPrice": 116
+            }
+          ]
+        },
+        {
+          "name": "L-Carnitine",
+          "startingPrice": 120,
+          "status": "active",
+          "variants": [
+            {
+              "form": "IM",
+              "dosage": "500mg",
+              "description": "Inject 500mg IM Up to 2 times weekly",
+              "costToBusiness": 95,
+              "sellingPrice": 120
+            },
+            {
+              "form": "IM",
+              "dosage": "1000mg",
+              "description": "Inject 1000mg IM up to 2 times weekly",
+              "costToBusiness": 95,
+              "sellingPrice": 120
+            }
+          ]
+        },
+        {
+          "name": "Skinny Shots - MICC",
+          "startingPrice": 299,
+          "status": "active",
+          "variants": [
+            {
+              "form": "IM",
+              "dosage": "1mL",
+              "description": "MICC (methionine 25mg/inositol 50mg/choline 50mg/ cyano 330mcg/ml)- Inject 1ml once weekly for 6 weeks, take 3 week break",
+              "costToBusiness": 150,
+              "sellingPrice": 299
+            }
+          ]
+        },
+        {
+          "name": "Skinny Shots",
+          "startingPrice": 61,
+          "status": "active",
+          "variants": [
+            {
+              "form": "IM",
+              "dosage": "1mL",
+              "description": "Methionine/Inositol B12 (Cyanocobalamin) + Levocarnitine 10mg/40mg/1mg/100mg/mL - Inject 1ml once weekly for 6 weeks, take 3 week break",
+              "costToBusiness": 47.11,
+              "sellingPrice": 61
+            },
+            {
+              "form": "IM",
+              "dosage": "1mL",
+              "description": "Methionine/Inositol B12 (Cyanocobalamin) 25mg/50mg/1mg/mL - Inject 1ml once weekly for 6 weeks, take 3 week break",
+              "costToBusiness": 61.99,
+              "sellingPrice": 80
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Weight Management",
+      "rank": 2,
+      "products": [
+        {
+          "name": "Oral Weight Loss Capsules",
+          "startingPrice": 142,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "1units",
+              "description": "1 capsule of Naltrexone/Bupropion/Metformin/Topiramate/Methylcobalamin 8mg/65mg/250mg/15mg/1mg for 6 Weeks",
+              "costToBusiness": 113,
+              "sellingPrice": 142
+            },
+            {
+              "form": "Oral",
+              "dosage": "1units",
+              "description": "1 capsule of Naltrexone/Bupropion/Metformin/Topiramate/Methylcobalamin 8mg/65mg/250mg/15mg/1mg for 8 Weeks",
+              "costToBusiness": 144.9,
+              "sellingPrice": 193
+            },
+            {
+              "form": "Oral",
+              "dosage": "2units",
+              "description": "2 capsule of Naltrexone/Bupropion/Metformin/Topiramate/Methylcobalamin 8mg/65mg/250mg/15mg/1mg for 3 Weeks",
+              "costToBusiness": 113,
+              "sellingPrice": 142
+            },
+            {
+              "form": "Oral",
+              "dosage": "2units",
+              "description": "2 capsule of Naltrexone/Bupropion/Metformin/Topiramate/Methylcobalamin 8mg/65mg/250mg/15mg/1mg for 4 Weeks",
+              "costToBusiness": 148,
+              "sellingPrice": 193
+            }
+          ]
+        },
+        {
+          "name": "Metformin HCl ER Tablet",
+          "startingPrice": 125,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "500mg",
+              "description": "Take 500mg of Metformin HCl ER Tablet Daily",
+              "costToBusiness": 98.21,
+              "sellingPrice": 125
+            },
+            {
+              "form": "Oral",
+              "dosage": "750mg",
+              "description": "Take 1000mg of Metformin HCl ER Tablet Daily",
+              "costToBusiness": 98.21,
+              "sellingPrice": 125
+            },
+            {
+              "form": "Oral",
+              "dosage": "750mg",
+              "description": "Take 750mg of Metformin HCl ER Tablet Daily",
+              "costToBusiness": 98.21,
+              "sellingPrice": 125
+            }
+          ]
+        },
+        {
+          "name": "Liraglutide",
+          "startingPrice": 399,
+          "status": "active",
+          "variants": [
+            {
+              "form": "SubQ",
+              "dosage": "0.75mg",
+              "description": "0.75mg SQ daily for 4 weeks",
+              "costToBusiness": 200,
+              "sellingPrice": 399
+            },
+            {
+              "form": "SubQ",
+              "dosage": "1.35mg",
+              "description": "1.35mg SQ daily for 4 weeks",
+              "costToBusiness": 200,
+              "sellingPrice": 399
+            },
+            {
+              "form": "SubQ",
+              "dosage": "2.1mg",
+              "description": "2.1mg SQ daily for 4 weeks",
+              "costToBusiness": 200,
+              "sellingPrice": 399
+            },
+            {
+              "form": "SubQ",
+              "dosage": "2.7mg",
+              "description": "2.7mg SQ daily for 4 weeks",
+              "costToBusiness": 200,
+              "sellingPrice": 399
+            },
+            {
+              "form": "SubQ",
+              "dosage": "3.3mg",
+              "description": "3.3mg SQ daily for 4 weeks",
+              "costToBusiness": 300,
+              "sellingPrice": 479
+            }
+          ]
+        },
+        {
+          "name": "Tirzepatide",
+          "startingPrice": 249,
+          "status": "active",
+          "variants": [
+            {
+              "form": "SubQ",
+              "dosage": "2.25mg",
+              "description": "Tirzepatide SQ 2.25mg once a week",
+              "costToBusiness": 90,
+              "sellingPrice": 249
+            },
+            {
+              "form": "SubQ",
+              "dosage": "4.5mg",
+              "description": "Tirzepatide SQ 4.5mg once a week",
+              "costToBusiness": 105,
+              "sellingPrice": 249
+            },
+            {
+              "form": "SubQ",
+              "dosage": "6.75mg",
+              "description": "Tirzepatide SQ 6.75mg once a week",
+              "costToBusiness": 120,
+              "sellingPrice": 249
+            },
+            {
+              "form": "SubQ",
+              "dosage": "9mg",
+              "description": "Tirzepatide SQ 9mg once a week",
+              "costToBusiness": 150,
+              "sellingPrice": 249
+            },
+            {
+              "form": "SubQ",
+              "dosage": "11.25mg",
+              "description": "Tirzepatide SQ 11.25mg once a week",
+              "costToBusiness": 160,
+              "sellingPrice": 249
+            },
+            {
+              "form": "SubQ",
+              "dosage": "13.5mg",
+              "description": "Tirzepatide SQ 13.5mg once a week",
+              "costToBusiness": 170,
+              "sellingPrice": 249
+            }
+          ]
+        },
+        {
+          "name": "Semaglutide Sublingual",
+          "startingPrice": 189,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Sublingual",
+              "dosage": "0.5mg",
+              "description": "0.5mg sublingually once daily for 4 weeks",
+              "costToBusiness": 169.05,
+              "sellingPrice": 189
+            },
+            {
+              "form": "Sublingual",
+              "dosage": "1mg",
+              "description": "1mg sublingually once daily for 4 weeks",
+              "costToBusiness": 169.05,
+              "sellingPrice": 189
+            },
+            {
+              "form": "Sublingual",
+              "dosage": "1.5mg",
+              "description": "1.5mg sublingually once daily for 4 weeks",
+              "costToBusiness": 168.5,
+              "sellingPrice": 189
+            },
+            {
+              "form": "Sublingual",
+              "dosage": "2mg",
+              "description": "2mg sublingually once daily for 4 weeks",
+              "costToBusiness": 177.61,
+              "sellingPrice": 189
+            },
+            {
+              "form": "Sublingual",
+              "dosage": "2.5mg",
+              "description": "2.5mg sublingually once daily for 4 weeks",
+              "costToBusiness": 180,
+              "sellingPrice": 189
+            },
+            {
+              "form": "Sublingual",
+              "dosage": "3mg",
+              "description": "3mg sublingually once daily for 4 weeks",
+              "costToBusiness": 180,
+              "sellingPrice": 189
+            }
+          ]
+        },
+        {
+          "name": "Phentermine HCl Tablet",
+          "startingPrice": 80,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "37.5mg",
+              "description": "Take 37.5mg of Phentermine HCl Tablet",
+              "costToBusiness": 63,
+              "sellingPrice": 80
+            }
+          ]
+        },
+        {
+          "name": "Semaglutide Injection",
+          "startingPrice": 189,
+          "status": "active",
+          "variants": [
+            {
+              "form": "SubQ",
+              "dosage": "0.25mg",
+              "description": "Semaglutide SQ 0.25mg once a week",
+              "costToBusiness": 85,
+              "sellingPrice": 189
+            },
+            {
+              "form": "SubQ",
+              "dosage": "0.5mg",
+              "description": "Semaglutide SQ 0.5mg once a week",
+              "costToBusiness": 95,
+              "sellingPrice": 189
+            },
+            {
+              "form": "SubQ",
+              "dosage": "1mg",
+              "description": "Semaglutide SQ 1mg once a week",
+              "costToBusiness": 100,
+              "sellingPrice": 189
+            },
+            {
+              "form": "SubQ",
+              "dosage": "1.7mg",
+              "description": "Semaglutide SQ 1.7mg once a week",
+              "costToBusiness": 105,
+              "sellingPrice": 189
+            },
+            {
+              "form": "SubQ",
+              "dosage": "2.4mg",
+              "description": "Semaglutide SQ 2.4mg once a week",
+              "costToBusiness": 110,
+              "sellingPrice": 189
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Peptides",
+      "rank": 3,
+      "products": [
+        {
+          "name": "BPC - 157",
+          "startingPrice": 300,
+          "status": "active",
+          "variants": [
+            {
+              "form": "SubQ",
+              "dosage": "200mcg",
+              "description": "200mcg SQ daily for 4 Weeks",
+              "costToBusiness": 224,
+              "sellingPrice": 300
+            },
+            {
+              "form": "SubQ",
+              "dosage": "250mcg",
+              "description": "250mcg SQ daily for 4 Weeks",
+              "costToBusiness": 224,
+              "sellingPrice": 300
+            },
+            {
+              "form": "SubQ",
+              "dosage": "300mcg",
+              "description": "300mcg SQ daily for 4 Weeks",
+              "costToBusiness": 224,
+              "sellingPrice": 300
+            },
+            {
+              "form": "SubQ",
+              "dosage": "350mcg",
+              "description": "350mcg SQ daily for 4 Weeks",
+              "costToBusiness": 224,
+              "sellingPrice": 300
+            },
+            {
+              "form": "SubQ",
+              "dosage": "400mcg",
+              "description": "400mcg SQ daily for 4 Weeks",
+              "costToBusiness": 224,
+              "sellingPrice": 300
+            },
+            {
+              "form": "SubQ",
+              "dosage": "450mcg",
+              "description": "450mcg SQ daily for 4 Weeks",
+              "costToBusiness": 224,
+              "sellingPrice": 300
+            },
+            {
+              "form": "SubQ",
+              "dosage": "500mcg",
+              "description": "500mcg SQ daily for 4 Weeks",
+              "costToBusiness": 224,
+              "sellingPrice": 300
+            }
+          ]
+        },
+        {
+          "name": "Sermorelin Sublingual",
+          "startingPrice": 197,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Sublingual",
+              "dosage": "0.5mg",
+              "description": "0.5mg sublingually 5 nights a week for 3 Months",
+              "costToBusiness": 156,
+              "sellingPrice": 197
+            }
+          ]
+        },
+        {
+          "name": "Sermorelin Injection",
+          "startingPrice": 115,
+          "status": "active",
+          "variants": [
+            {
+              "form": "SubQ",
+              "dosage": "0.2mg",
+              "description": "0.2mg SQ 5 nights a week",
+              "costToBusiness": 115,
+              "sellingPrice": 115
+            },
+            {
+              "form": "SubQ",
+              "dosage": "0.3mg",
+              "description": "0.3mg SQ 5 nights a week",
+              "costToBusiness": 115,
+              "sellingPrice": 115
+            },
+            {
+              "form": "SubQ",
+              "dosage": "0.4mg",
+              "description": "0.4mg SQ 5 nights a week",
+              "costToBusiness": 115,
+              "sellingPrice": 126
+            },
+            {
+              "form": "SubQ",
+              "dosage": "0.5mg",
+              "description": "0.5mg SQ 5 nights a week",
+              "costToBusiness": 115,
+              "sellingPrice": 145
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Anti-Aging",
+      "rank": 4,
+      "products": [
+        {
+          "name": "NAD+ Patches",
+          "startingPrice": 215,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Topical",
+              "dosage": "1units",
+              "description": "1 patch to affected area twice weekly",
+              "costToBusiness": 166,
+              "sellingPrice": 215
+            },
+            {
+              "form": "Topical",
+              "dosage": "1units",
+              "description": "1 patch to affected area once weekly",
+              "costToBusiness": 166,
+              "sellingPrice": 215
+            }
+          ]
+        },
+        {
+          "name": "NAD+ Injection",
+          "startingPrice": 199,
+          "status": "active",
+          "variants": [
+            {
+              "form": "IM",
+              "dosage": "25mg",
+              "description": "25mg IM up to 3 times weekly",
+              "costToBusiness": 119,
+              "sellingPrice": 199
+            },
+            {
+              "form": "IM",
+              "dosage": "50mg",
+              "description": "50mg IM up to 3 times weekly",
+              "costToBusiness": 119,
+              "sellingPrice": 199
+            },
+            {
+              "form": "IM",
+              "dosage": "75mg",
+              "description": "75mg IM up to 3 times weekly",
+              "costToBusiness": 119,
+              "sellingPrice": 199
+            },
+            {
+              "form": "IM",
+              "dosage": "100mg",
+              "description": "100mg IM up to 3 times weekly",
+              "costToBusiness": 119,
+              "sellingPrice": 199
+            }
+          ]
+        },
+        {
+          "name": "Anti Aging Topical Gel",
+          "startingPrice": 136,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Topical",
+              "dosage": "0.5g",
+              "description": "Apply 0.5gms of Estriol 0.3% - Ascorbic Acid – 1% - Hydroquinone 8% Topical Gel",
+              "costToBusiness": 130.33,
+              "sellingPrice": 136
+            },
+            {
+              "form": "Topical",
+              "dosage": "1units",
+              "description": "Apply thin layer of Hydroquinone 6% - Tretinoin 0.025% - Hydrocortisone 1% Topical Gel",
+              "costToBusiness": 130.33,
+              "sellingPrice": 136
+            },
+            {
+              "form": "Topical",
+              "dosage": "1g",
+              "description": "Apply 1gms of Estriol 0.3% - Ascorbic Acid – 1% - Hydroquinone 8% Topical Gel",
+              "costToBusiness": 130.33,
+              "sellingPrice": 136
+            }
+          ]
+        },
+        {
+          "name": "Vitamin B12 Injection",
+          "startingPrice": 89,
+          "status": "active",
+          "variants": [
+            {
+              "form": "IM",
+              "dosage": "1mg",
+              "description": "1mg Methylocobalamin IM weekly for 10 Weeks",
+              "costToBusiness": 49,
+              "sellingPrice": 89
+            },
+            {
+              "form": "IM",
+              "dosage": "1mg",
+              "description": "1mg Methylocobalamin IM twice weekly for 5 weeks",
+              "costToBusiness": 49,
+              "sellingPrice": 89
+            },
+            {
+              "form": "IM",
+              "dosage": "1mg",
+              "description": "1mg Cyanocobalamin IM twice weekly for 4 weeks",
+              "costToBusiness": 49,
+              "sellingPrice": 89
+            },
+            {
+              "form": "IM",
+              "dosage": "1mg",
+              "description": "1mg Cyanocobalamin IM weekly for 12 weeks",
+              "costToBusiness": 49,
+              "sellingPrice": 89
+            },
+            {
+              "form": "IM",
+              "dosage": "1mg",
+              "description": "1mg Cyanocobalamin IM weekly for 4 weeks",
+              "costToBusiness": 49,
+              "sellingPrice": 89
+            }
+          ]
+        },
+        {
+          "name": "Nicotinamide Riboside (NR) Injectable",
+          "startingPrice": 403,
+          "status": "active",
+          "variants": [
+            {
+              "form": "IM",
+              "dosage": "100mg",
+              "description": "100mg IM Once Weekly",
+              "costToBusiness": 384,
+              "sellingPrice": 403
+            },
+            {
+              "form": "IM",
+              "dosage": "100mg",
+              "description": "100mg IM Twice Weekly",
+              "costToBusiness": 656,
+              "sellingPrice": 765
+            },
+            {
+              "form": "IM",
+              "dosage": "100mg",
+              "description": "100mg IM Thrice Weekly",
+              "costToBusiness": 611,
+              "sellingPrice": 765
+            }
+          ]
+        },
+        {
+          "name": "Anti Aging Topical Cream",
+          "startingPrice": 115,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Topical",
+              "dosage": "1units",
+              "description": "Apply thin layer of Hydrocortisone/Tretinoin/Hydroquinone/Kojic acid Cream 1%/0.05%/8%/4%",
+              "costToBusiness": 110.4,
+              "sellingPrice": 115
+            },
+            {
+              "form": "Topical",
+              "dosage": "1units",
+              "description": "Apply thin layer of Hydrocortisone/Tretinoin/Hydroquinone/Kojic acid Cream 1%/1%/6%/4%",
+              "costToBusiness": 110.4,
+              "sellingPrice": 115
+            }
+          ]
+        },
+        {
+          "name": "Low Dose Naltrexone",
+          "startingPrice": 119,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "1.5mg",
+              "description": "1.5mg orally daily for 4 weeks",
+              "costToBusiness": 99.82,
+              "sellingPrice": 119
+            },
+            {
+              "form": "Oral",
+              "dosage": "3mg",
+              "description": "3mg orally daily for 4 weeks",
+              "costToBusiness": 99.82,
+              "sellingPrice": 119
+            },
+            {
+              "form": "Oral",
+              "dosage": "4.5mg",
+              "description": "4.5mg orally daily for 4 weeks",
+              "costToBusiness": 99.82,
+              "sellingPrice": 119
+            },
+            {
+              "form": "Oral",
+              "dosage": "6mg",
+              "description": "6mg orally daily for 4 weeks",
+              "costToBusiness": 99.82,
+              "sellingPrice": 119
+            }
+          ]
+        },
+        {
+          "name": "NAD+ Nasal Spray",
+          "startingPrice": 299,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Nasal",
+              "dosage": "1units",
+              "description": "1-2 sprays in each nostril once daily (2-4 sprays total)",
+              "costToBusiness": 230.23,
+              "sellingPrice": 299
+            }
+          ]
+        },
+        {
+          "name": "Methylene Blue Capsules",
+          "startingPrice": 80,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "2.5mg",
+              "description": "2.5mg orally twice daily for 4 weeks",
+              "costToBusiness": 119,
+              "sellingPrice": 225
+            },
+            {
+              "form": "Oral",
+              "dosage": "2.5mg",
+              "description": "2.5mg orally daily for 4 weeks",
+              "costToBusiness": 72,
+              "sellingPrice": 80
+            },
+            {
+              "form": "Oral",
+              "dosage": "5mg",
+              "description": "5mg orally twice daily for 4 weeks",
+              "costToBusiness": 138,
+              "sellingPrice": 145
+            },
+            {
+              "form": "Oral",
+              "dosage": "5mg",
+              "description": "5mg orally daily for 4 weeks",
+              "costToBusiness": 81,
+              "sellingPrice": 85
+            },
+            {
+              "form": "Oral",
+              "dosage": "10mg",
+              "description": "10mg orally daily for 4 weeks",
+              "costToBusiness": 113.47,
+              "sellingPrice": 120
+            },
+            {
+              "form": "Oral",
+              "dosage": "10mg",
+              "description": "10mg orally twice daily for 4 weeks",
+              "costToBusiness": 202,
+              "sellingPrice": 212
+            },
+            {
+              "form": "Oral",
+              "dosage": "25mg",
+              "description": "25mg orally twice daily for 4 weeks",
+              "costToBusiness": 287,
+              "sellingPrice": 359
+            },
+            {
+              "form": "Oral",
+              "dosage": "25mg",
+              "description": "25mg orally daily for 4 weeks",
+              "costToBusiness": 148.73,
+              "sellingPrice": 156
+            },
+            {
+              "form": "Oral",
+              "dosage": "50mg",
+              "description": "50mg orally twice daily for 4 weeks",
+              "costToBusiness": 368,
+              "sellingPrice": 386
+            },
+            {
+              "form": "Oral",
+              "dosage": "50mg",
+              "description": "50mg orally daily for 4 weeks",
+              "costToBusiness": 196.27,
+              "sellingPrice": 206
+            },
+            {
+              "form": "Oral",
+              "dosage": "100mg",
+              "description": "100mg orally daily for 4 weeks",
+              "costToBusiness": 249.93,
+              "sellingPrice": 262
+            },
+            {
+              "form": "Oral",
+              "dosage": "100mg",
+              "description": "100mg orally twice daily for 4 weeks",
+              "costToBusiness": 477.53,
+              "sellingPrice": 500
+            }
+          ]
+        },
+        {
+          "name": "Glutathione",
+          "startingPrice": 89,
+          "status": "active",
+          "variants": [
+            {
+              "form": "IM",
+              "dosage": "200mg",
+              "description": "1ml (200mg) IM Upto 3 times weekly",
+              "costToBusiness": 69,
+              "sellingPrice": 89
+            },
+            {
+              "form": "IM",
+              "dosage": "400mg",
+              "description": "2ml (400mg) IM Upto 3 times weekly",
+              "costToBusiness": 69,
+              "sellingPrice": 89
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Sexual Health",
+      "rank": 5,
+      "products": [
+        {
+          "name": "PT-141 (bremelanotide) Injectable",
+          "startingPrice": 135,
+          "status": "active",
+          "variants": [
+            {
+              "form": "SubQ",
+              "dosage": "2mg",
+              "description": "1ML Vial, Inject 0.2ml SQ 1 to 3 hours prior to sexual activity, max of 3 times per week",
+              "costToBusiness": 105,
+              "sellingPrice": 135
+            },
+            {
+              "form": "SubQ",
+              "dosage": "2mg",
+              "description": "2ML Vial, Inject 0.2ml SQ 1 to 3 hours prior to sexual activity, max of 3 times per week",
+              "costToBusiness": 195,
+              "sellingPrice": 251
+            }
+          ]
+        },
+        {
+          "name": "Erectile Dysfunction Medication",
+          "startingPrice": 119,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "5mg",
+              "description": "Tadalafil 5mg before sexual activity",
+              "costToBusiness": 69,
+              "sellingPrice": 119
+            },
+            {
+              "form": "Oral",
+              "dosage": "5mg",
+              "description": "Tadalafil 5mg/ Sildenafil 25mg Troche before sexual activity",
+              "costToBusiness": 119,
+              "sellingPrice": 150
+            },
+            {
+              "form": "Oral",
+              "dosage": "10mg",
+              "description": "Tadalafil 10mg before sexual activity",
+              "costToBusiness": 69,
+              "sellingPrice": 119
+            },
+            {
+              "form": "Oral",
+              "dosage": "12mg",
+              "description": "Tadalafil 12 mg/Sildenafil 55 mg (Berry) Rapid Dissolve Tablet before sexual activity",
+              "costToBusiness": 119,
+              "sellingPrice": 150
+            },
+            {
+              "form": "Oral",
+              "dosage": "20mg",
+              "description": "Tadalafil 20mg before sexual activity",
+              "costToBusiness": 69,
+              "sellingPrice": 119
+            },
+            {
+              "form": "Oral",
+              "dosage": "20mg",
+              "description": "Sildenafil 20mg before sexual activity",
+              "costToBusiness": 69,
+              "sellingPrice": 119
+            },
+            {
+              "form": "Oral",
+              "dosage": "100mg",
+              "description": "Sildenafil 100mg before sexual activity",
+              "costToBusiness": 69,
+              "sellingPrice": 119
+            }
+          ]
+        },
+        {
+          "name": "Oxytocin Nasal Spray",
+          "startingPrice": 149,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Nasal",
+              "dosage": "1units",
+              "description": "Instill 1 spray in each nostril up to 2 times daily and/or 1 hour before intimacy - 12ML Nasal Spray",
+              "costToBusiness": 116,
+              "sellingPrice": 149
+            },
+            {
+              "form": "Nasal",
+              "dosage": "1units",
+              "description": "Instill 1 spray in each nostril up to 2 times daily and/or 1 hour before intimacy - 24ML Nasal Spray",
+              "costToBusiness": 212,
+              "sellingPrice": 272
+            }
+          ]
+        },
+        {
+          "name": "Oxytocin 100 IU Troche",
+          "startingPrice": 190,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "0.5units",
+              "description": "0.5 troche daily sublingually",
+              "costToBusiness": 185,
+              "sellingPrice": 190
+            },
+            {
+              "form": "Oral",
+              "dosage": "1units",
+              "description": "1 troche daily sublingually",
+              "costToBusiness": 185,
+              "sellingPrice": 190
+            }
+          ]
+        },
+        {
+          "name": "Oxybutynin",
+          "startingPrice": 99,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "5mg",
+              "description": "5mg orally once daily",
+              "costToBusiness": 70.15,
+              "sellingPrice": 99
+            },
+            {
+              "form": "Oral",
+              "dosage": "10mg",
+              "description": "10mg orally once daily",
+              "costToBusiness": 70.15,
+              "sellingPrice": 99
+            },
+            {
+              "form": "Oral",
+              "dosage": "15mg",
+              "description": "15mg orally once daily",
+              "costToBusiness": 70.15,
+              "sellingPrice": 99
+            }
+          ]
+        },
+        {
+          "name": "Tadalafil + Oxytocin Troche",
+          "startingPrice": 120,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "5mg",
+              "description": "Tadalafil 5mg/Oxytocin 100IU troche before sexual activity",
+              "costToBusiness": 95,
+              "sellingPrice": 120
+            },
+            {
+              "form": "Oral",
+              "dosage": "10mg",
+              "description": "Tadalafil 10mg/Oxytocin 100IU/PT 141 1000mcg troche before sexual activity",
+              "costToBusiness": 95,
+              "sellingPrice": 120
+            },
+            {
+              "form": "Oral",
+              "dosage": "10mg",
+              "description": "Tadalafil 10mg/Oxytocin 100IU troche before sexual activity",
+              "costToBusiness": 100,
+              "sellingPrice": 120
+            },
+            {
+              "form": "Oral",
+              "dosage": "20mg",
+              "description": "Tadalafil 20mg/Oxytocin 100IU/PT 141 1000mcg troche before sexual activity",
+              "costToBusiness": 110,
+              "sellingPrice": 120
+            },
+            {
+              "form": "Oral",
+              "dosage": "20mg",
+              "description": "Tadalafil 20mg/Oxytocin 100IU troche before sexual activity",
+              "costToBusiness": 110,
+              "sellingPrice": 120
+            },
+            {
+              "form": "Oral",
+              "dosage": "40mg",
+              "description": "Tadalafil 40mg/Oxytocin 100IU troche before sexual activity",
+              "costToBusiness": 105,
+              "sellingPrice": 135
+            }
+          ]
+        },
+        {
+          "name": "Scream Cream - Libido Enhancement for Women",
+          "startingPrice": 98,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Vaginal",
+              "dosage": "0.5mL",
+              "description": "0.5ml to clitoris or vulva 30 minutes prior to sexual relations and gently massage in",
+              "costToBusiness": 80,
+              "sellingPrice": 98
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Hair Loss",
+      "rank": 6,
+      "products": [
+        {
+          "name": "Hair Loss Scalp Topical Medication",
+          "startingPrice": 120,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Topical",
+              "dosage": "1mL",
+              "description": "Finasteride 0.25% - Tretinoin 0.01% in Minoxidil 5% Scalp Solution",
+              "costToBusiness": 96.6,
+              "sellingPrice": 120
+            },
+            {
+              "form": "Topical",
+              "dosage": "1mL",
+              "description": "Minoxidil 7% - Azelaic acid 5% – Finasteride 0.1% - Niacinamide 5% Scalp Suspension",
+              "costToBusiness": 96.6,
+              "sellingPrice": 120
+            }
+          ]
+        },
+        {
+          "name": "Hair Loss Oral Medication",
+          "startingPrice": 97,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "1mg",
+              "description": "1mg Finasteride orally once daily for 3 Months",
+              "costToBusiness": 77,
+              "sellingPrice": 97
+            },
+            {
+              "form": "Oral",
+              "dosage": "5mg",
+              "description": "5/1.25/25mg Biotin/Minoxidil/Spironolactone orally once daily for 3 Months",
+              "costToBusiness": 109,
+              "sellingPrice": 192
+            },
+            {
+              "form": "Oral",
+              "dosage": "5mg",
+              "description": "5/1.25mg Biotin/Minoxidil Capsule orally once daily for 3 Months",
+              "costToBusiness": 153,
+              "sellingPrice": 192
+            },
+            {
+              "form": "Oral",
+              "dosage": "5mg",
+              "description": "5mg Finasteride once daily for 3 Months",
+              "costToBusiness": 77,
+              "sellingPrice": 97
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Acne",
+      "rank": 7,
+      "products": [
+        {
+          "name": "Acne Gel",
+          "startingPrice": 92,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Topical",
+              "dosage": "1units",
+              "description": "Apply thin layer of Clindamycin/Spironolactone/Benzoyl Peroxide/Niacinamide/Tretinoin 1%/2%/5%/2%/0.025% 1-2 times daily",
+              "costToBusiness": 87,
+              "sellingPrice": 92
+            }
+          ]
+        },
+        {
+          "name": "Doxycycline Hyclate for Acne",
+          "startingPrice": 122.36,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Oral",
+              "dosage": "100mg",
+              "description": "100mg Orally Once Daily for 3 Months",
+              "costToBusiness": 116.53,
+              "sellingPrice": 123
+            }
+          ]
+        },
+        {
+          "name": "Acne Cream",
+          "startingPrice": 98,
+          "status": "active",
+          "variants": [
+            {
+              "form": "Topical",
+              "dosage": "1units",
+              "description": "Apply thin layer of Azelaic Acid 4% - Niacinamide 4% - Benzoyl Peroxide 2.5% to acne 1-2 times daily",
+              "costToBusiness": 93,
+              "sellingPrice": 98
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "totalCategories": 7,
+    "totalProducts": 36,
+    "totalVariants": 119,
+    "categories": [
+      { "name": "Appetite Suppressant", "products": 4 },
+      { "name": "Weight Management", "products": 7 },
+      { "name": "Peptides", "products": 3 },
+      { "name": "Anti-Aging", "products": 10 },
+      { "name": "Sexual Health", "products": 7 },
+      { "name": "Hair Loss", "products": 2 },
+      { "name": "Acne", "products": 3 }
+    ]
+  }
+}

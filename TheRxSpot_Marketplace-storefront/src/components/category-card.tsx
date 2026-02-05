@@ -4,6 +4,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { ProductCategory } from "@/lib/business"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 interface CategoryCardProps {
   category: ProductCategory
@@ -12,7 +13,7 @@ interface CategoryCardProps {
 
 export function CategoryCard({ category, businessSlug }: CategoryCardProps) {
   return (
-    <Link href={`/${businessSlug}/categories/${category.id}`}>
+    <LocalizedClientLink href={`/categories/${category.id}`}>
       <div className="group border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
         {category.image_url ? (
           <div className="aspect-video relative">
@@ -43,6 +44,6 @@ export function CategoryCard({ category, businessSlug }: CategoryCardProps) {
           )}
         </div>
       </div>
-    </Link>
+    </LocalizedClientLink>
   )
 }

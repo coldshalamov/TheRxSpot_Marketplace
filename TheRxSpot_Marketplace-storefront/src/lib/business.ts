@@ -38,12 +38,15 @@ export interface Location {
 
 export interface ProductCategory {
   id: string
+  business_id: string
+  parent_id: string | null
   name: string
   description: string | null
   image_url: string | null
   requires_consult: boolean
-  sort_order: number
+  rank: number
   is_active: boolean
+  children?: ProductCategory[]
 }
 
 export interface ConsultSubmission {
@@ -137,9 +140,14 @@ export async function fetchBusinessLocations(businessSlug: string): Promise<Loca
   }
 }
 
-export async function fetchProductCategories(): Promise<ProductCategory[]> {
+export async function fetchProductCategories(businessSlug?: string): Promise<ProductCategory[]> {
   try {
+    const headers: Record<string, string> = {}
+    if (businessSlug) {
+      headers["x-business-slug"] = businessSlug
+    }
     const res = await fetch(`${MEDUSA_BACKEND_URL}/store/product-categories`, {
+      headers,
       next: { revalidate: 60 },
     })
     if (!res.ok) return []
@@ -147,6 +155,19 @@ export async function fetchProductCategories(): Promise<ProductCategory[]> {
     return data.categories
   } catch {
     return []
+  }
+}
+
+export async function fetchCategoryById(categoryId: string): Promise<ProductCategory | null> {
+  try {
+    const res = await fetch(`${MEDUSA_BACKEND_URL}/store/product-categories/${categoryId}`, {
+      next: { revalidate: 60 },
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.category
+  } catch {
+    return null
   }
 }
 

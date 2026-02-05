@@ -80,7 +80,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const consultationService = req.scope.resolve(CONSULTATION_MODULE)
 
   try {
-    const consultation = await consultationService.createConsultation(req.body)
+    const body = (req.body ?? {}) as Record<string, any>
+    const consultation = await consultationService.createConsultation(body)
     res.status(201).json({ consultation })
   } catch (error) {
     res.status(400).json({

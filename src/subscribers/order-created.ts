@@ -34,8 +34,8 @@ export default async function orderCreatedHandler({
     // This can be determined by product metadata or category
     let requiresConsultation = false
 
-    for (const item of order.items || []) {
-      const product = item.variant?.product
+    for (const item of (order.items ?? []) as any[]) {
+      const product = item?.variant?.product ?? item?.product
       if (product?.metadata?.requires_consultation) {
         requiresConsultation = true
         break
@@ -46,21 +46,30 @@ export default async function orderCreatedHandler({
     const initialStatus = requiresConsultation ? "consult_pending" : "pending"
 
     // Set custom status in order metadata
-    await orderService.updateOrders(orderId, {
-      metadata: {
-        ...order.metadata,
-        custom_status: initialStatus,
-        requires_consultation: requiresConsultation,
-        status_updated_at: new Date().toISOString(),
-      },
-    })
+    const nextMetadata = {
+      ...(order.metadata ?? {}),
+      custom_status: initialStatus,
+      requires_consultation: requiresConsultation,
+      status_updated_at: new Date().toISOString(),
+    }
+
+    await orderService.updateOrders({ id: orderId, metadata: nextMetadata } as any)
 
     // Create OrderStatusEvent record
+    const businessId = String((nextMetadata as any).business_id ?? "")
+    if (!businessId) {
+      console.error(
+        `[order-created] Missing order.metadata.business_id for order ${orderId}; skipping OrderStatusEvent creation`
+      )
+      return
+    }
+
     await businessService.createOrderStatusEvents({
       order_id: orderId,
+      business_id: businessId,
       from_status: "pending",
       to_status: initialStatus,
-      changed_by: "system",
+      triggered_by: "system",
       reason: requiresConsultation
         ? "Order contains items requiring consultation"
         : "Standard order created",

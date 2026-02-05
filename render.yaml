@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: denigma-mcp-server
+    runtime: docker
+    repo: https://github.com/yourusername/denigma
+    plan: starter
+    region: oregon
+    branch: main
+    dockerContext: .
+    dockerfilePath: packages/mcp-server/Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATA_DIR
+        value: /data
+      - key: LOG_LEVEL
+        value: info
+      - key: ALLOWED_ORIGINS
+        value: "*"
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1

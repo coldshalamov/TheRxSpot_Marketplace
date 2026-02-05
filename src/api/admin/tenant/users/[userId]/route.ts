@@ -20,10 +20,13 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
     return res.status(403).json({ message: "User not in your tenant" })
   }
 
-  const updated = await businessModuleService.updateBusinessUsers(
-    userId,
-    req.body
-  )
+  const body = (req.body ?? {}) as Record<string, any>
+  const { id: _ignored, ...data } = body
+
+  const updated = await businessModuleService.updateBusinessUsers({
+    id: userId,
+    ...data,
+  } as any)
 
   res.json({ user: updated })
 }

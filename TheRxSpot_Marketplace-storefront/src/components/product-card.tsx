@@ -1,29 +1,44 @@
 // components/product-card.tsx
 "use client"
 
-import Link from "next/link"
 import Image from "next/image"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
 
 interface ProductCardProps {
   product: {
     id: string
+    handle?: string
     title: string
     description: string
-    thumbnail: string
+    thumbnail: string | null
     variants: {
       id: string
       title: string
       prices: { amount: number; currency_code: string }[]
     }[]
+    metadata?: {
+      starting_price?: number
+      requires_consult?: boolean
+    }
   }
-  businessSlug: string
+  businessSlug?: string
 }
 
-export function ProductCard({ product, businessSlug }: ProductCardProps) {
-  const price = product.variants[0]?.prices[0]
-  
+export function ProductCard({ product }: ProductCardProps) {
+  // Get the lowest price from all variants
+  const lowestPrice = product.variants.reduce((min, v) => {
+    const price = v.prices?.[0]?.amount
+    if (!price) return min
+    return min === 0 ? price : Math.min(min, price)
+  }, 0)
+
+  // Use metadata starting_price if available, otherwise calculated lowest
+  const displayPrice = product.metadata?.starting_price
+    ? product.metadata.starting_price * 100
+    : lowestPrice
+
   return (
-    <Link href={`/${businessSlug}/products/${product.id}`}>
+    <LocalizedClientLink href={`/products/${product.handle || product.id}`}>
       <div className="group border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
         {product.thumbnail ? (
           <div className="aspect-square relative">
@@ -47,13 +62,19 @@ export function ProductCard({ product, businessSlug }: ProductCardProps) {
             {product.description}
           </p>
           
-          {price && (
+          {displayPrice > 0 && (
             <p className="font-bold text-lg">
-              ${(price.amount / 100).toFixed(2)} {price.currency_code.toUpperCase()}
+              Starting at ${(displayPrice / 100).toFixed(2)}
             </p>
+          )}
+
+          {product.metadata?.requires_consult && (
+            <span className="inline-block mt-2 text-xs px-2 py-1 bg-amber-100 text-amber-800 rounded">
+              Consult Required
+            </span>
           )}
         </div>
       </div>
-    </Link>
+    </LocalizedClientLink>
   )
 }

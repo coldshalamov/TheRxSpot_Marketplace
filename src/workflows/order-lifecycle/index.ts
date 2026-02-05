@@ -3,6 +3,7 @@ import {
   WorkflowResponse,
   createStep,
   StepResponse,
+  transform,
 } from "@medusajs/framework/workflows-sdk"
 import { Modules } from "@medusajs/framework/utils"
 import { BUSINESS_MODULE } from "../../modules/business"
@@ -98,13 +99,13 @@ const updateOrderStatusStep = createStep(
 
     // Update order metadata with custom status
     const orderService = container.resolve(Modules.ORDER)
-    await orderService.updateOrders(orderId, {
-      metadata: {
-        ...order.metadata,
-        custom_status: toStatus,
-        status_updated_at: new Date().toISOString(),
-      },
-    })
+    const nextMetadata = {
+      ...(order.metadata ?? {}),
+      custom_status: toStatus,
+      status_updated_at: new Date().toISOString(),
+    }
+
+    await orderService.updateOrders({ id: orderId, metadata: nextMetadata } as any)
 
     return new StepResponse({ updated: true })
   }
@@ -118,6 +119,7 @@ const createStatusEventStep = createStep(
   async (
     input: {
       orderId: string
+      businessId: string
       fromStatus: string
       toStatus: string
       changedBy?: string
@@ -129,9 +131,10 @@ const createStatusEventStep = createStep(
 
     const event = await businessService.createOrderStatusEvents({
       order_id: input.orderId,
+      business_id: input.businessId,
       from_status: input.fromStatus,
       to_status: input.toStatus,
-      changed_by: input.changedBy ?? null,
+      triggered_by: input.changedBy ?? null,
       reason: input.reason ?? null,
       metadata: null,
     })
@@ -194,13 +197,20 @@ export const orderStatusTransitionWorkflow = createWorkflow(
     })
 
     // Step 2: Create status event record
-    const statusEvent = createStatusEventStep({
-      orderId: input.orderId,
-      fromStatus: input.fromStatus,
-      toStatus: input.toStatus,
-      changedBy: input.changedBy,
-      reason: input.reason,
+    const statusEventInput = transform({ input, validation }, (d) => {
+      const businessId = String(d.validation.order?.metadata?.business_id ?? "")
+
+      return {
+        orderId: d.input.orderId,
+        businessId,
+        fromStatus: d.input.fromStatus,
+        toStatus: d.input.toStatus,
+        changedBy: d.input.changedBy,
+        reason: d.input.reason,
+      }
     })
+
+    const statusEvent = createStatusEventStep(statusEventInput)
 
     // Step 3: Update order status
     const orderUpdate = updateOrderStatusStep({
@@ -249,6 +259,7 @@ export const initializeOrderWorkflow = createWorkflow(
     // Create initial status event
     const statusEvent = createStatusEventStep({
       orderId: input.orderId,
+      businessId: input.businessId,
       fromStatus: "pending",
       toStatus: initialStatus,
       changedBy: "system",

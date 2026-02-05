@@ -16,7 +16,6 @@ WORKDIR /app
 
 # Copy package files for dependency installation
 COPY package*.json ./
-COPY .npmrc ./
 COPY .yarnrc.yml ./
 
 # Install all dependencies (including devDependencies for build)
@@ -44,11 +43,10 @@ RUN addgroup -g 1001 -S nodejs && \
 WORKDIR /app
 
 # Copy only production artifacts from builder
-COPY --from=builder --chown=medusa:nodejs /app/dist ./dist
+COPY --from=builder --chown=medusa:nodejs /app/.medusa ./.medusa
 COPY --from=builder --chown=medusa:nodejs /app/node_modules ./node_modules
 COPY --from=builder --chown=medusa:nodejs /app/package*.json ./
 COPY --from=builder --chown=medusa:nodejs /app/medusa-config.ts ./
-COPY --from=builder --chown=medusa:nodejs /app/.env ./
 
 # Create uploads directory for document storage
 RUN mkdir -p uploads && chown -R medusa:nodejs uploads

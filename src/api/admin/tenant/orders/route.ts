@@ -9,25 +9,24 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
 
-  // Query orders linked to this business via the business-order link
-  const { data: orders } = await query.graph({
-    entity: "order",
+  const { data: businesses } = await query.graph({
+    entity: "business",
     fields: [
       "id",
-      "display_id",
-      "status",
-      "total",
-      "currency_code",
-      "created_at",
-      "email",
-      "items.*",
+      "orders.id",
+      "orders.display_id",
+      "orders.status",
+      "orders.total",
+      "orders.currency_code",
+      "orders.created_at",
+      "orders.email",
+      "orders.items.*",
     ],
-    filters: {
-      business: {
-        id: tenantContext.business_id,
-      },
-    },
+    filters: { id: tenantContext.business_id },
   })
+
+  const business = businesses?.[0] as any
+  const orders = ((business?.orders ?? []) as any[]).filter(Boolean)
 
   res.json({ orders })
 }

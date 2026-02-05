@@ -17,12 +17,12 @@ module.exports = defineConfig({
       jwtSecret: env.jwtSecret,
       cookieSecret: env.cookieSecret,
       compression: { enabled: true },
-      cookieOptions: {
-        sameSite: "strict",
-        secure: env.nodeEnv === "production",
-        httpOnly: true
-      }
-    }
+    },
+    cookieOptions: {
+      sameSite: "strict",
+      secure: env.nodeEnv === "production",
+      httpOnly: true,
+    },
   },
   admin: {
     backendUrl: env.backendUrl,

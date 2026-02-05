@@ -95,7 +95,8 @@ export const PUT = [
         return res.status(notFound.status).json(notFound.body)
       }
       
-      const clinician = await consultationService.updateClinician(id, req.body)
+      const update = (req.body ?? {}) as Record<string, any>
+      const clinician = await consultationService.updateClinician(id, update)
       res.json({ clinician })
     } catch (error) {
       if (error instanceof Error && error.message.includes("not found")) {
