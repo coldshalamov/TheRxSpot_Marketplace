@@ -8,6 +8,8 @@ This toolkit lets one Custom GPT connect to **any** repo you are actively workin
 
 If you want the "just run one script and talk to GPT" workflow, use `Run-Serena-For-GPT.ps1`.
 
+If you want a local-only Serena bootstrap (onboarding + memory sync) before GPT exposure, use `Initialize-Serena-MCP.ps1`.
+
 ## 1) One-Time Worker Setup
 
 1. Create a Cloudflare Worker project and copy files from `worker/`:
@@ -51,6 +53,26 @@ D:\GitHub\serena-gpt-bridge\Run-Serena-For-GPT.ps1 -ProjectPath "D:\GitHub\TheRx
 ```
 
 After that, use the same Custom GPT without editing it again.
+
+## 2c) Initialize Serena MCP Knowledge (Recommended Before First Use)
+
+This repo includes a dedicated initializer that:
+- starts a local Serena MCP instance for the target project,
+- checks/runs onboarding,
+- syncs all `.serena/memories/*.md` files into Serena memory store,
+- emits a summary JSON with onboarding + inventory details.
+
+Run from this repo root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\serena-gpt-bridge\Initialize-Serena-MCP.ps1 -ProjectPath .
+```
+
+Useful flags:
+- `-Port 8011` (or another free local port)
+- `-SkipMemorySync` (onboarding only)
+- `-ForceOnboarding`
+- `-KeepServerRunning` (leave local MCP running after initialization)
 
 ## 3) Use One Stable GPT Action
 
