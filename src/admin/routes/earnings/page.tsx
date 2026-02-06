@@ -849,7 +849,6 @@ const EarningsPage = () => {
 
 export const config = defineRouteConfig({
   label: "Earnings",
-  icon: "CurrencyDollar",
 })
 
 export default EarningsPage

@@ -12,7 +12,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const full = await businessService.retrieveBusiness(business.id)
 
   // Fetch the published template config for this tenant
-  let template = null
+  let template: any = null
   try {
     template = await businessService.getPublishedTemplate(business.id)
   } catch {

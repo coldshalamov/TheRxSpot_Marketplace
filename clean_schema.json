@@ -1,0 +1,78 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Serena Agent Tools",
+    "description": "API for accessing the Serena coding agent tools.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://opened-tin-download-those.trycloudflare.com"
+    }
+  ],
+  "paths": {
+    "/mcp/tools/call": {
+      "post": {
+        "operationId": "callTool",
+        "summary": "Execute a Serena Tool",
+        "description": "Calls a tool on the Serena MCP server.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "The name of the tool to call (e.g., find_symbol, read_file)."
+                  },
+                  "arguments": {
+                    "type": "object",
+                    "description": "The arguments to pass to the tool."
+                  }
+                },
+                "required": [
+                  "name",
+                  "arguments"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tool execution result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "content": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": {
+                            "type": "string"
+                          },
+                          "text": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "isError": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-openai-isConsequential": false
+      }
+    }
+  }
+}

@@ -45,6 +45,10 @@ type UsersListResponse = {
 
 const LIMIT = 25
 
+function isValidDate(value: Date | null | undefined): value is Date {
+  return !!value && !Number.isNaN(value.getTime())
+}
+
 function initials(firstName?: string | null, lastName?: string | null, email?: string | null): string {
   const f = (firstName || "").trim()
   const l = (lastName || "").trim()
@@ -81,6 +85,28 @@ function formatDobAndAge(dob?: string | null): { label: string; ageLabel: string
   const label = format(date, "MM/dd/yyyy")
   const ageLabel = age >= 0 && age <= 125 ? `${age}` : ""
   return { label, ageLabel }
+}
+
+function safeRelativeDate(value?: string | null): string {
+  if (!value) return "-"
+  const date = new Date(value)
+  if (!isValidDate(date)) return "-"
+  try {
+    return formatDistanceToNowStrict(date, { addSuffix: true })
+  } catch {
+    return "-"
+  }
+}
+
+function safeDate(value?: string | null, pattern = "MMM d, yyyy"): string {
+  if (!value) return "-"
+  const date = new Date(value)
+  if (!isValidDate(date)) return "-"
+  try {
+    return format(date, pattern)
+  } catch {
+    return "-"
+  }
 }
 
 function roleBadge(role: UserRole): { color: "grey" | "blue" | "green" | "orange"; label: string } {
@@ -470,9 +496,7 @@ const UsersPage = () => {
                 const { label: dobLabel, ageLabel } = formatDobAndAge(u.date_of_birth)
                 const statusInfo = statusBadge(u.status)
                 const roleInfo = roleBadge(u.role)
-                const joined = u.created_at
-                  ? formatDistanceToNowStrict(new Date(u.created_at), { addSuffix: true })
-                  : "-"
+                const joined = safeRelativeDate(u.created_at)
 
                 return (
                   <Table.Row key={u.id}>
@@ -673,7 +697,7 @@ const UsersPage = () => {
                   <div>
                     <div className="text-xs font-medium mb-1">Joined</div>
                     <div className="text-sm">
-                      {activeUser.created_at ? format(new Date(activeUser.created_at), "MMM d, yyyy") : "-"}
+                      {safeDate(activeUser.created_at, "MMM d, yyyy")}
                     </div>
                   </div>
                 </div>
@@ -740,6 +764,7 @@ const UsersPage = () => {
                     ) : (
                       activityLogs.map((log: any) => {
                         const ts = log.created_at ? new Date(log.created_at) : null
+                        const tsLabel = isValidDate(ts) ? safeDate(log.created_at, "MMM d, h:mm a") : "—"
                         return (
                           <div key={log.id} className="rounded-lg border px-3 py-2">
                             <div className="flex items-center justify-between gap-2">
@@ -762,7 +787,7 @@ const UsersPage = () => {
                                 </div>
                               </div>
                               <div className="text-[11px] text-ui-fg-subtle">
-                                {ts ? format(ts, "MMM d, h:mm a") : "—"}
+                                {tsLabel}
                               </div>
                             </div>
                           </div>
@@ -787,8 +812,6 @@ const UsersPage = () => {
 
 export const config = defineRouteConfig({
   label: "Users",
-  icon: "Users",
 })
 
 export default UsersPage
-

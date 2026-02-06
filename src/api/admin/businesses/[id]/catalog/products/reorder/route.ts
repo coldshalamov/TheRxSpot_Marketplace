@@ -1,5 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { BUSINESS_MODULE } from "../../../../../../../../modules/business"
+import { BUSINESS_MODULE } from "../../../../../../../modules/business"
 
 /**
  * POST /admin/businesses/:id/catalog/products/reorder

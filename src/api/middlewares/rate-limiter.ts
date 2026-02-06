@@ -144,6 +144,23 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
       return next()
     }
 
+    // In local development, avoid lockouts from repeated auth attempts
+    // while debugging admin flows.
+    const env = (process.env.NODE_ENV || "").toLowerCase()
+    const forwardedFor = ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim()
+    const realIp = ((req.headers["x-real-ip"] as string) || "").trim()
+    const remoteIp = (req.socket?.remoteAddress || "").trim()
+    const ip = forwardedFor || realIp || remoteIp
+    const isLocalIp =
+      ip === "127.0.0.1" ||
+      ip === "::1" ||
+      ip === "::ffff:127.0.0.1" ||
+      ip === "localhost"
+
+    if (env === "development" && isLocalIp) {
+      return next()
+    }
+
     const key = keyGenerator(req, keyPrefix)
     
     try {

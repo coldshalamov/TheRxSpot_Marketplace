@@ -236,7 +236,7 @@
                     <p>The patient/provider facing shop interface with premium aesthetics.</p>
                 </a>
 
-                <a id="admin-launch-btn" href="http://localhost:9000/app" target="_blank" class="launch-btn">
+                <a id="admin-launch-btn" href="http://localhost:9000/app/login" target="_blank" class="launch-btn">
                     <div class="icon">
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                     </div>
@@ -282,6 +282,20 @@
                 return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
             }
 
+            function normalizePath(value, fallback) {
+                if (typeof value !== "string" || !value.trim()) {
+                    return fallback;
+                }
+                let path = value.trim();
+                if (!path.startsWith("/")) {
+                    path = `/${path}`;
+                }
+                if (path.length > 1 && path.endsWith("/")) {
+                    path = path.slice(0, -1);
+                }
+                return path;
+            }
+
             const backendPort = normalizePort(
                 params.get("backendPort") ?? runtimeConfig.backendPort,
                 9000
@@ -290,6 +304,11 @@
                 params.get("storefrontPort") ?? runtimeConfig.storefrontPort,
                 8000
             );
+            const adminPath = normalizePath(
+                params.get("adminPath") ?? runtimeConfig.adminPath,
+                "/app"
+            );
+            const adminLoginPath = adminPath === "/" ? "/login" : `${adminPath}/login`;
 
             const adminLink = document.getElementById("admin-launch-btn");
             const adminPortLabel = document.getElementById("admin-port-label");
@@ -297,7 +316,7 @@
             const storefrontPortLabel = document.getElementById("storefront-port-label");
 
             if (adminLink) {
-                adminLink.href = `http://localhost:${backendPort}/app`;
+                adminLink.href = `http://localhost:${backendPort}${adminLoginPath}`;
             }
 
             if (adminPortLabel) {

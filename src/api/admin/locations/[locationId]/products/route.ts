@@ -103,8 +103,8 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         display_image_url: display_image_url ?? existingProduct[0].display_image_url ?? null,
         details_blocks:
           details_blocks !== undefined
-            ? sanitizeDetailsBlocks(details_blocks)
-            : existingProduct[0].details_blocks ?? [],
+            ? (sanitizeDetailsBlocks(details_blocks) as any)
+            : ((existingProduct[0].details_blocks ?? []) as any),
       })
       created.push(updated)
     } else {
@@ -118,7 +118,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         display_title: display_title ?? null,
         display_description: display_description ?? null,
         display_image_url: display_image_url ?? null,
-        details_blocks: details_blocks !== undefined ? sanitizeDetailsBlocks(details_blocks) : [],
+        details_blocks: details_blocks !== undefined ? (sanitizeDetailsBlocks(details_blocks) as any) : ([] as any),
         rank: nextRank++,
       })
       created.push(locationProduct)

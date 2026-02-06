@@ -6,7 +6,7 @@ export const TemplateConfig = model.define("template_config", {
   template_id: model.text().default("default"),
   version: model.number().default(1),
   is_published: model.boolean().default(false),
-  sections: model.json().default([]),
+  sections: model.json().default({}),
   global_styles: model.json().default({}),
   metadata: model.json().default({}),
   published_at: model.dateTime().nullable(),

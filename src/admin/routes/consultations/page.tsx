@@ -767,7 +767,6 @@ const ConsultationsPage = () => {
 
 export const config = defineRouteConfig({
   label: "Consultations",
-  icon: "ChatBubbleLeftRight",
 })
 
 export default ConsultationsPage

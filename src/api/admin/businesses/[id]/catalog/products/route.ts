@@ -61,7 +61,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       display_title: body.display_title ?? undefined,
       display_description: body.display_description ?? undefined,
       display_image_url: body.display_image_url ?? undefined,
-      details_blocks: detailsBlocks,
+      details_blocks: detailsBlocks as any,
     }
 
     if (found.length) {
@@ -84,7 +84,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       display_title: body.display_title ?? null,
       display_description: body.display_description ?? null,
       display_image_url: body.display_image_url ?? null,
-      details_blocks: detailsBlocks ?? [],
+      details_blocks: (detailsBlocks ?? []) as any,
     })
     createdOrUpdated.push(created)
   }

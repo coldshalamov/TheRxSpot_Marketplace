@@ -1,0 +1,869 @@
+{
+  "loginUrl": "http://localhost:9001/app/login",
+  "outDir": "D:\\GitHub\\TheRxSpot_Marketplace\\TheRxSpot_Marketplace-storefront\\tmp\\admin-login-diagnose",
+  "steps": [
+    {
+      "label": "01-login-loaded",
+      "screenshotPath": "D:\\GitHub\\TheRxSpot_Marketplace\\TheRxSpot_Marketplace-storefront\\tmp\\admin-login-diagnose\\01-login-loaded.png",
+      "domState": {
+        "href": "http://localhost:9001/app/login",
+        "readyState": "complete",
+        "title": "",
+        "hasSpinner": false,
+        "text": "Welcome to Medusa Sign in to access the account area Show password Continue with Email Forgot password? - Reset"
+      }
+    }
+  ],
+  "error": "locator.fill: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input[type=\"email\"]').first()\u001b[22m\n\n    at D:\\GitHub\\TheRxSpot_Marketplace\\TheRxSpot_Marketplace-storefront\\scripts\\admin-login-diagnose.mjs:112:20",
+  "finalUrl": "http://localhost:9001/app/login",
+  "failedRequests": [
+    {
+      "method": "GET",
+      "url": "http://localhost:59012/app/",
+      "errorText": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:59012/app/",
+      "errorText": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:59012/app/",
+      "errorText": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:59012/app/",
+      "errorText": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:59012/app/",
+      "errorText": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:59012/app/",
+      "errorText": "net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:59012/app/",
+      "errorText": "net::ERR_CONNECTION_REFUSED"
+    }
+  ],
+  "consoleMessages": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "warning",
+      "text": "[@medusajs/dashboard] Menu item for path \"/businesses/:id\" can't be added to the sidebar as it contains a mandatory parameter."
+    },
+    {
+      "type": "warning",
+      "text": "[@medusajs/dashboard] Menu item for path \"/consultations/:id\" can't be added to the sidebar as it contains a mandatory parameter."
+    },
+    {
+      "type": "warning",
+      "text": "[@medusajs/dashboard] Menu item for path \"/businesses/:id/domains\" can't be added to the sidebar as it contains a mandatory parameter."
+    },
+    {
+      "type": "warning",
+      "text": "[@medusajs/dashboard] Menu item for path \"/locations/:locationId/products\" can't be added to the sidebar as it contains a mandatory parameter."
+    },
+    {
+      "type": "warning",
+      "text": "[@medusajs/dashboard] Menu item for path \"/businesses/:id\" can't be added to the sidebar as it contains a mandatory parameter."
+    },
+    {
+      "type": "warning",
+      "text": "[@medusajs/dashboard] Menu item for path \"/consultations/:id\" can't be added to the sidebar as it contains a mandatory parameter."
+    },
+    {
+      "type": "warning",
+      "text": "[@medusajs/dashboard] Menu item for path \"/businesses/:id/domains\" can't be added to the sidebar as it contains a mandatory parameter."
+    },
+    {
+      "type": "warning",
+      "text": "[@medusajs/dashboard] Menu item for path \"/locations/:locationId/products\" can't be added to the sidebar as it contains a mandatory parameter."
+    },
+    {
+      "type": "log",
+      "text": "i18next: languageChanged en"
+    },
+    {
+      "type": "log",
+      "text": "i18next: initialized {debug: true, initImmediate: true, ns: Array(1), defaultNS: Array(1), fallbackLng: Array(1)}"
+    },
+    {
+      "type": "warning",
+      "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
+    },
+    {
+      "type": "log",
+      "text": "[vite] server connection lost. Polling for restart..."
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+    }
+  ],
+  "pageErrors": [],
+  "relevantEvents": [
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-HPGXK5DQ.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-WTYZ5EON.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-MPXR7HT5.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-4PEGH5KR.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-E7TN3UJF.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-JUZFP7SV.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-N5QOMXVK.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-HUKVGY7I.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-CHCTLIBY.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-2MV3FLBB.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-AEWZECHG.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-M2ENDZKM.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-X7HHPOSJ.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-XLPCIOCI.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-ERIS6MEK.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-TBAZRUQF.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-SQV7DPJ2.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-3VYRMVBA.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-OTAUV56X.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-UVADOFME.js?v=8c8f78b8"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@id/__x00__virtual:medusa/links"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-PXEBMD4X.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-O27SDWSQ.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-LECC7SAI.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-F2Z4ALZS.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-5QM4JN6Q.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-TVINYJXB.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-YQ2WRSGT.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-JCK4JZUA.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-UIUMP5QV.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-7HIRIWRF.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-2KC7JMSY.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-JLCKDLH7.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-VMLNCWLE.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-CUPZIPFX.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-POUZZXZY.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-RSU5RGXO.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-LK7TNEDZ.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-GCVUV4YW.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-PJH2FZXH.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-PXKNUQDM.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-JB3JGZP2.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-R35JBZ3G.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-QKQG4KE2.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-EZCH7FOC.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-4E3X3L63.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-LWUIMGEN.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-TNZIWR7V.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-KBTYAULA.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-5GLF3XJW.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-PELU447P.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@id/__x00__virtual:medusa/displays"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@id/__x00__virtual:medusa/forms"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@id/__x00__virtual:medusa/i18n"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/@medusajs_admin-shared.js?v=8c8f78b8"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/i18n/index.ts"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@id/__x00__virtual:medusa/menu-items"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/businesses/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/earnings/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/consultations/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/home/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/orders-global/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/users/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/businesses/[id]/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/consultations/[id]/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/businesses/[id]/domains/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/locations/[locationId]/products/page.tsx"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-WQJJJ2T5.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@id/__x00__virtual:medusa/routes"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-WZA4GJOD.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@id/__x00__virtual:medusa/widgets"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-KETDQBWH.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-EFJVDLE5.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@id/__x00__virtual:medusa/links"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/@medusajs_admin-shared.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/i18n/index.ts"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-V3UCTQE4.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/businesses/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/@medusajs_admin-sdk.js?v=8c8f78b8"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/@medusajs_ui.js?v=8c8f78b8"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/react-router-dom.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-DU2XHES7.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/index.css"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/earnings/page.tsx"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/home/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/date-fns.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/orders-global/page.tsx"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/businesses/[id]/domains/page.tsx"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/locations/[locationId]/products/page.tsx"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/businesses/[id]/page.tsx"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/@medusajs_admin-sdk.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/consultations/page.tsx"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/@medusajs_ui.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/react-router-dom.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/date-fns.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/users/page.tsx"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/src/admin/routes/consultations/[id]/page.tsx"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/prism-json-CZ7I2BOC.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/prism-json-CZ7I2BOC.js?v=8c8f78b8"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/login-IMDOL4BZ-I63EZZWS.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/login-IMDOL4BZ-I63EZZWS.js?v=8c8f78b8"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "fetch",
+      "url": "http://localhost:9001/admin/feature-flags"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-2Y27ECRT.js?v=8c8f78b8"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "script",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-OVXY2BEQ.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/admin/feature-flags"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-2Y27ECRT.js?v=8c8f78b8"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/.vite/deps/chunk-OVXY2BEQ.js?v=8c8f78b8"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "font",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/@medusajs/dashboard/dist/Inter-Medium-RUQTUVA3.ttf"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "font",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/@medusajs/dashboard/dist/Inter-Regular-CKBOXRQ3.ttf"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/@medusajs/dashboard/dist/Inter-Medium-RUQTUVA3.ttf"
+    },
+    {
+      "type": "response",
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:9001/app/@fs/D:/GitHub/TheRxSpot_Marketplace/node_modules/@medusajs/dashboard/dist/Inter-Regular-CKBOXRQ3.ttf"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "fetch",
+      "url": "http://localhost:59012/app/"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "fetch",
+      "url": "http://localhost:59012/app/"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "fetch",
+      "url": "http://localhost:59012/app/"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "fetch",
+      "url": "http://localhost:59012/app/"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "fetch",
+      "url": "http://localhost:59012/app/"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "fetch",
+      "url": "http://localhost:59012/app/"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "fetch",
+      "url": "http://localhost:59012/app/"
+    },
+    {
+      "type": "request",
+      "method": "GET",
+      "resourceType": "fetch",
+      "url": "http://localhost:59012/app/"
+    }
+  ]
+}

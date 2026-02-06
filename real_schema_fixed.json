@@ -1,0 +1,2207 @@
+{
+  "openapi": "3.1.0",
+  "servers": [
+    {
+      "url": "https://opened-tin-download-those.trycloudflare.com"
+    }
+  ],
+  "info": {
+    "title": "Serena Agent API",
+    "description": "OpenAPI schema for Serena coding tools exposed over MCPO.",
+    "version": "1.23.1"
+  },
+  "paths": {
+    "/read_file": {
+      "post": {
+        "summary": "Read File",
+        "description": "Reads the given file or a chunk of it. Generally, symbolic operations\nlike find_symbol or find_referencing_symbols should be preferred if you know which symbols you are looking for. Returns the full text of the file at the given relative path.",
+        "operationId": "tool_read_file_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/read_file_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/read_file_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Read File Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/create_text_file": {
+      "post": {
+        "summary": "Create Text File",
+        "description": "Write a new file or overwrite an existing file. Returns a message indicating success or failure.",
+        "operationId": "tool_create_text_file_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/create_text_file_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/create_text_file_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Create Text File Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/list_dir": {
+      "post": {
+        "summary": "List Dir",
+        "description": "Lists files and directories in the given directory (optionally with recursion). Returns a JSON object with the names of directories and files within the given directory.",
+        "operationId": "tool_list_dir_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/list_dir_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/list_dir_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool List Dir Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/find_file": {
+      "post": {
+        "summary": "Find File",
+        "description": "Finds non-gitignored files matching the given file mask within the given relative path. Returns a JSON object with the list of matching files.",
+        "operationId": "tool_find_file_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/find_file_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/find_file_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Find File Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/replace_content": {
+      "post": {
+        "summary": "Replace Content",
+        "description": "Replaces content in files. Preferred for smaller edits where symbol-level tools aren't appropriate.\nUse mode \"regex\" with wildcards (.*?) to match large sections efficiently: \"beginning.*?end\" instead of specifying exact content.\nEssential for multi-line replacements.",
+        "operationId": "tool_replace_content_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/replace_content_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/replace_content_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Replace Content Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/search_for_pattern": {
+      "post": {
+        "summary": "Search For Pattern",
+        "description": "Flexible pattern search across codebase. Prefer symbolic operations when possible.\nUses DOTALL matching. Use non-greedy quantifiers (.*?) to avoid over-matching.\nSupports file filtering via globs and code-only restriction. Returns A mapping of file paths to lists of matched consecutive lines.",
+        "operationId": "tool_search_for_pattern_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/search_for_pattern_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/search_for_pattern_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Search For Pattern Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/get_symbols_overview": {
+      "post": {
+        "summary": "Get Symbols Overview",
+        "description": "Use this tool to get a high-level understanding of the code symbols in a file.\nThis should be the first tool to call when you want to understand a new file, unless you already know\nwhat you are looking for. Returns a JSON object containing symbols grouped by kind in a compact format.",
+        "operationId": "tool_get_symbols_overview_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/get_symbols_overview_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/get_symbols_overview_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Get Symbols Overview Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/find_symbol": {
+      "post": {
+        "summary": "Find Symbol",
+        "description": "Retrieves symbols matching `name_path_pattern` in a file.\nUse `depth > 0` to include children. `name_path_pattern` can be: \"foo\": any symbol named \"foo\"; \"foo/bar\": \"bar\" within \"foo\"; \"/foo/bar\": only top-level \"foo/bar\". Returns a list of symbols (with locations) matching the name.",
+        "operationId": "tool_find_symbol_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/find_symbol_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/find_symbol_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Find Symbol Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/find_referencing_symbols": {
+      "post": {
+        "summary": "Find Referencing Symbols",
+        "description": "Finds references to the symbol at the given `name_path`. The result will contain metadata about the referencing symbols\nas well as a short code snippet around the reference. Returns a list of JSON objects with the symbols referencing the requested symbol.",
+        "operationId": "tool_find_referencing_symbols_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/find_referencing_symbols_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/find_referencing_symbols_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Find Referencing Symbols Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/replace_symbol_body": {
+      "post": {
+        "summary": "Replace Symbol Body",
+        "description": "Replaces the body of the symbol with the given `name_path`.\n\nThe tool shall be used to replace symbol bodies that have been previously retrieved\n(e.g. via `find_symbol`).\nIMPORTANT: Do not use this tool if you do not know what exactly constitutes the body of the symbol.",
+        "operationId": "tool_replace_symbol_body_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/replace_symbol_body_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/replace_symbol_body_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Replace Symbol Body Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/insert_after_symbol": {
+      "post": {
+        "summary": "Insert After Symbol",
+        "description": "Inserts the given body/content after the end of the definition of the given symbol (via the symbol's location).\nA typical use case is to insert a new class, function, method, field or variable assignment.",
+        "operationId": "tool_insert_after_symbol_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/insert_after_symbol_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/insert_after_symbol_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Insert After Symbol Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/insert_before_symbol": {
+      "post": {
+        "summary": "Insert Before Symbol",
+        "description": "Inserts the given content before the beginning of the definition of the given symbol (via the symbol's location).\nA typical use case is to insert a new class, function, method, field or variable assignment; or\na new import statement before the first symbol in the file.",
+        "operationId": "tool_insert_before_symbol_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/insert_before_symbol_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/insert_before_symbol_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Insert Before Symbol Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/rename_symbol": {
+      "post": {
+        "summary": "Rename Symbol",
+        "description": "Renames the symbol with the given `name_path` to `new_name` throughout the entire codebase.\nNote: for languages with method overloading, like Java, name_path may have to include a method's\nsignature to uniquely identify a method. Returns result summary indicating success or failure.",
+        "operationId": "tool_rename_symbol_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rename_symbol_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/rename_symbol_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Rename Symbol Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/write_memory": {
+      "post": {
+        "summary": "Write Memory",
+        "description": "Write some information (utf-8-encoded) about this project that can be useful for future tasks to a memory in md format.\nThe memory name should be meaningful.",
+        "operationId": "tool_write_memory_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/write_memory_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/write_memory_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Write Memory Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/read_memory": {
+      "post": {
+        "summary": "Read Memory",
+        "description": "Read the content of a memory file. This tool should only be used if the information\nis relevant to the current task. You can infer whether the information\nis relevant from the memory file name.\nYou should not read the same memory file multiple times in the same conversation.",
+        "operationId": "tool_read_memory_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/read_memory_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/read_memory_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Read Memory Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/list_memories": {
+      "post": {
+        "summary": "List Memories",
+        "description": "List available memories. Any memory can be read using the `read_memory` tool.",
+        "operationId": "tool_list_memories_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/delete_memory": {
+      "post": {
+        "summary": "Delete Memory",
+        "description": "Delete a memory file. Should only happen if a user asks for it explicitly,\nfor example by saying that the information retrieved from a memory file is no longer correct\nor no longer relevant for the project.",
+        "operationId": "tool_delete_memory_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/delete_memory_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/delete_memory_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Delete Memory Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/edit_memory": {
+      "post": {
+        "summary": "Edit Memory",
+        "description": "Replaces content matching a regular expression in a memory.",
+        "operationId": "tool_edit_memory_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/edit_memory_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/edit_memory_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Edit Memory Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/execute_shell_command": {
+      "post": {
+        "summary": "Execute Shell Command",
+        "description": "Execute a shell command and return its output. If there is a memory about suggested commands, read that first. Never execute unsafe shell commands! Do not use for long-running processes or interactive ones.",
+        "operationId": "tool_execute_shell_command_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/execute_shell_command_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/execute_shell_command_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Execute Shell Command Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/open_dashboard": {
+      "post": {
+        "summary": "Open Dashboard",
+        "description": "Opens the Serena web dashboard in the default web browser.",
+        "operationId": "tool_open_dashboard_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/activate_project": {
+      "post": {
+        "summary": "Activate Project",
+        "description": "Activates the project with the given name or path.",
+        "operationId": "tool_activate_project_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/activate_project_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/activate_project_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Activate Project Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/switch_modes": {
+      "post": {
+        "summary": "Switch Modes",
+        "description": "Activates the desired modes, like [\"editing\", \"interactive\"] or [\"planning\", \"one-shot\"].",
+        "operationId": "tool_switch_modes_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/switch_modes_form_model"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/switch_modes_response_model"
+                    },
+                    {}
+                  ],
+                  "title": "Response Tool Switch Modes Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/get_current_config": {
+      "post": {
+        "summary": "Get Current Config",
+        "description": "Print the current configuration of the agent, including the active and available projects, tools, contexts, and modes.",
+        "operationId": "tool_get_current_config_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/check_onboarding_performed": {
+      "post": {
+        "summary": "Check Onboarding Performed",
+        "description": "Checks whether project onboarding was already performed.\nYou should always call this tool before beginning to actually work on the project/after activating a project.",
+        "operationId": "tool_check_onboarding_performed_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/onboarding": {
+      "post": {
+        "summary": "Onboarding",
+        "description": "Call this tool if onboarding was not performed yet.\nYou will call this tool at most once per conversation. Returns instructions on how to create the onboarding information.",
+        "operationId": "tool_onboarding_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/think_about_collected_information": {
+      "post": {
+        "summary": "Think About Collected Information",
+        "description": "Think about the collected information and whether it is sufficient and relevant.\nThis tool should ALWAYS be called after you have completed a non-trivial sequence of searching steps like\nfind_symbol, find_referencing_symbols, search_files_for_pattern, read_file, etc.",
+        "operationId": "tool_think_about_collected_information_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/think_about_task_adherence": {
+      "post": {
+        "summary": "Think About Task Adherence",
+        "description": "Think about the task at hand and whether you are still on track.\nEspecially important if the conversation has been going on for a while and there\nhas been a lot of back and forth.\n\nThis tool should ALWAYS be called before you insert, replace, or delete code.",
+        "operationId": "tool_think_about_task_adherence_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/think_about_whether_you_are_done": {
+      "post": {
+        "summary": "Think About Whether You Are Done",
+        "description": "Whenever you feel that you are done with what the user has asked for, it is important to call this tool.",
+        "operationId": "tool_think_about_whether_you_are_done_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/prepare_for_new_conversation": {
+      "post": {
+        "summary": "Prepare For New Conversation",
+        "description": "Instructions for preparing for a new conversation. This tool should only be called on explicit user request.",
+        "operationId": "tool_prepare_for_new_conversation_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    },
+    "/initial_instructions": {
+      "post": {
+        "summary": "Initial Instructions",
+        "description": "Provides the 'Serena Instructions Manual', which contains essential information on how to use the Serena toolbox.\nIMPORTANT: If you have not yet read the manual, call this tool immediately after you are given your task by the user,\nas it will critically inform you!.",
+        "operationId": "tool_initial_instructions_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-openai-isConsequential": false
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "activate_project_form_model": {
+        "properties": {
+          "project": {
+            "type": "string",
+            "title": "Project",
+            "description": "The name of a registered project to activate or a path to a project directory."
+          }
+        },
+        "type": "object",
+        "required": [
+          "project"
+        ],
+        "title": "activate_project_form_model"
+      },
+      "activate_project_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "activate_project_response_model"
+      },
+      "create_text_file_form_model": {
+        "properties": {
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the file to create."
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": "The (appropriately encoded) content to write to the file."
+          }
+        },
+        "type": "object",
+        "required": [
+          "relative_path",
+          "content"
+        ],
+        "title": "create_text_file_form_model"
+      },
+      "create_text_file_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "create_text_file_response_model"
+      },
+      "delete_memory_form_model": {
+        "properties": {
+          "memory_file_name": {
+            "type": "string",
+            "title": "Memory File Name",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "memory_file_name"
+        ],
+        "title": "delete_memory_form_model"
+      },
+      "delete_memory_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "delete_memory_response_model"
+      },
+      "edit_memory_form_model": {
+        "properties": {
+          "memory_file_name": {
+            "type": "string",
+            "title": "Memory File Name",
+            "description": "The name of the memory."
+          },
+          "needle": {
+            "type": "string",
+            "title": "Needle",
+            "description": "The string or regex pattern to search for.\nIf `mode` is \"literal\", this string will be matched exactly.\nIf `mode` is \"regex\", this string will be treated as a regular expression (syntax of Python's `re` module,\nwith flags DOTALL and MULTILINE enabled)."
+          },
+          "repl": {
+            "type": "string",
+            "title": "Repl",
+            "description": "The replacement string (verbatim)."
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "description": "Either \"literal\" or \"regex\", specifying how the `needle` parameter is to be interpreted."
+          }
+        },
+        "type": "object",
+        "required": [
+          "memory_file_name",
+          "needle",
+          "repl",
+          "mode"
+        ],
+        "title": "edit_memory_form_model"
+      },
+      "edit_memory_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "edit_memory_response_model"
+      },
+      "execute_shell_command_form_model": {
+        "properties": {
+          "command": {
+            "type": "string",
+            "title": "Command",
+            "description": "The shell command to execute."
+          },
+          "cwd": {
+            "type": "string",
+            "title": "Cwd",
+            "description": "The working directory to execute the command in. If None, the project root will be used."
+          },
+          "capture_stderr": {
+            "type": "boolean",
+            "title": "Capture Stderr",
+            "description": "Whether to capture and return stderr output.",
+            "default": true
+          },
+          "max_answer_chars": {
+            "type": "number",
+            "title": "Max Answer Chars",
+            "description": "If the output is longer than this number of characters,\nno content will be returned. -1 means using the default value, don't adjust unless there is no other way to get the content\nrequired for the task.",
+            "default": -1
+          }
+        },
+        "type": "object",
+        "required": [
+          "command"
+        ],
+        "title": "execute_shell_command_form_model"
+      },
+      "execute_shell_command_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "execute_shell_command_response_model"
+      },
+      "find_file_form_model": {
+        "properties": {
+          "file_mask": {
+            "type": "string",
+            "title": "File Mask",
+            "description": "The filename or file mask (using the wildcards * or ?) to search for."
+          },
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the directory to search in; pass \".\" to scan the project root."
+          }
+        },
+        "type": "object",
+        "required": [
+          "file_mask",
+          "relative_path"
+        ],
+        "title": "find_file_form_model"
+      },
+      "find_file_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "find_file_response_model"
+      },
+      "find_referencing_symbols_form_model": {
+        "properties": {
+          "name_path": {
+            "type": "string",
+            "title": "Name Path",
+            "description": "For finding the symbol to find references for, same logic as in the `find_symbol` tool."
+          },
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the file containing the symbol for which to find references.\nNote that here you can't pass a directory but must pass a file."
+          },
+          "include_info": {
+            "type": "boolean",
+            "title": "Include Info",
+            "description": "Whether to include additional info (hover-like, typically including docstring and signature),\nabout the referencing symbols; can be slow depending on the language (e.g. C/C++).",
+            "default": false
+          },
+          "include_kinds": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Include Kinds",
+            "description": "Same as in the `find_symbol` tool.",
+            "default": []
+          },
+          "exclude_kinds": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Exclude Kinds",
+            "description": "Same as in the `find_symbol` tool.",
+            "default": []
+          },
+          "max_answer_chars": {
+            "type": "number",
+            "title": "Max Answer Chars",
+            "description": "Same as in the `find_symbol` tool.",
+            "default": -1
+          }
+        },
+        "type": "object",
+        "required": [
+          "name_path",
+          "relative_path"
+        ],
+        "title": "find_referencing_symbols_form_model"
+      },
+      "find_referencing_symbols_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "find_referencing_symbols_response_model"
+      },
+      "find_symbol_form_model": {
+        "properties": {
+          "name_path_pattern": {
+            "type": "string",
+            "title": "Name Path Pattern",
+            "description": "The name path matching pattern (see above)."
+          },
+          "depth": {
+            "type": "number",
+            "title": "Depth",
+            "description": "Depth up to which descendants shall be retrieved (e.g. use 1 to also retrieve immediate children;\nfor the case where the symbol is a class, this will return its methods). Default 0.",
+            "default": 0
+          },
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "Optional. Restrict search to this file or directory. If None, searches entire codebase.\nIf a directory is passed, the search will be restricted to the files in that directory.\nIf a file is passed, the search will be restricted to that file.\nIf you have some knowledge about the codebase, you should use this parameter, as it will significantly\nspeed up the search as well as reduce the number of results.",
+            "default": ""
+          },
+          "include_body": {
+            "type": "boolean",
+            "title": "Include Body",
+            "description": "Whether to include the symbol's source code. Use judiciously.",
+            "default": false
+          },
+          "include_info": {
+            "type": "boolean",
+            "title": "Include Info",
+            "description": "Whether to include additional info (hover-like, typically including docstring and signature),\nabout the symbol (ignored if include_body is True). Info is never included for child symbols.\nNote: Depending on the language, this can be slow (e.g., C/C++).",
+            "default": false
+          },
+          "include_kinds": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Include Kinds",
+            "description": "List of LSP symbol kind integers to include.\nIf not provided, all kinds are included.",
+            "default": []
+          },
+          "exclude_kinds": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Exclude Kinds",
+            "description": "Optional. List of LSP symbol kind integers to exclude. Takes precedence over `include_kinds`.\nIf not provided, no kinds are excluded.",
+            "default": []
+          },
+          "substring_matching": {
+            "type": "boolean",
+            "title": "Substring Matching",
+            "description": "If True, use substring matching for the last element of the pattern, such that\n\"Foo/get\" would match \"Foo/getValue\" and \"Foo/getData\".",
+            "default": false
+          },
+          "max_answer_chars": {
+            "type": "number",
+            "title": "Max Answer Chars",
+            "description": "Max characters for the JSON result. If exceeded, no content is returned.\n-1 means the default value from the config will be used.",
+            "default": -1
+          }
+        },
+        "type": "object",
+        "required": [
+          "name_path_pattern"
+        ],
+        "title": "find_symbol_form_model"
+      },
+      "find_symbol_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "find_symbol_response_model"
+      },
+      "get_symbols_overview_form_model": {
+        "properties": {
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the file to get the overview of."
+          },
+          "depth": {
+            "type": "number",
+            "title": "Depth",
+            "description": "Depth up to which descendants of top-level symbols shall be retrieved\n(e.g. 1 retrieves immediate children). Default 0.",
+            "default": 0
+          },
+          "max_answer_chars": {
+            "type": "number",
+            "title": "Max Answer Chars",
+            "description": "If the overview is longer than this number of characters,\nno content will be returned. -1 means the default value from the config will be used.\nDon't adjust unless there is really no other way to get the content required for the task.",
+            "default": -1
+          }
+        },
+        "type": "object",
+        "required": [
+          "relative_path"
+        ],
+        "title": "get_symbols_overview_form_model"
+      },
+      "get_symbols_overview_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "get_symbols_overview_response_model"
+      },
+      "insert_after_symbol_form_model": {
+        "properties": {
+          "name_path": {
+            "type": "string",
+            "title": "Name Path",
+            "description": "Name path of the symbol after which to insert content (definitions in the `find_symbol` tool apply)."
+          },
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the file containing the symbol."
+          },
+          "body": {
+            "type": "string",
+            "title": "Body",
+            "description": "The body/content to be inserted. The inserted code shall begin with the next line after\nthe symbol."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name_path",
+          "relative_path",
+          "body"
+        ],
+        "title": "insert_after_symbol_form_model"
+      },
+      "insert_after_symbol_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "insert_after_symbol_response_model"
+      },
+      "insert_before_symbol_form_model": {
+        "properties": {
+          "name_path": {
+            "type": "string",
+            "title": "Name Path",
+            "description": "Name path of the symbol before which to insert content (definitions in the `find_symbol` tool apply)."
+          },
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the file containing the symbol."
+          },
+          "body": {
+            "type": "string",
+            "title": "Body",
+            "description": "The body/content to be inserted before the line in which the referenced symbol is defined."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name_path",
+          "relative_path",
+          "body"
+        ],
+        "title": "insert_before_symbol_form_model"
+      },
+      "insert_before_symbol_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "insert_before_symbol_response_model"
+      },
+      "list_dir_form_model": {
+        "properties": {
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the directory to list; pass \".\" to scan the project root."
+          },
+          "recursive": {
+            "type": "boolean",
+            "title": "Recursive",
+            "description": "Whether to scan subdirectories recursively."
+          },
+          "skip_ignored_files": {
+            "type": "boolean",
+            "title": "Skip Ignored Files",
+            "description": "Whether to skip files and directories that are ignored.",
+            "default": false
+          },
+          "max_answer_chars": {
+            "type": "number",
+            "title": "Max Answer Chars",
+            "description": "If the output is longer than this number of characters,\nno content will be returned. -1 means the default value from the config will be used.\nDon't adjust unless there is really no other way to get the content required for the task.",
+            "default": -1
+          }
+        },
+        "type": "object",
+        "required": [
+          "relative_path",
+          "recursive"
+        ],
+        "title": "list_dir_form_model"
+      },
+      "list_dir_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "list_dir_response_model"
+      },
+      "read_file_form_model": {
+        "properties": {
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the file to read."
+          },
+          "start_line": {
+            "type": "number",
+            "title": "Start Line",
+            "description": "The 0-based index of the first line to be retrieved.",
+            "default": 0
+          },
+          "end_line": {
+            "type": "integer",
+            "title": "End Line",
+            "description": "The 0-based index of the last line to be retrieved (inclusive). If None, read until the end of the file."
+          },
+          "max_answer_chars": {
+            "type": "number",
+            "title": "Max Answer Chars",
+            "description": "If the file (chunk) is longer than this number of characters,\nno content will be returned. Don't adjust unless there is really no other way to get the content\nrequired for the task.",
+            "default": -1
+          }
+        },
+        "type": "object",
+        "required": [
+          "relative_path"
+        ],
+        "title": "read_file_form_model"
+      },
+      "read_file_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "read_file_response_model"
+      },
+      "read_memory_form_model": {
+        "properties": {
+          "memory_file_name": {
+            "type": "string",
+            "title": "Memory File Name",
+            "description": ""
+          },
+          "max_answer_chars": {
+            "type": "number",
+            "title": "Max Answer Chars",
+            "description": "",
+            "default": -1
+          }
+        },
+        "type": "object",
+        "required": [
+          "memory_file_name"
+        ],
+        "title": "read_memory_form_model"
+      },
+      "read_memory_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "read_memory_response_model"
+      },
+      "rename_symbol_form_model": {
+        "properties": {
+          "name_path": {
+            "type": "string",
+            "title": "Name Path",
+            "description": "Name path of the symbol to rename (definitions in the `find_symbol` tool apply)."
+          },
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the file containing the symbol to rename."
+          },
+          "new_name": {
+            "type": "string",
+            "title": "New Name",
+            "description": "The new name for the symbol."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name_path",
+          "relative_path",
+          "new_name"
+        ],
+        "title": "rename_symbol_form_model"
+      },
+      "rename_symbol_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "rename_symbol_response_model"
+      },
+      "replace_content_form_model": {
+        "properties": {
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the file."
+          },
+          "needle": {
+            "type": "string",
+            "title": "Needle",
+            "description": "The string or regex pattern to search for.\nIf `mode` is \"literal\", this string will be matched exactly.\nIf `mode` is \"regex\", this string will be treated as a regular expression (syntax of Python's `re` module,\nwith flags DOTALL and MULTILINE enabled)."
+          },
+          "repl": {
+            "type": "string",
+            "title": "Repl",
+            "description": "The replacement string (verbatim).\nIf mode is \"regex\", the string can contain backreferences to matched groups in the needle regex,\nspecified using the syntax $!1, $!2, etc. for groups 1, 2, etc."
+          },
+          "mode": {
+            "type": "string",
+            "title": "Mode",
+            "description": "Either \"literal\" or \"regex\", specifying how the `needle` parameter is to be interpreted."
+          },
+          "allow_multiple_occurrences": {
+            "type": "boolean",
+            "title": "Allow Multiple Occurrences",
+            "description": "If True, the regex may match multiple occurrences in the file\nand all of them will be replaced.\nIf this is set to False and the regex matches multiple occurrences, an error will be returned\n(and you may retry with a revised, more specific regex).",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "relative_path",
+          "needle",
+          "repl",
+          "mode"
+        ],
+        "title": "replace_content_form_model"
+      },
+      "replace_content_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "replace_content_response_model"
+      },
+      "replace_symbol_body_form_model": {
+        "properties": {
+          "name_path": {
+            "type": "string",
+            "title": "Name Path",
+            "description": "For finding the symbol to replace, same logic as in the `find_symbol` tool."
+          },
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "The relative path to the file containing the symbol."
+          },
+          "body": {
+            "type": "string",
+            "title": "Body",
+            "description": "The new symbol body. The symbol body is the definition of a symbol\nin the programming language, including e.g. the signature line for functions.\nIMPORTANT: The body does NOT include any preceding docstrings/comments or imports, in particular."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name_path",
+          "relative_path",
+          "body"
+        ],
+        "title": "replace_symbol_body_form_model"
+      },
+      "replace_symbol_body_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "replace_symbol_body_response_model"
+      },
+      "search_for_pattern_form_model": {
+        "properties": {
+          "substring_pattern": {
+            "type": "string",
+            "title": "Substring Pattern",
+            "description": "Regular expression for a substring pattern to search for."
+          },
+          "context_lines_before": {
+            "type": "number",
+            "title": "Context Lines Before",
+            "description": "Number of lines of context to include before each match.",
+            "default": 0
+          },
+          "context_lines_after": {
+            "type": "number",
+            "title": "Context Lines After",
+            "description": "Number of lines of context to include after each match.",
+            "default": 0
+          },
+          "paths_include_glob": {
+            "type": "string",
+            "title": "Paths Include Glob",
+            "description": "Optional glob pattern specifying files to include in the search.\nMatches against relative file paths from the project root (e.g., \"*.py\", \"src/**/*.ts\").\nSupports standard glob patterns (*, ?, [seq], **, etc.) and brace expansion {a,b,c}.\nOnly matches files, not directories. If left empty, all non-ignored files will be included.",
+            "default": ""
+          },
+          "paths_exclude_glob": {
+            "type": "string",
+            "title": "Paths Exclude Glob",
+            "description": "Optional glob pattern specifying files to exclude from the search.\nMatches against relative file paths from the project root (e.g., \"*test*\", \"**/*_generated.py\").\nSupports standard glob patterns (*, ?, [seq], **, etc.) and brace expansion {a,b,c}.\nTakes precedence over paths_include_glob. Only matches files, not directories. If left empty, no files are excluded.",
+            "default": ""
+          },
+          "relative_path": {
+            "type": "string",
+            "title": "Relative Path",
+            "description": "Only subpaths of this path (relative to the repo root) will be analyzed. If a path to a single\nfile is passed, only that will be searched. The path must exist, otherwise a `FileNotFoundError` is raised.",
+            "default": ""
+          },
+          "restrict_search_to_code_files": {
+            "type": "boolean",
+            "title": "Restrict Search To Code Files",
+            "description": "Whether to restrict the search to only those files where\nanalyzed code symbols can be found. Otherwise, will search all non-ignored files.\nSet this to True if your search is only meant to discover code that can be manipulated with symbolic tools.\nFor example, for finding classes or methods from a name pattern.\nSetting to False is a better choice if you also want to search in non-code files, like in html or yaml files,\nwhich is why it is the default.",
+            "default": false
+          },
+          "max_answer_chars": {
+            "type": "number",
+            "title": "Max Answer Chars",
+            "description": "If the output is longer than this number of characters,\nno content will be returned.\n-1 means the default value from the config will be used.\nDon't adjust unless there is really no other way to get the content\nrequired for the task. Instead, if the output is too long, you should\nmake a stricter query.",
+            "default": -1
+          }
+        },
+        "type": "object",
+        "required": [
+          "substring_pattern"
+        ],
+        "title": "search_for_pattern_form_model"
+      },
+      "search_for_pattern_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "search_for_pattern_response_model"
+      },
+      "switch_modes_form_model": {
+        "properties": {
+          "modes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Modes",
+            "description": "The names of the modes to activate."
+          }
+        },
+        "type": "object",
+        "required": [
+          "modes"
+        ],
+        "title": "switch_modes_form_model"
+      },
+      "switch_modes_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "switch_modes_response_model"
+      },
+      "write_memory_form_model": {
+        "properties": {
+          "memory_file_name": {
+            "type": "string",
+            "title": "Memory File Name",
+            "description": ""
+          },
+          "content": {
+            "type": "string",
+            "title": "Content",
+            "description": ""
+          },
+          "max_answer_chars": {
+            "type": "number",
+            "title": "Max Answer Chars",
+            "description": "",
+            "default": -1
+          }
+        },
+        "type": "object",
+        "required": [
+          "memory_file_name",
+          "content"
+        ],
+        "title": "write_memory_form_model"
+      },
+      "write_memory_response_model": {
+        "properties": {
+          "result": {
+            "type": "string",
+            "title": "Result",
+            "description": ""
+          }
+        },
+        "type": "object",
+        "required": [
+          "result"
+        ],
+        "title": "write_memory_response_model"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

@@ -35,7 +35,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   }
 
   // Normalize coupon code to uppercase
-  const data = {
+  const data: Record<string, any> = {
     ...body,
     code: body.code.toUpperCase(),
   }

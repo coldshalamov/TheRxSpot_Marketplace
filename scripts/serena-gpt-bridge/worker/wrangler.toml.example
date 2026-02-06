@@ -1,0 +1,7 @@
+name = "serena-gpt-proxy"
+main = "index.ts"
+compatibility_date = "2026-02-06"
+
+[[kv_namespaces]]
+binding = "TUNNEL_KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"

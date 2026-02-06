@@ -9,7 +9,7 @@ import {
   toast,
   DatePicker,
 } from "@medusajs/ui"
-import { format, formatDistanceToNowStrict } from "date-fns"
+import { format, formatDistanceToNowStrict, isValid } from "date-fns"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
 
@@ -64,6 +64,28 @@ const integer = new Intl.NumberFormat("en-US")
 
 function formatCents(cents: number): string {
   return money.format((cents || 0) / 100)
+}
+
+function safeRelativeDate(value: string | null | undefined): string | null {
+  if (!value) return null
+  const date = new Date(value)
+  if (!isValid(date)) return null
+  try {
+    return formatDistanceToNowStrict(date, { addSuffix: true })
+  } catch {
+    return null
+  }
+}
+
+function safeTimestamp(value: string | null | undefined): string {
+  if (!value) return "—"
+  const date = new Date(value)
+  if (!isValid(date)) return "—"
+  try {
+    return format(date, "MMM d, h:mm a")
+  } catch {
+    return "—"
+  }
 }
 
 function actionColor(action: string): "green" | "blue" | "red" | "grey" {
@@ -396,9 +418,7 @@ const HomePage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const lastUpdated = data?.generated_at
-    ? formatDistanceToNowStrict(new Date(data.generated_at), { addSuffix: true })
-    : null
+  const lastUpdated = safeRelativeDate(data?.generated_at)
 
   const metrics = data?.metrics
 
@@ -518,7 +538,7 @@ const HomePage = () => {
           title="Total Businesses"
           value={loading ? "—" : integer.format(metrics?.total_businesses.value || 0)}
           badge={
-            metrics?.total_businesses.change_pct === null ? (
+            !metrics || metrics.total_businesses.change_pct == null ? (
               <Badge color="grey">—</Badge>
             ) : (
               <Badge color={metrics.total_businesses.change_pct >= 0 ? "green" : "red"}>
@@ -646,7 +666,6 @@ const HomePage = () => {
               <div className="text-xs text-ui-fg-subtle">No activity yet.</div>
             ) : (
               (data?.activity.logs || []).slice(0, 20).map((log) => {
-                const ts = log.created_at ? new Date(log.created_at) : null
                 const who = (log.actor_email || "").trim() || log.actor_id
                 const href = buildEntityHref(log)
 
@@ -675,7 +694,7 @@ const HomePage = () => {
                         </div>
                       </div>
                       <div className="text-[11px] text-ui-fg-subtle whitespace-nowrap">
-                        {ts ? format(ts, "MMM d, h:mm a") : "—"}
+                        {safeTimestamp(log.created_at)}
                       </div>
                     </div>
                     <div className="mt-1 text-[11px] text-ui-fg-subtle">
@@ -694,7 +713,6 @@ const HomePage = () => {
 
 export const config = defineRouteConfig({
   label: "Home",
-  icon: "Home",
 })
 
 export default HomePage

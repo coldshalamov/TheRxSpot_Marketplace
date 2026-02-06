@@ -1,0 +1,6 @@
+{
+  "workerUrl": "https://YOUR_WORKER.workers.dev",
+  "updaterToken": "YOUR_UPDATER_TOKEN",
+  "serenaApiKey": "serena-secret-key-123456",
+  "port": 8000
+}

@@ -109,6 +109,32 @@ function formatDateTime(value?: string | null): string {
   return date.toLocaleString(undefined, { timeZoneName: "short" })
 }
 
+function isValidDate(value: Date | null | undefined): value is Date {
+  return !!value && !Number.isNaN(value.getTime())
+}
+
+function safeRelativeDate(value?: string | null, withSuffix = false): string {
+  if (!value) return "—"
+  const date = new Date(value)
+  if (!isValidDate(date)) return "—"
+  try {
+    return formatDistanceToNowStrict(date, withSuffix ? { addSuffix: true } : undefined)
+  } catch {
+    return "—"
+  }
+}
+
+function safeFormatDate(value?: string | null, pattern = "PPpp"): string {
+  if (!value) return "—"
+  const date = new Date(value)
+  if (!isValidDate(date)) return "—"
+  try {
+    return format(date, pattern)
+  } catch {
+    return "—"
+  }
+}
+
 function formatBytes(bytes?: number | null): string {
   if (!bytes || bytes <= 0) return "-"
   const units = ["B", "KB", "MB", "GB"]
@@ -774,8 +800,8 @@ const ConsultationDetailPage = () => {
   const scheduledAt = consultation.scheduled_at ? new Date(consultation.scheduled_at) : null
   const scheduledLabel = consultation.scheduled_at ? formatDateTime(consultation.scheduled_at) : "—"
   const scheduledCountdown =
-    scheduledAt && !Number.isNaN(scheduledAt.getTime()) && scheduledAt.getTime() > Date.now()
-      ? formatDistanceToNowStrict(scheduledAt, { addSuffix: true })
+    scheduledAt && isValidDate(scheduledAt) && scheduledAt.getTime() > Date.now()
+      ? safeRelativeDate(consultation.scheduled_at, true)
       : null
 
   const clinician = consultation.clinician || null
@@ -831,7 +857,7 @@ const ConsultationDetailPage = () => {
             <Badge color={status.color}>{status.label}</Badge>
             <div className="text-xs text-ui-fg-subtle">
               Updated{" "}
-              {consultation.updated_at ? formatDistanceToNowStrict(new Date(consultation.updated_at)) : "—"} ago
+              {safeRelativeDate(consultation.updated_at, true)}
             </div>
           </div>
         </div>
@@ -1087,7 +1113,7 @@ const ConsultationDetailPage = () => {
                             >
                               {d.file_name || d.title}
                             </button>
-                            <div className="text-[11px] text-ui-fg-subtle truncate">{format(new Date(d.created_at), "PPpp")}</div>
+                            <div className="text-[11px] text-ui-fg-subtle truncate">{safeFormatDate(d.created_at, "PPpp")}</div>
                           </Table.Cell>
                           <Table.Cell>
                             <div className="text-sm">{d.type}</div>
@@ -1485,7 +1511,6 @@ const ConsultationDetailPage = () => {
 
 export const config = defineRouteConfig({
   label: "Consultation detail",
-  icon: "ChatBubbleLeftRight",
 })
 
 export default ConsultationDetailPage

@@ -188,7 +188,6 @@ const BusinessesPage = () => {
 
 export const config = defineRouteConfig({
   label: "Businesses",
-  icon: "Building",
 })
 
 export default BusinessesPage

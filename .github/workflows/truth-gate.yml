@@ -1,0 +1,43 @@
+name: Truth Gate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  check:
+    name: Check (Root + Storefront)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install storefront dependencies
+        run: npm -C TheRxSpot_Marketplace-storefront ci
+
+      - name: Run hard truth check
+        run: npm run check
+        env:
+          NODE_ENV: production
+          DATABASE_URL: postgres://medusa:medusa@localhost:5432/medusa
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci_jwt_secret_that_is_at_least_64_characters_long_for_truth_gate_checks_only
+          COOKIE_SECRET: ci_cookie_secret_that_is_at_least_64_characters_long_for_truth_gate_checks
+          STORE_CORS: http://localhost:8000
+          ADMIN_CORS: http://localhost:5173,http://localhost:9000
+          AUTH_CORS: http://localhost:5173,http://localhost:9000,http://localhost:8000
+          MEDUSA_BACKEND_URL: http://localhost:9000
+          NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ci_publishable_key

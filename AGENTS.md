@@ -1,0 +1,58 @@
+# Agent Instructions (scope: repository root and all subdirectories)
+
+## Scope and Layout
+- This file applies to the whole repo unless a nested `AGENTS.md` overrides details.
+- Treat this as a monorepo-style workspace:
+  - Medusa backend in `src/`
+  - Next.js storefront in `TheRxSpot_Marketplace-storefront/`
+  - Operational docs in `docs/`
+  - Launch/orchestration scripts at repo root and `scripts/`
+
+## Modules / Subprojects
+
+| Module | Type | Path | What it owns | How to run | Tests | Docs | AGENTS |
+|--------|------|------|--------------|------------|-------|------|--------|
+| backend | medusa/typescript | `src/` | API routes, admin extensions, modules, workflows/jobs | `npm run dev` | `npm run test`, `npm run test:integration:http`, `npm run lint`, `npm run typecheck` | `docs/ARCHITECTURE.md`, `docs/API_REFERENCE.md` | `src/AGENTS.md` |
+| storefront | nextjs/typescript | `TheRxSpot_Marketplace-storefront/` | Customer-facing UI and tenant-aware web app | `npm -C TheRxSpot_Marketplace-storefront run dev` | `npm -C TheRxSpot_Marketplace-storefront run check` | `TheRxSpot_Marketplace-storefront/README.md` | `TheRxSpot_Marketplace-storefront/AGENTS.md` |
+| docs | documentation | `docs/` | Runbooks, plans, architecture, API docs | n/a | n/a | `docs/` | `docs/AGENTS.md` |
+| launchers | powershell/html | repo root, `launcher_assets/` | Local orchestration and command center UI | `.\Launch-Admin-Only.ps1`, `.\Launch-Marketplace.ps1` | smoke via `npm run diagnose:smoke` | `LAUNCHER_GUIDE.md` | (this file) |
+
+## Cross-Domain Workflows
+- Admin/Backend workflow:
+  - Admin app is served by backend (`/app` path from `medusa-config.ts`).
+  - Launcher scripts must respect runtime backend port and `admin.path`.
+- Storefront/Backend workflow:
+  - Storefront reads backend URL from env (`MEDUSA_BACKEND_URL`, `NEXT_PUBLIC_MEDUSA_BACKEND_URL`).
+  - Full-stack launch should keep backend and storefront port selection in sync.
+- Local startup:
+  - Start dependencies first (`Start-Dependencies.ps1` or `.bat`).
+  - Prefer launchers for Windows local orchestration.
+
+## Verification Standard (Critical)
+- For admin login/render fixes, read `docs/ADMIN_PANEL_MISTAKE_LEDGER.md` first.
+- Do not claim success from URL changes alone.
+- Minimum proof in one run:
+  - post-login UI visibly rendered,
+  - no critical runtime/browser errors,
+  - auth flow succeeds,
+  - behavior is repeatable.
+
+## Global Conventions
+- Keep changes scoped and reversible.
+- Prefer module-local commands from the relevant nested `AGENTS.md`.
+- Do not read the entire `docs/` tree unless the task needs it.
+
+## Links to Nested Instructions
+- `src/AGENTS.md`
+- `TheRxSpot_Marketplace-storefront/AGENTS.md`
+- `docs/AGENTS.md`
+
+## Medusa V2 AI Compatibility (CRITICAL)
+- **Repo Version**: V2.13.1 (Incompatible with V1).
+- **Rule**: ALL AI Agents MUST read `MEDUSA_V2_CONTEXT.md`.
+- **Deep Context**: If `MEDUSA_LLMS_FULL.md` exists, READ IT for complex tasks.
+- **Instability**: If the server hangs, check Redis (`docker ps`).
+- **Patterns**:
+  - NO `src/services` (use `src/modules`).
+  - NO `router.use` (use `src/api/.../route.ts`).
+  - ALWAYS use Workflows for business logic.

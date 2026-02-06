@@ -992,7 +992,6 @@ const OrdersGlobalPage = () => {
 
 export const config = defineRouteConfig({
   label: "Orders (Global)",
-  icon: "ShoppingBag",
 })
 
 export default OrdersGlobalPage

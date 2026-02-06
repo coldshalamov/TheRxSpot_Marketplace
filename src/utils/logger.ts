@@ -79,7 +79,9 @@ function log(level: "info" | "warn" | "error" | "debug", arg1: LogInput, arg2?: 
   const merged = { ...context, ...payload }
 
   if (error) {
-    baseLogger[level](merged, error, message)
+    // Pino expects (obj, msg, ...args) or (msg, ...args)
+    // We merge error into the object for proper logging
+    baseLogger[level]({ ...merged, err: error }, message)
     return
   }
 
