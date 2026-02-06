@@ -8,5 +8,7 @@ import { BusinessDomain } from "./business-domain"
 import { BusinessUser } from "./business-user"
 import { OrderStatusEvent } from "./order-status-event"
 import { OutboxEvent } from "./outbox-event"
+import { TemplateConfig } from "./template-config"
+import { Coupon } from "./coupon"
 
-export default [Business, Location, ProductCategory, LocationProduct, ConsultSubmission, ConsultApproval, BusinessDomain, BusinessUser, OrderStatusEvent, OutboxEvent]
+export default [Business, Location, ProductCategory, LocationProduct, ConsultSubmission, ConsultApproval, BusinessDomain, BusinessUser, OrderStatusEvent, OutboxEvent, TemplateConfig, Coupon]

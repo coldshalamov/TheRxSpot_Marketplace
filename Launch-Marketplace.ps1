@@ -13,9 +13,12 @@ $launcherHtml = Join-Path $repoRoot "Marketplace-Launcher.html"
 $preferredBackendPort = 9000
 $fallbackBackendPort = 9001
 $backendPort = $preferredBackendPort
+$preferredStorefrontPort = 8000
+$fallbackStorefrontPort = 8001
+$storefrontPort = $preferredStorefrontPort
 
 # Step 0: Check Dependencies
-Write-Host '[0/4] Checking dependencies...' -ForegroundColor Yellow
+Write-Host '[0/5] Checking dependencies...' -ForegroundColor Yellow
 
 # Fast port check function (Test-NetConnection is too slow)
 function Test-Port {
@@ -32,6 +35,71 @@ function Test-Port {
         return $false
     }
 }
+
+function Get-ProcessInfo {
+    param([int]$ProcessId)
+    try {
+        return Get-CimInstance Win32_Process -Filter "ProcessId = $ProcessId" -ErrorAction Stop
+    } catch {
+        return $null
+    }
+}
+
+function Should-StopForMarketplace {
+    param(
+        [object]$ProcessInfo
+    )
+
+    if (-not $ProcessInfo) {
+        return $false
+    }
+
+    $name = if ($ProcessInfo.Name) { $ProcessInfo.Name.ToLowerInvariant() } else { "" }
+    $cmd = if ($ProcessInfo.CommandLine) { $ProcessInfo.CommandLine.ToLowerInvariant() } else { "" }
+    $repoPath = $repoRoot.ToLowerInvariant()
+
+    if ($name -notin @("node.exe", "node", "powershell.exe", "powershell", "pwsh.exe", "pwsh")) {
+        return $false
+    }
+
+    if ($cmd.Contains($repoPath)) {
+        return $true
+    }
+
+    if ($cmd.Contains("medusa develop") -or $cmd.Contains("npm run dev") -or $cmd.Contains("next dev")) {
+        return $true
+    }
+
+    return $false
+}
+
+function Release-Port-Safely {
+    param(
+        [int]$Port,
+        [string]$Label
+    )
+
+    $listeners = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
+    if (-not $listeners) {
+        Write-Host "✅ Port $Port is available for $Label" -ForegroundColor Green
+        return
+    }
+
+    foreach ($ownerPid in $listeners) {
+        $procInfo = Get-ProcessInfo -ProcessId $ownerPid
+        $procName = if ($procInfo -and $procInfo.Name) { $procInfo.Name } else { "PID $ownerPid" }
+
+        if (Should-StopForMarketplace -ProcessInfo $procInfo) {
+            Write-Host "⚠️  Port $Port is used by marketplace process $procName. Stopping it..." -ForegroundColor Yellow
+            Stop-Process -Id $ownerPid -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Milliseconds 800
+            Write-Host "✅ Stopped $procName on port $Port" -ForegroundColor Green
+        } else {
+            Write-Host "ℹ️  Port $Port is used by external process $procName. Leaving it untouched." -ForegroundColor Cyan
+        }
+    }
+}
+
 
 $pgReady = Test-Port 5432
 $redisReady = Test-Port 6379
@@ -56,29 +124,11 @@ Write-Host '✅ PostgreSQL: Ready' -ForegroundColor Green
 Write-Host '✅ Redis: Ready' -ForegroundColor Green
 Write-Host ''
 
-# Step 1: Kill any existing processes on ports 9000 and 8000
+# Step 1: Release dev ports without touching unrelated apps
 Write-Host '[1/5] Checking for running services...' -ForegroundColor Yellow
 
-$port9000 = Get-NetTCPConnection -LocalPort $preferredBackendPort -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
-$port8000 = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique
-
-if ($port9000) {
-    Write-Host "⚠️  Port $preferredBackendPort is in use. Stopping existing process..." -ForegroundColor Yellow
-    Stop-Process -Id $port9000 -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 2
-    Write-Host '✅ Stopped existing backend process' -ForegroundColor Green
-}
-
-if ($port8000) {
-    Write-Host "⚠️  Port 8000 is in use. Stopping existing process..." -ForegroundColor Yellow
-    Stop-Process -Id $port8000 -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 2
-    Write-Host '✅ Stopped existing storefront process' -ForegroundColor Green
-}
-
-if (-not $port9000 -and -not $port8000) {
-    Write-Host '✅ Ports are available' -ForegroundColor Green
-}
+Release-Port-Safely -Port $preferredBackendPort -Label "Medusa backend"
+Release-Port-Safely -Port $preferredStorefrontPort -Label "Storefront"
 
 $port9000InUseAfterStop = Get-NetTCPConnection -LocalPort $preferredBackendPort -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($port9000InUseAfterStop) {
@@ -88,6 +138,16 @@ if ($port9000InUseAfterStop) {
 
     Write-Host "⚠️  Port $preferredBackendPort is still occupied by $ownerName. Using fallback port $fallbackBackendPort for Medusa." -ForegroundColor Yellow
     $backendPort = $fallbackBackendPort
+}
+
+$port8000InUseAfterStop = Get-NetTCPConnection -LocalPort $preferredStorefrontPort -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($port8000InUseAfterStop) {
+    $ownerPid = $port8000InUseAfterStop.OwningProcess
+    $ownerProcess = Get-Process -Id $ownerPid -ErrorAction SilentlyContinue
+    $ownerName = if ($ownerProcess) { $ownerProcess.ProcessName } else { "PID $ownerPid" }
+
+    Write-Host "⚠️  Port $preferredStorefrontPort is still occupied by $ownerName. Using fallback port $fallbackStorefrontPort for storefront." -ForegroundColor Yellow
+    $storefrontPort = $fallbackStorefrontPort
 }
 Write-Host ''
 
@@ -121,12 +181,14 @@ Write-Host ''
 Write-Host "[3/5] Launching Medusa Backend (:$backendPort)..." -ForegroundColor Green
 
 $backendUrl = "http://localhost:$backendPort"
-$adminCors = "http://localhost:5173,http://localhost:9000,http://localhost:8000,http://localhost:$backendPort,https://docs.medusajs.com"
-$authCors = "http://localhost:5173,http://localhost:9000,http://localhost:8000,http://localhost:$backendPort,https://docs.medusajs.com"
+$storeCors = "http://localhost:8000,http://localhost:$storefrontPort,https://docs.medusajs.com"
+$adminCors = "http://localhost:5173,http://localhost:9000,http://localhost:$backendPort,http://localhost:8000,http://localhost:$storefrontPort,https://docs.medusajs.com"
+$authCors = "http://localhost:5173,http://localhost:9000,http://localhost:$backendPort,http://localhost:8000,http://localhost:$storefrontPort,https://docs.medusajs.com"
 
 $backendCommand = @"
 `$env:PORT='$backendPort'
 `$env:MEDUSA_BACKEND_URL='$backendUrl'
+`$env:STORE_CORS='$storeCors'
 `$env:ADMIN_CORS='$adminCors'
 `$env:AUTH_CORS='$authCors'
 cd `"$repoRoot`"
@@ -167,6 +229,36 @@ function Wait-ForBackend {
     return $false
 }
 
+function Resolve-StorefrontPublishableKey {
+    param([string]$RepoRoot)
+
+    try {
+        $cliPath = Join-Path $RepoRoot "node_modules\@medusajs\cli\cli.js"
+        if (-not (Test-Path $cliPath)) {
+            Write-Host "⚠️  Medusa CLI not found at $cliPath" -ForegroundColor Yellow
+            return $null
+        }
+
+        Push-Location $RepoRoot
+        try {
+            $output = & node $cliPath exec ./src/scripts/ensure-storefront-publishable-key.ts 2>&1
+        } finally {
+            Pop-Location
+        }
+        $keyLine = $output | Where-Object { $_ -like "PUBLISHABLE_KEY=*" } | Select-Object -Last 1
+
+        if ($keyLine) {
+            return $keyLine.Substring("PUBLISHABLE_KEY=".Length).Trim()
+        }
+
+        Write-Host "⚠️  Could not parse publishable key from script output." -ForegroundColor Yellow
+        return $null
+    } catch {
+        Write-Host "⚠️  Failed to create publishable key automatically: $($_.Exception.Message)" -ForegroundColor Yellow
+        return $null
+    }
+}
+
 if (-not (Wait-ForBackend -Port $backendPort)) {
     Write-Host "Backend did not respond. Check the terminal window for errors." -ForegroundColor Red
     pause
@@ -174,13 +266,29 @@ if (-not (Wait-ForBackend -Port $backendPort)) {
 }
 
 # Step 4: Start Next.js Storefront
-Write-Host '[4/5] Launching Next.js Storefront (:8000)...' -ForegroundColor Green
-Start-Process powershell -ArgumentList '-NoExit', '-Command', "cd `"$storefrontRoot`"; npm run dev"
+Write-Host "[4/5] Launching Next.js Storefront (:$storefrontPort)..." -ForegroundColor Green
+$storefrontPublishableKey = Resolve-StorefrontPublishableKey -RepoRoot $repoRoot
+
+if (-not $storefrontPublishableKey) {
+    Write-Host "❌ Storefront requires a valid Medusa publishable key, but none was resolved." -ForegroundColor Red
+    Write-Host "   Run: npm run seed" -ForegroundColor Yellow
+    pause
+    exit 1
+}
+
+$storefrontCommand = @"
+`$env:MEDUSA_BACKEND_URL='$backendUrl'
+`$env:NEXT_PUBLIC_MEDUSA_BACKEND_URL='$backendUrl'
+`$env:NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY='$storefrontPublishableKey'
+cd `"$storefrontRoot`"
+npm run dev -- -p $storefrontPort
+"@
+Start-Process powershell -ArgumentList '-NoExit', '-Command', $storefrontCommand
 
 # Step 5: Open the Control Center
 Write-Host '[5/5] Opening Command Center Interface...' -ForegroundColor Green
 Start-Sleep -Seconds 3
-$launcherUri = "file:///" + (($launcherHtml -replace '\\', '/') -replace ' ', '%20') + "?backendPort=$backendPort"
+$launcherUri = "file:///" + (($launcherHtml -replace '\\', '/') -replace ' ', '%20') + "?backendPort=$backendPort&storefrontPort=$storefrontPort"
 Start-Process $launcherUri
 
 Write-Host '
@@ -191,6 +299,7 @@ Write-Host '===================================================
 Write-Host '📊 Monitor the PowerShell windows for startup logs' -ForegroundColor Yellow
 Write-Host '🌐 Command Center opening in your browser...' -ForegroundColor Yellow
 Write-Host "🔐 Admin URL: $backendUrl/app" -ForegroundColor Yellow
+Write-Host "🛍️  Storefront URL: http://localhost:$storefrontPort" -ForegroundColor Yellow
 Write-Host '
 ⏳ Services may take 30-60 seconds to fully initialize' -ForegroundColor Gray
 Write-Host ''

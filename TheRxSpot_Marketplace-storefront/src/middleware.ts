@@ -39,7 +39,7 @@ async function getRegionMap(cacheId: string) {
     !regionMap.keys().next().value ||
     regionMapUpdated < Date.now() - 3600 * 1000
   ) {
-    const { regions } = await fetch(`${BACKEND_URL}/store/regions`, {
+    const response = await fetch(`${BACKEND_URL}/store/regions`, {
       headers: {
         "x-publishable-api-key": PUBLISHABLE_API_KEY!,
       },
@@ -48,15 +48,29 @@ async function getRegionMap(cacheId: string) {
         tags: [`regions-${cacheId}`],
       },
       cache: "force-cache",
-    }).then(async (response) => {
-      const json = await response.json()
-
-      if (!response.ok) {
-        throw new Error(json.message)
-      }
-
-      return json
     })
+
+    const rawBody = await response.text()
+    let json: any = null
+
+    if (rawBody) {
+      try {
+        json = JSON.parse(rawBody)
+      } catch {
+        throw new Error(
+          `Middleware.ts: Invalid JSON from ${BACKEND_URL}/store/regions (status ${response.status}).`
+        )
+      }
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        json?.message ||
+          `Middleware.ts: Failed to fetch regions from ${BACKEND_URL} (status ${response.status}).`
+      )
+    }
+
+    const regions = json?.regions
 
     if (!regions?.length) {
       throw new Error(
@@ -188,21 +202,32 @@ export async function middleware(request: NextRequest) {
   if (!hasCountryCode(pathname)) {
     const cacheIdCookie = request.cookies.get("_medusa_cache_id")
     const cacheId = cacheIdCookie?.value || crypto.randomUUID()
-    const regionMap = await getRegionMap(cacheId)
-    const countryCode = regionMap && (await getCountryCode(request, regionMap))
-    
-    if (countryCode) {
-      const url = request.nextUrl.clone()
-      url.pathname = `/${countryCode}${pathname}`
-      
-      const redirectResponse = NextResponse.redirect(url)
-      if (!cacheIdCookie) {
-        redirectResponse.cookies.set("_medusa_cache_id", cacheId, {
-          maxAge: 60 * 60 * 24,
-        })
+    try {
+      const regionMap = await getRegionMap(cacheId)
+      const countryCode = regionMap && (await getCountryCode(request, regionMap))
+
+      if (countryCode) {
+        const url = request.nextUrl.clone()
+        url.pathname = `/${countryCode}${pathname}`
+
+        const redirectResponse = NextResponse.redirect(url)
+        if (!cacheIdCookie) {
+          redirectResponse.cookies.set("_medusa_cache_id", cacheId, {
+            maxAge: 60 * 60 * 24,
+          })
+        }
+
+        return redirectResponse
       }
-      
-      return redirectResponse
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Middleware.ts: Failed resolving regions in middleware.", error)
+      }
+
+      // Fallback to default region so middleware never hard-crashes requests.
+      const url = request.nextUrl.clone()
+      url.pathname = `/${DEFAULT_REGION}${pathname}`
+      return NextResponse.redirect(url)
     }
   }
   

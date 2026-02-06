@@ -227,11 +227,11 @@
             </header>
 
             <div class="grid">
-                <a href="http://localhost:8000" target="_blank" class="launch-btn">
+                <a id="storefront-launch-btn" href="http://localhost:8000" target="_blank" class="launch-btn">
                     <div class="icon">
                         <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                     </div>
-                    <span class="port">:8000</span>
+                    <span id="storefront-port-label" class="port">:8000</span>
                     <h3>Storefront <span class="badge">Next.js</span></h3>
                     <p>The patient/provider facing shop interface with premium aesthetics.</p>
                 </a>
@@ -270,13 +270,31 @@
         </footer>
     </div>
 
+    <script src="launcher_assets/runtime-config.js"></script>
     <script>
-        // Admin URL is configurable via query parameter from Launch-Marketplace.ps1.
-        (function configureAdminLink() {
+        // Resolve runtime ports in this order: generated runtime config -> URL query -> defaults.
+        (function configureLaunchLinks() {
             const params = new URLSearchParams(window.location.search);
-            const backendPort = params.get('backendPort') || '9000';
-            const adminLink = document.getElementById('admin-launch-btn');
-            const adminPortLabel = document.getElementById('admin-port-label');
+            const runtimeConfig = window.__THERXSPOT_LAUNCHER_PORTS || {};
+
+            function normalizePort(value, fallback) {
+                const parsed = Number.parseInt(value, 10);
+                return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+            }
+
+            const backendPort = normalizePort(
+                params.get("backendPort") ?? runtimeConfig.backendPort,
+                9000
+            );
+            const storefrontPort = normalizePort(
+                params.get("storefrontPort") ?? runtimeConfig.storefrontPort,
+                8000
+            );
+
+            const adminLink = document.getElementById("admin-launch-btn");
+            const adminPortLabel = document.getElementById("admin-port-label");
+            const storefrontLink = document.getElementById("storefront-launch-btn");
+            const storefrontPortLabel = document.getElementById("storefront-port-label");
 
             if (adminLink) {
                 adminLink.href = `http://localhost:${backendPort}/app`;
@@ -284,6 +302,14 @@
 
             if (adminPortLabel) {
                 adminPortLabel.textContent = `:${backendPort}`;
+            }
+
+            if (storefrontLink) {
+                storefrontLink.href = `http://localhost:${storefrontPort}`;
+            }
+
+            if (storefrontPortLabel) {
+                storefrontPortLabel.textContent = `:${storefrontPort}`;
             }
         })();
 

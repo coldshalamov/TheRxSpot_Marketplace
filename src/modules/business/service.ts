@@ -9,6 +9,8 @@ import { BusinessDomain } from "./models/business-domain"
 import { BusinessUser } from "./models/business-user"
 import { OrderStatusEvent } from "./models/order-status-event"
 import { OutboxEvent } from "./models/outbox-event"
+import { TemplateConfig } from "./models/template-config"
+import { Coupon } from "./models/coupon"
 import { decryptFields, encryptFields } from "../../utils/encryption"
 
 class BusinessModuleService extends MedusaService({
@@ -22,6 +24,8 @@ class BusinessModuleService extends MedusaService({
   BusinessUser,
   OrderStatusEvent,
   OutboxEvent,
+  TemplateConfig,
+  Coupon,
 }) {
   private static readonly CONSULT_SUBMISSION_PHI_FIELDS = [
     "customer_email",
@@ -331,6 +335,123 @@ class BusinessModuleService extends MedusaService({
         await this.updateLocationProducts({ id: existing[0].id, rank: i })
       }
     }
+  }
+
+  // =========================
+  // Template Config methods
+  // =========================
+
+  async getPublishedTemplate(businessId: string) {
+    const configs = await this.listTemplateConfigs(
+      { business_id: businessId, is_published: true },
+      { take: 1, order: { version: "DESC" } }
+    )
+    return configs[0] ?? null
+  }
+
+  async getLatestTemplateDraft(businessId: string) {
+    const configs = await this.listTemplateConfigs(
+      { business_id: businessId },
+      { take: 1, order: { version: "DESC" } }
+    )
+    return configs[0] ?? null
+  }
+
+  async createDefaultTemplate(businessId: string): Promise<any> {
+    const existing = await this.getLatestTemplateDraft(businessId)
+    if (existing) return existing
+
+    return await this.createTemplateConfigs({
+      business_id: businessId,
+      template_id: "default",
+      version: 1,
+      is_published: true,
+      published_at: new Date(),
+      published_by: "system",
+      sections: [
+        { id: "hero", type: "hero", visible: true, order: 0, settings: {} },
+        { id: "featured-products", type: "product_grid", visible: true, order: 1, settings: { limit: 8 } },
+        { id: "about", type: "rich_text", visible: true, order: 2, settings: {} },
+        { id: "footer", type: "footer", visible: true, order: 3, settings: {} },
+      ],
+      global_styles: {},
+      metadata: {},
+    } as any)
+  }
+
+  async publishTemplate(templateId: string, publishedBy: string): Promise<any> {
+    const template = await this.retrieveTemplateConfig(templateId)
+
+    // Un-publish any currently published config for this business
+    const published = await this.listTemplateConfigs(
+      { business_id: template.business_id, is_published: true },
+      {}
+    )
+    for (const p of published) {
+      if (p.id !== templateId) {
+        await this.updateTemplateConfigs({ id: p.id, is_published: false } as any)
+      }
+    }
+
+    return await this.updateTemplateConfigs({
+      id: templateId,
+      is_published: true,
+      published_at: new Date(),
+      published_by: publishedBy,
+    } as any)
+  }
+
+  // =========================
+  // Coupon methods
+  // =========================
+
+  async listCouponsByBusiness(businessId: string) {
+    return await this.listCoupons(
+      { business_id: businessId },
+      { order: { created_at: "DESC" } }
+    )
+  }
+
+  async getCouponByCode(businessId: string, code: string) {
+    const coupons = await this.listCoupons(
+      { business_id: businessId, code: code.toUpperCase() },
+      { take: 1 }
+    )
+    return coupons[0] ?? null
+  }
+
+  async validateCoupon(businessId: string, code: string, orderAmount?: number): Promise<{
+    valid: boolean
+    coupon: any | null
+    reason?: string
+  }> {
+    const coupon = await this.getCouponByCode(businessId, code)
+    if (!coupon) return { valid: false, coupon: null, reason: "Coupon not found" }
+    if (!coupon.is_active) return { valid: false, coupon, reason: "Coupon is inactive" }
+
+    const now = new Date()
+    if (coupon.starts_at && new Date(coupon.starts_at) > now) {
+      return { valid: false, coupon, reason: "Coupon is not yet active" }
+    }
+    if (coupon.ends_at && new Date(coupon.ends_at) < now) {
+      return { valid: false, coupon, reason: "Coupon has expired" }
+    }
+    if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
+      return { valid: false, coupon, reason: "Coupon usage limit reached" }
+    }
+    if (orderAmount && coupon.min_order_amount && orderAmount < Number(coupon.min_order_amount)) {
+      return { valid: false, coupon, reason: `Minimum order amount is ${coupon.min_order_amount}` }
+    }
+
+    return { valid: true, coupon }
+  }
+
+  async incrementCouponUsage(couponId: string): Promise<any> {
+    const coupon = await this.retrieveCoupon(couponId)
+    return await this.updateCoupons({
+      id: couponId,
+      usage_count: (coupon.usage_count || 0) + 1,
+    } as any)
   }
 }
 

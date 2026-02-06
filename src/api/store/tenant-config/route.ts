@@ -11,6 +11,14 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessService = req.scope.resolve(BUSINESS_MODULE)
   const full = await businessService.retrieveBusiness(business.id)
 
+  // Fetch the published template config for this tenant
+  let template = null
+  try {
+    template = await businessService.getPublishedTemplate(business.id)
+  } catch {
+    // Template system not yet provisioned for this tenant - that's okay
+  }
+
   res.json({
     business: {
       id: full.id,
@@ -25,6 +33,14 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       secondary_color: full.secondary_color,
       ...(full.branding_config as object),
     },
+    template: template
+      ? {
+          template_id: template.template_id,
+          version: template.version,
+          sections: template.sections,
+          global_styles: template.global_styles,
+        }
+      : null,
     catalog_config: full.catalog_config,
     publishable_api_key: full.settings?.publishable_api_key_token || null,
     sales_channel_id: full.sales_channel_id,

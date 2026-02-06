@@ -31,6 +31,15 @@ const getBusinessStep = createStep(
   }
 )
 
+const createDefaultTemplateStep = createStep(
+  "create-default-template",
+  async (input: { business_id: string }, { container }) => {
+    const businessService = container.resolve(BUSINESS_MODULE)
+    const template = await businessService.createDefaultTemplate(input.business_id)
+    return new StepResponse(template)
+  }
+)
+
 const updateBusinessAfterProvisionStep = createStep(
   "update-business-after-provision",
   async (
@@ -138,6 +147,11 @@ export const provisionBusinessWorkflow = createWorkflow(
 
     const storefrontBaseUrl = transform({ input }, (data) => {
       return data.input.storefront_base_url || "http://localhost:8000"
+    })
+
+    // Phase 1: Auto-create default template during provisioning
+    createDefaultTemplateStep({
+      business_id: transform({ business }, (d) => d.business.id),
     })
 
     const updatedBusiness = updateBusinessAfterProvisionStep({

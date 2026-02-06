@@ -131,6 +131,19 @@ export default defineMiddlewares({
       matcher: "/admin/payouts*",
       middlewares: [auditLoggingMiddleware],
     },
+    // Phase 1 - Workstream A: Extend audit coverage to businesses and custom admin routes
+    {
+      matcher: "/admin/businesses*",
+      middlewares: [auditLoggingMiddleware],
+    },
+    {
+      matcher: "/admin/custom/*",
+      middlewares: [auditLoggingMiddleware],
+    },
+    {
+      matcher: "/admin/coupons*",
+      middlewares: [auditLoggingMiddleware],
+    },
     {
       matcher: "/store/documents*",
       middlewares: [documentAuditMiddleware],

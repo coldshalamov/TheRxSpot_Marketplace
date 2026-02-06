@@ -29,7 +29,9 @@
     "test:consultation": "cross-env NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/consultation-lifecycle.test.ts --silent=false --runInBand --forceExit",
     "test:earnings": "cross-env NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/earnings.test.ts --silent=false --runInBand --forceExit",
     "test:documents": "cross-env NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/documents.test.ts --silent=false --runInBand --forceExit",
-    "test:audit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/audit-logging.test.ts --silent=false --runInBand --forceExit"
+    "test:audit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest src/tests/integration/audit-logging.test.ts --silent=false --runInBand --forceExit",
+    "typecheck": "tsc --noEmit",
+    "diagnose:smoke": "powershell -ExecutionPolicy Bypass -File ./scripts/smoke/verify-local.ps1"
   },
   "dependencies": {
     "@medusajs/admin-sdk": "2.13.1",

@@ -6,7 +6,8 @@ Write-Host "Medusa Admin Panel Diagnostics" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$preferredPort = 9000
+$runtimeConfigPath = Join-Path $repoRoot "launcher_assets\runtime-config.js"
+$defaultCandidatePorts = @(9000, 9001)
 
 function Get-PortOwnerName {
     param([int]$Port)
@@ -23,6 +24,59 @@ function Get-PortOwnerName {
     return "PID $($listener.OwningProcess)"
 }
 
+function Try-GetBackendPortFromRuntimeConfig {
+    param([string]$ConfigPath)
+
+    if (-not (Test-Path $ConfigPath)) {
+        return $null
+    }
+
+    $configContent = Get-Content $ConfigPath -Raw
+    if ($configContent -match 'backendPort:\s*(\d+)') {
+        return [int]$matches[1]
+    }
+
+    return $null
+}
+
+function Test-BackendHealth {
+    param([int]$Port)
+
+    try {
+        $response = Invoke-WebRequest -Uri "http://localhost:$Port/health" -TimeoutSec 4 -UseBasicParsing -ErrorAction Stop
+        return $response.StatusCode -eq 200
+    } catch {
+        return $false
+    }
+}
+
+function Test-AdminPath {
+    param(
+        [int]$Port,
+        [string]$AdminPath
+    )
+
+    try {
+        $response = Invoke-WebRequest -Uri "http://localhost:$Port$AdminPath" -TimeoutSec 4 -UseBasicParsing -ErrorAction Stop
+        return @{
+            Success = $true
+            StatusCode = $response.StatusCode
+            Url = "http://localhost:$Port$AdminPath"
+        }
+    } catch {
+        $statusCode = $null
+        if ($_.Exception.Response) {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+        }
+
+        return @{
+            Success = $false
+            StatusCode = $statusCode
+            Url = "http://localhost:$Port$AdminPath"
+        }
+    }
+}
+
 # 1. Check if admin panel is built
 Write-Host "[1/5] Checking if admin panel is built..." -ForegroundColor Yellow
 $adminIndex = Join-Path $repoRoot ".medusa\server\public\admin\index.html"
@@ -35,7 +89,7 @@ if ($adminBuilt) {
     exit 1
 }
 
-# 2. Check config
+# 2. Check configured admin path
 Write-Host "`n[2/5] Checking medusa-config.ts..." -ForegroundColor Yellow
 $configPath = Join-Path $repoRoot "medusa-config.ts"
 $configContent = Get-Content $configPath -Raw
@@ -47,63 +101,66 @@ if ($configContent -match 'path:\s*"([^"]+)"') {
     $adminPath = "/app"
 }
 
-# 3. Check if backend is running
-Write-Host "`n[3/5] Checking if Medusa backend is running..." -ForegroundColor Yellow
-try {
-    $response = Invoke-WebRequest -Uri "http://localhost:$preferredPort/health" -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
-    Write-Host "  [OK] Backend health endpoint returned $($response.StatusCode)" -ForegroundColor Green
-} catch {
-    $ownerName = Get-PortOwnerName -Port $preferredPort
-    if ($ownerName) {
-        Write-Host "  [X] Port $preferredPort is occupied by '$ownerName' (not Medusa /health)." -ForegroundColor Red
-        Write-Host "      This causes the Admin button to open the wrong app (white screen)." -ForegroundColor Yellow
-        Write-Host "      Run .\Launch-Marketplace.ps1 to auto-select a valid backend port." -ForegroundColor Yellow
+# 3. Determine active backend port
+Write-Host "`n[3/5] Detecting active Medusa backend port..." -ForegroundColor Yellow
+$runtimePort = Try-GetBackendPortFromRuntimeConfig -ConfigPath $runtimeConfigPath
+$candidatePorts = @()
+if ($runtimePort) {
+    $candidatePorts += $runtimePort
+}
+$candidatePorts += $defaultCandidatePorts
+$candidatePorts = $candidatePorts | Select-Object -Unique
+
+$healthyPorts = @()
+foreach ($port in $candidatePorts) {
+    if (Test-BackendHealth -Port $port) {
+        $healthyPorts += $port
+        Write-Host "  [OK] /health is reachable on port $port" -ForegroundColor Green
     } else {
-        Write-Host "  [X] Backend is not running on port $preferredPort." -ForegroundColor Red
-        Write-Host "      Start it with: npm run dev" -ForegroundColor Yellow
+        $owner = Get-PortOwnerName -Port $port
+        if ($owner) {
+            Write-Host "  [WARN] Port $port is occupied by '$owner' but is not a healthy Medusa backend" -ForegroundColor Yellow
+        } else {
+            Write-Host "  [INFO] Port $port has no listener" -ForegroundColor Gray
+        }
     }
+}
+
+if (-not $healthyPorts) {
+    Write-Host "  [X] No healthy Medusa backend found on ports: $($candidatePorts -join ', ')" -ForegroundColor Red
+    Write-Host "      Start the stack with .\Launch-Marketplace.ps1" -ForegroundColor Yellow
     exit 1
 }
 
-# 4. Test admin panel access
-Write-Host "`n[4/5] Testing admin panel access at http://localhost:$preferredPort$adminPath..." -ForegroundColor Yellow
-try {
-    $adminResponse = Invoke-WebRequest -Uri "http://localhost:$preferredPort$adminPath" -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
-    Write-Host "  [OK] Admin panel accessible (Status: $($adminResponse.StatusCode))" -ForegroundColor Green
+$activeBackendPort = $healthyPorts[0]
+Write-Host "  [OK] Active backend selected: $activeBackendPort" -ForegroundColor Green
+
+# 4. Test admin panel access on active backend
+Write-Host "`n[4/5] Testing admin panel access..." -ForegroundColor Yellow
+$adminTest = Test-AdminPath -Port $activeBackendPort -AdminPath $adminPath
+if ($adminTest.Success) {
+    Write-Host "  [OK] Admin panel accessible (Status: $($adminTest.StatusCode))" -ForegroundColor Green
+    Write-Host "  [OK] URL: $($adminTest.Url)" -ForegroundColor Green
+} else {
+    $statusText = if ($adminTest.StatusCode) { "HTTP $($adminTest.StatusCode)" } else { "no response" }
+    Write-Host "  [X] Admin panel failed on active backend ($statusText)" -ForegroundColor Red
+}
+
+# 5. Summary and next steps
+Write-Host "`n[5/5] Summary..." -ForegroundColor Yellow
+if ($adminTest.Success) {
     Write-Host "`n========================================" -ForegroundColor Green
-    Write-Host "[OK] DIAGNOSIS: Admin panel is working on port $preferredPort" -ForegroundColor Green
+    Write-Host "[OK] DIAGNOSIS: Admin panel is working" -ForegroundColor Green
     Write-Host "========================================" -ForegroundColor Green
-    Write-Host "`nOpen in browser: http://localhost:$preferredPort$adminPath" -ForegroundColor Cyan
-} catch {
-    $statusCode = $_.Exception.Response.StatusCode.value__
-    Write-Host "  [X] Admin panel returns HTTP $statusCode" -ForegroundColor Red
-
-    # 5. Diagnose the issue
-    Write-Host "`n[5/5] Diagnosing the issue..." -ForegroundColor Yellow
-
-    $backendProc = Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object {
-        $_.StartTime -and $_.StartTime -lt (Get-Item $adminIndex).LastWriteTime
-    }
-
-    if ($backendProc) {
-        Write-Host "`n========================================" -ForegroundColor Yellow
-        Write-Host "[WARN] DIAGNOSIS: Backend was started before the admin panel was built" -ForegroundColor Yellow
-        Write-Host "========================================" -ForegroundColor Yellow
-        Write-Host "`nSOLUTION:" -ForegroundColor Cyan
-        Write-Host "  1. Stop all PowerShell windows running npm/node" -ForegroundColor White
-        Write-Host "  2. Re-run the launcher: .\Launch-Marketplace.ps1" -ForegroundColor White
-        Write-Host "`n  OR restart just the backend:" -ForegroundColor White
-        Write-Host "  - Stop the Medusa backend process" -ForegroundColor White
-        Write-Host "  - Run: npm run dev" -ForegroundColor White
-    } else {
-        Write-Host "`n========================================" -ForegroundColor Red
-        Write-Host "[X] DIAGNOSIS: Unknown issue" -ForegroundColor Red
-        Write-Host "========================================" -ForegroundColor Red
-        Write-Host "`nPOSSIBLE SOLUTIONS:" -ForegroundColor Cyan
-        Write-Host "  1. Rebuild the admin panel: npm run build" -ForegroundColor White
-        Write-Host "  2. Check environment variables in .env file" -ForegroundColor White
-        Write-Host "  3. Look for errors in the Medusa backend console" -ForegroundColor White
-    }
+    Write-Host "`nOpen in browser: $($adminTest.Url)" -ForegroundColor Cyan
+} else {
+    Write-Host "`n========================================" -ForegroundColor Red
+    Write-Host "[X] DIAGNOSIS: Backend is up, but admin route is failing" -ForegroundColor Red
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host "`nRecommended checks:" -ForegroundColor Cyan
+    Write-Host "  1. Stop all marketplace terminals and rerun .\Launch-Marketplace.ps1" -ForegroundColor White
+    Write-Host "  2. Rebuild admin assets with npm run build" -ForegroundColor White
+    Write-Host "  3. Confirm medusa-config.ts admin.path still matches your expected route" -ForegroundColor White
 }
 
 Write-Host "`n"

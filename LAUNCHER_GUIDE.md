@@ -1,114 +1,110 @@
-# TheRxSpot Marketplace - Setup Guide
+# TheRxSpot Marketplace Launcher Guide
 
-## 🚀 Quick Start (3 Steps)
+## Quick Start
 
-### Step 1: Install Dependencies (One-Time Setup)
+### 1. Start dependencies
+Run:
 
-You need **PostgreSQL** and **Redis** running for the marketplace to work.
-
-#### Option A: Using Docker (Recommended - Easiest)
 ```powershell
-# Start PostgreSQL
-docker run -d --name therxspot-postgres `
-  -e POSTGRES_USER=medusa `
-  -e POSTGRES_PASSWORD=medusa `
-  -e POSTGRES_DB=medusa `
-  -p 5432:5432 `
-  postgres:15
-
-# Start Redis
-docker run -d --name therxspot-redis `
-  -p 6379:6379 `
-  redis:latest
+.\Start-Dependencies.bat
 ```
 
-#### Option B: Native Installation
-- **PostgreSQL**: Download from https://www.postgresql.org/download/windows/
-  - During install, set password to `medusa`
-  - Note the port (default: 5432)
-  
-- **Redis**: 
-  - **Windows**: Install Memurai from https://www.memurai.com/
-  - **WSL2**: `sudo apt install redis-server && sudo service redis-server start`
+This ensures PostgreSQL (`5432`) and Redis (`6379`) are running.
 
-### Step 2: Start Dependencies
-
-Double-click: **`Start-Dependencies.bat`**
-
-This script will:
-- ✅ Check if PostgreSQL is running
-- ✅ Check if Redis is running
-- ✅ Start them if they're stopped
-- ✅ Provide helpful error messages if not found
-
-### Step 3: Launch the Marketplace
-
-Double-click: **`Launch-Marketplace.bat`**
-
-This will:
-1. ✅ Verify dependencies are running
-2. ✅ Build the backend (first time only)
-3. ✅ Start Medusa Backend on port 9000
-4. ✅ Start Next.js Storefront on port 8000
-5. ✅ Open the Command Center in your browser
-
----
-
-## 📍 Access Points
-
-Once launched, you can access:
-
-- **🌐 Storefront**: http://localhost:8000 (Customer-facing shop)
-- **⚙️ Admin Panel**: http://localhost:9000/app (Manage products, orders)
-- **📱 Command Center**: Opens automatically (Quick links dashboard)
-
----
-
-## ❓ Troubleshooting
-
-### "PostgreSQL is not running on port 5432"
-**Solution**: Run `Start-Dependencies.bat` first
-
-### "Redis is not running on port 6379"
-**Solution**: Run `Start-Dependencies.bat` first
-
-### Admin Panel shows 404
-**Causes**:
-1. Backend is still starting up (wait 30-60 seconds)
-2. Database not initialized
-3. Build failed
-
-**Solution**: 
-1. Check the Medusa Backend terminal window for errors
-2. Visit http://localhost:9000/health - should show healthy status
-3. If build failed, try manually: `cd d:\GitHub\TheRxSpot_Marketplace && npm run build`
-
-### "Build failed"
-**Solution**:
-1. Make sure Node.js 20+ is installed: `node --version`
-2. Delete `node_modules` and reinstall: 
-   ```bash
-   cd <repo-root>
-   rm -rf node_modules
-   npm install
-   npm run build
-   ```
-
----
-
-## 🛠️ Manual Commands (Advanced)
-
-If the launcher doesn't work, you can run manually:
+### 2. Launch the stack
+Run:
 
 ```powershell
-# Terminal 1: Backend
+.\Launch-Marketplace.bat
+```
+
+The launcher will:
+1. Validate dependencies.
+2. Build backend assets if needed.
+3. Start Medusa backend (prefers `9000`, falls back to `9001` if occupied).
+4. Start storefront (prefers `8000`, falls back to `8001` if occupied).
+5. Open `Marketplace-Launcher.html` with active ports in URL query params.
+
+### Optional: launch only what you need
+
+Admin only:
+
+```powershell
+.\Launch-Admin-Only.bat
+```
+
+Storefront only:
+
+```powershell
+.\Launch-Storefront-Only.bat
+```
+
+`Launch-Admin-Only` pre-warms admin assets and opens admin in a clean Edge InPrivate window with extensions disabled (if Edge is available), which avoids many "blank spinner forever" browser-profile issues.
+
+### 3. Use Command Center links
+The launcher tiles show the active ports (for example `:9001` if `:9000` is already used).
+
+## Access Points
+
+- Storefront: `http://localhost:<storefront-port>`
+- Admin Panel: `http://localhost:<backend-port>/app`
+- Backend health: `http://localhost:<backend-port>/health`
+
+## Troubleshooting
+
+### Admin opens a 404 page
+Likely causes:
+1. Medusa started on fallback port (`9001`) because `9000` is used by another app.
+2. Backend is still starting.
+3. Admin build failed.
+
+Run diagnostics:
+
+```powershell
+.\diagnose-admin.ps1
+```
+
+This script now auto-detects the healthy backend port and prints the correct admin URL.
+
+### Admin stays on spinner / blank screen
+Likely causes:
+1. Browser extension or stale browser profile state.
+2. Backend restarted during first admin load.
+3. Cold dev compile still in progress.
+
+Try:
+1. Run `.\Launch-Admin-Only.bat` and use the opened InPrivate admin window.
+2. If needed, manually open `http://localhost:9001/app` (or printed backend port).
+3. Keep the backend terminal visible and ensure no restart loop appears while loading.
+
+### Dependencies are missing
+- PostgreSQL not running: start it, then rerun `Start-Dependencies.bat`.
+- Redis not running: start it, then rerun `Start-Dependencies.bat`.
+
+### Build failure
+Run:
+
+```powershell
+npm run build
+```
+
+Then relaunch with `.\Launch-Marketplace.bat`.
+
+## Manual Launch (Advanced)
+
+Backend:
+
+```powershell
 cd <repo-root>
-npm run build  # First time only
-npm run dev
-
-# Terminal 2: Storefront
-cd <repo-root>\TheRxSpot_Marketplace-storefront
+npm run build
 npm run dev
 ```
 
-Then open http://localhost:9000/app for admin or http://localhost:8000 for storefront.
+Storefront:
+
+```powershell
+cd <repo-root>\TheRxSpot_Marketplace-storefront
+npm run dev -- -p 8000
+```
+
+If ports are busy, use `9001` / `8001` and open matching URLs.

@@ -1,15 +1,8 @@
-import { listRegions } from "@lib/data/regions"
-import { listLocales } from "@lib/data/locales"
-import { getLocale } from "@lib/data/locale-actions"
-import { StoreRegion } from "@medusajs/types"
 import SideMenu from "@modules/layout/components/side-menu"
 
-export default async function SideMenuWrapper() {
-    const [regions, locales, currentLocale] = await Promise.all([
-        listRegions().then((regions: StoreRegion[]) => regions),
-        listLocales(),
-        getLocale(),
-    ])
-
-    return <SideMenu regions={regions} locales={locales} currentLocale={currentLocale} />
+export default function SideMenuWrapper() {
+  // Avoid calling server actions during initial render in Next 15/Turbopack.
+  // Side menu still renders and locale/country selectors are hidden until
+  // we re-introduce a non-action data loader.
+  return <SideMenu regions={null} locales={null} currentLocale={null} />
 }

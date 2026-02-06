@@ -10,17 +10,18 @@ Write-Host '===================================================' -ForegroundColo
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot ".")).Path
 $storefrontRoot = Join-Path $repoRoot "TheRxSpot_Marketplace-storefront"
 $launcherHtml = Join-Path $repoRoot "Marketplace-Launcher.html"
+$preferredBackendPort = 9000
+$fallbackBackendPort = 9001
+$backendPort = $preferredBackendPort
+$preferredStorefrontPort = 8000
+$fallbackStorefrontPort = 8001
+$storefrontPort = $preferredStorefrontPort
 
 Write-Host "[DEBUG] Repo root: $repoRoot" -ForegroundColor Gray
 Write-Host "[DEBUG] Storefront root: $storefrontRoot" -ForegroundColor Gray
 
-# Step 0: Check Dependencies
-Write-Host "`n[0/4] Checking dependencies..." -ForegroundColor Yellow
-
-# Fast port check function
 function Test-Port {
-    param($Port)
-    Write-Host "[DEBUG] Testing port $Port..." -ForegroundColor Gray
+    param([int]$Port)
     try {
         $tcpClient = New-Object System.Net.Sockets.TcpClient
         $tcpClient.ReceiveTimeout = 1000
@@ -28,104 +29,172 @@ function Test-Port {
         $result = $tcpClient.BeginConnect("127.0.0.1", $Port, $null, $null)
         $success = $result.AsyncWaitHandle.WaitOne(1000, $false)
         $tcpClient.Close()
-        Write-Host "[DEBUG] Port $Port result: $success" -ForegroundColor Gray
         return $success
     } catch {
-        Write-Host "[DEBUG] Port $Port error: $_" -ForegroundColor Red
         return $false
     }
 }
 
-Write-Host "[DEBUG] Checking PostgreSQL..." -ForegroundColor Gray
-$pgReady = Test-Port 5432
-Write-Host "[DEBUG] Checking Redis..." -ForegroundColor Gray
-$redisReady = Test-Port 6379
+
+function Wait-ForBackend {
+    param([int]$Port)
+
+    $maxAttempts = 120
+    for ($attempt = 1; $attempt -le $maxAttempts; $attempt++) {
+        try {
+            $response = Invoke-WebRequest -Uri "http://localhost:$Port/health" -TimeoutSec 1 -UseBasicParsing -ErrorAction Stop
+            if ($response.StatusCode -eq 200) {
+                Write-Host "[DEBUG] Backend health check passed on attempt $attempt" -ForegroundColor Gray
+                return $true
+            }
+        } catch {
+            if ($attempt % 10 -eq 0) {
+                Write-Host "[DEBUG] Waiting for backend... ($attempt seconds)" -ForegroundColor Gray
+            }
+        }
+        Start-Sleep -Seconds 1
+    }
+
+    return $false
+}
+
+function Resolve-StorefrontPublishableKey {
+    try {
+        $cliPath = Join-Path $repoRoot "node_modules\@medusajs\cli\cli.js"
+        if (-not (Test-Path $cliPath)) {
+            Write-Host "[DEBUG] Medusa CLI not found at $cliPath" -ForegroundColor Yellow
+            return $null
+        }
+
+        Push-Location $repoRoot
+        try {
+            $output = & node $cliPath exec ./src/scripts/ensure-storefront-publishable-key.ts 2>&1
+        } finally {
+            Pop-Location
+        }
+        $keyLine = $output | Where-Object { $_ -like "PUBLISHABLE_KEY=*" } | Select-Object -Last 1
+
+        if ($keyLine) {
+            return $keyLine.Substring("PUBLISHABLE_KEY=".Length).Trim()
+        }
+
+        Write-Host "[DEBUG] Could not parse publishable key from script output." -ForegroundColor Yellow
+        return $null
+    } catch {
+        Write-Host "[DEBUG] Failed to create publishable key automatically: $($_.Exception.Message)" -ForegroundColor Yellow
+        return $null
+    }
+}
+
+# Step 0: Check dependencies
+Write-Host "`n[0/5] Checking dependencies..." -ForegroundColor Yellow
+$pgReady = Test-Port -Port 5432
+$redisReady = Test-Port -Port 6379
 
 if (-not $pgReady) {
-    Write-Host '❌ PostgreSQL is not running on port 5432' -ForegroundColor Red
-    Write-Host '   Please run Start-Dependencies.bat first to start PostgreSQL' -ForegroundColor Yellow
+    Write-Host 'ERROR: PostgreSQL is not running on port 5432' -ForegroundColor Red
+    Write-Host 'Please run Start-Dependencies.bat first to start PostgreSQL' -ForegroundColor Yellow
     pause
     exit 1
 }
 
 if (-not $redisReady) {
-    Write-Host '❌ Redis is not running on port 6379' -ForegroundColor Red
-    Write-Host '   Please run Start-Dependencies.bat first to start Redis' -ForegroundColor Yellow
+    Write-Host 'ERROR: Redis is not running on port 6379' -ForegroundColor Red
+    Write-Host 'Please run Start-Dependencies.bat first to start Redis' -ForegroundColor Yellow
     pause
     exit 1
 }
 
-Write-Host '✅ PostgreSQL: Ready' -ForegroundColor Green
-Write-Host '✅ Redis: Ready' -ForegroundColor Green
+Write-Host 'OK: PostgreSQL and Redis are reachable' -ForegroundColor Green
 
-# Step 1: Check if build exists
-Write-Host "`n[1/4] Validating backend build..." -ForegroundColor Yellow
-$buildPath = Join-Path $repoRoot ".medusa\server"
-$adminPath = Join-Path $buildPath "public\admin\index.html"
+# Step 1: Resolve ports
+Write-Host "`n[1/5] Resolving service ports..." -ForegroundColor Yellow
+if (Get-NetTCPConnection -LocalPort $preferredBackendPort -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1) {
+    Write-Host "[DEBUG] Backend preferred port $preferredBackendPort is in use. Falling back to $fallbackBackendPort." -ForegroundColor Yellow
+    $backendPort = $fallbackBackendPort
+}
 
-Write-Host "[DEBUG] Checking for: $adminPath" -ForegroundColor Gray
+if (Get-NetTCPConnection -LocalPort $preferredStorefrontPort -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1) {
+    Write-Host "[DEBUG] Storefront preferred port $preferredStorefrontPort is in use. Falling back to $fallbackStorefrontPort." -ForegroundColor Yellow
+    $storefrontPort = $fallbackStorefrontPort
+}
 
-if (-not (Test-Path $adminPath)) {
-    Write-Host '⚠️  First-time setup detected. Building backend...' -ForegroundColor Yellow
-    Write-Host 'This may take 2-3 minutes...' -ForegroundColor Gray
+Write-Host "[DEBUG] Selected backend port: $backendPort" -ForegroundColor Gray
+Write-Host "[DEBUG] Selected storefront port: $storefrontPort" -ForegroundColor Gray
 
+# Step 2: Ensure backend build exists
+Write-Host "`n[2/5] Validating backend build..." -ForegroundColor Yellow
+$adminIndexPath = Join-Path $repoRoot ".medusa\server\public\admin\index.html"
+if (-not (Test-Path $adminIndexPath)) {
+    Write-Host 'First-time setup detected. Building backend...' -ForegroundColor Yellow
     Set-Location $repoRoot
-    Write-Host "[DEBUG] Running: npm run build" -ForegroundColor Gray
     npm run build
 
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "`n❌ Build failed. Please check for errors above." -ForegroundColor Red
+        Write-Host 'ERROR: Build failed. Check logs above.' -ForegroundColor Red
         pause
         exit 1
     }
-    Write-Host "`n✅ Backend build complete!" -ForegroundColor Green
-} else {
-    Write-Host '✅ Backend already built' -ForegroundColor Green
 }
 
-# Step 2: Start Medusa Backend
-Write-Host "`n[2/4] Launching Medusa Backend (:9000)..." -ForegroundColor Green
-Write-Host "[DEBUG] Starting backend process..." -ForegroundColor Gray
+Write-Host 'OK: Backend build is available' -ForegroundColor Green
 
-try {
-    $backendProc = Start-Process powershell -ArgumentList '-NoExit', '-Command', "cd `"$repoRoot`"; npm run dev" -PassThru
-    Write-Host "[DEBUG] Backend process started: PID $($backendProc.Id)" -ForegroundColor Gray
-} catch {
-    Write-Host "[ERROR] Failed to start backend: $_" -ForegroundColor Red
+# Step 3: Start Medusa backend
+Write-Host "`n[3/5] Launching Medusa Backend (:$backendPort)..." -ForegroundColor Green
+$backendUrl = "http://localhost:$backendPort"
+$storeCors = "http://localhost:8000,http://localhost:$storefrontPort,https://docs.medusajs.com"
+$adminCors = "http://localhost:5173,http://localhost:9000,http://localhost:$backendPort,http://localhost:8000,http://localhost:$storefrontPort,https://docs.medusajs.com"
+$authCors = "http://localhost:5173,http://localhost:9000,http://localhost:$backendPort,http://localhost:8000,http://localhost:$storefrontPort,https://docs.medusajs.com"
+
+$backendCommand = @"
+`$env:PORT='$backendPort'
+`$env:MEDUSA_BACKEND_URL='$backendUrl'
+`$env:STORE_CORS='$storeCors'
+`$env:ADMIN_CORS='$adminCors'
+`$env:AUTH_CORS='$authCors'
+cd `"$repoRoot`"
+npm run dev
+"@
+
+$backendProc = Start-Process powershell -ArgumentList '-NoExit', '-Command', $backendCommand -PassThru
+Write-Host "[DEBUG] Backend process started: PID $($backendProc.Id)" -ForegroundColor Gray
+
+if (-not (Wait-ForBackend -Port $backendPort)) {
+    Write-Host 'ERROR: Backend did not become healthy within 120 seconds.' -ForegroundColor Red
     pause
     exit 1
 }
 
-# Wait for Backend to initialize
-Write-Host '⏳ Waiting for backend to initialize...' -ForegroundColor Gray
-Start-Sleep -Seconds 8
-Write-Host "[DEBUG] Backend wait complete" -ForegroundColor Gray
+Write-Host 'OK: Backend is healthy' -ForegroundColor Green
 
-# Step 3: Start Next.js Storefront
-Write-Host "`n[3/4] Launching Next.js Storefront (:8000)..." -ForegroundColor Green
-Write-Host "[DEBUG] Starting storefront process..." -ForegroundColor Gray
-
-try {
-    $storefrontProc = Start-Process powershell -ArgumentList '-NoExit', '-Command', "cd `"$storefrontRoot`"; npm run dev" -PassThru
-    Write-Host "[DEBUG] Storefront process started: PID $($storefrontProc.Id)" -ForegroundColor Gray
-} catch {
-    Write-Host "[ERROR] Failed to start storefront: $_" -ForegroundColor Red
+# Step 4: Start storefront
+Write-Host "`n[4/5] Launching Next.js Storefront (:$storefrontPort)..." -ForegroundColor Green
+$storefrontPublishableKey = Resolve-StorefrontPublishableKey
+if (-not $storefrontPublishableKey) {
+    Write-Host "ERROR: Could not resolve a valid publishable key for storefront." -ForegroundColor Red
     pause
     exit 1
 }
 
-# Step 4: Open the Control Center
-Write-Host "`n[4/4] Opening Command Center Interface..." -ForegroundColor Green
-Write-Host "[DEBUG] Waiting 3 seconds..." -ForegroundColor Gray
-Start-Sleep -Seconds 3
+$storefrontCommand = @"
+`$env:MEDUSA_BACKEND_URL='$backendUrl'
+`$env:NEXT_PUBLIC_MEDUSA_BACKEND_URL='$backendUrl'
+`$env:NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY='$storefrontPublishableKey'
+cd `"$storefrontRoot`"
+npm run dev -- -p $storefrontPort
+"@
+$storefrontProc = Start-Process powershell -ArgumentList '-NoExit', '-Command', $storefrontCommand -PassThru
+Write-Host "[DEBUG] Storefront process started: PID $($storefrontProc.Id)" -ForegroundColor Gray
 
-Write-Host "[DEBUG] Opening: $launcherHtml" -ForegroundColor Gray
-Start-Process $launcherHtml
+# Step 5: Open launcher
+Write-Host "`n[5/5] Opening Command Center Interface..." -ForegroundColor Green
+Start-Sleep -Seconds 2
+$launcherUri = "file:///" + (($launcherHtml -replace '\\', '/') -replace ' ', '%20') + "?backendPort=$backendPort&storefrontPort=$storefrontPort"
+Start-Process $launcherUri
 
 Write-Host "`n===================================================" -ForegroundColor Cyan
-Write-Host '✅ All systems deployed successfully!' -ForegroundColor Green
-Write-Host "===================================================`n" -ForegroundColor Cyan
-Write-Host '📊 Monitor the PowerShell windows for startup logs' -ForegroundColor Yellow
-Write-Host '🌐 Command Center opening in your browser...' -ForegroundColor Yellow
-Write-Host "`n⏳ Services may take 30-60 seconds to fully initialize" -ForegroundColor Gray
+Write-Host 'SUCCESS: All systems launched in debug mode' -ForegroundColor Green
+Write-Host '===================================================' -ForegroundColor Cyan
+Write-Host "Admin URL: $backendUrl/app" -ForegroundColor Yellow
+Write-Host "Storefront URL: http://localhost:$storefrontPort" -ForegroundColor Yellow
 Write-Host ''

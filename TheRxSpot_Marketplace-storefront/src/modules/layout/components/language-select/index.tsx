@@ -13,7 +13,7 @@ import ReactCountryFlag from "react-country-flag"
 
 import { StateType } from "@lib/hooks/use-toggle-state"
 import { updateLocale } from "@lib/data/locale-actions"
-import { Locale } from "@lib/data/locales"
+import type { Locale } from "@lib/data/locales"
 
 type LanguageOption = {
   code: string

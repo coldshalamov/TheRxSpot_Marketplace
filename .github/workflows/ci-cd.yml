@@ -66,6 +66,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      - name: TypeScript type-check
+        run: npm run typecheck
+        env:
+          DATABASE_URL: postgres://medusa:medusa@localhost:5432/medusa_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_that_is_at_least_64_characters_long_for_testing_purposes_only' }}
+          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET || 'test_cookie_secret_that_is_at_least_64_characters_long_for_testing_purposes_only' }}
+          STORE_CORS: http://localhost:8000
+          ADMIN_CORS: http://localhost:5173,http://localhost:9000
+          AUTH_CORS: http://localhost:5173,http://localhost:9000,http://localhost:8000
+
       - name: Run unit tests
         run: npm run test:unit
         env:
@@ -248,11 +259,43 @@ jobs:
           # Example: kubectl, helm, or platform-specific deployment
           echo "Staging deployment completed"
       
-      - name: Verify Deployment
+      - name: Verify Deployment - Health Check
         run: |
-          echo "Verifying staging deployment..."
-          # Add health check verification here
-          echo "Staging verification completed"
+          STAGING_URL="${{ vars.STAGING_URL || 'https://staging.therxspot.io' }}"
+          echo "Verifying staging health at ${STAGING_URL}..."
+          for i in 1 2 3 4 5; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${STAGING_URL}/health" || echo "000")
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "Health check passed (attempt $i)"
+              break
+            fi
+            echo "Health check attempt $i returned $HTTP_STATUS, retrying in 10s..."
+            sleep 10
+          done
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Health check failed after 5 attempts"
+            exit 1
+          fi
+
+      - name: Verify Deployment - Ready Check
+        run: |
+          STAGING_URL="${{ vars.STAGING_URL || 'https://staging.therxspot.io' }}"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${STAGING_URL}/ready" || echo "000")
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Ready check failed with status $HTTP_STATUS"
+            exit 1
+          fi
+          echo "Ready check passed"
+
+      - name: Verify Deployment - Protected Route Auth Guard
+        run: |
+          STAGING_URL="${{ vars.STAGING_URL || 'https://staging.therxspot.io' }}"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${STAGING_URL}/admin/businesses" || echo "000")
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "SECURITY FAILURE: Admin route accessible without auth"
+            exit 1
+          fi
+          echo "Auth guard check passed (status: $HTTP_STATUS)"
 
   # ------------------------------------------
   # Job 5: Deploy to Production (main branch)
@@ -277,19 +320,49 @@ jobs:
           # Example: kubectl, helm, or platform-specific deployment
           echo "Production deployment completed"
       
-      - name: Verify Deployment
+      - name: Verify Deployment - Health Check
         run: |
-          echo "Verifying production deployment..."
-          # Add health check verification here
-          echo "Production verification completed"
-      
+          PROD_URL="${{ vars.PRODUCTION_URL || 'https://therxspot.io' }}"
+          echo "Verifying production health at ${PROD_URL}..."
+          for i in 1 2 3 4 5; do
+            HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${PROD_URL}/health" || echo "000")
+            if [ "$HTTP_STATUS" = "200" ]; then
+              echo "Health check passed (attempt $i)"
+              break
+            fi
+            echo "Health check attempt $i returned $HTTP_STATUS, retrying in 15s..."
+            sleep 15
+          done
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "PRODUCTION HEALTH CHECK FAILED - INVESTIGATE IMMEDIATELY"
+            exit 1
+          fi
+
+      - name: Verify Deployment - Ready Check
+        run: |
+          PROD_URL="${{ vars.PRODUCTION_URL || 'https://therxspot.io' }}"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${PROD_URL}/ready" || echo "000")
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "PRODUCTION READY CHECK FAILED with status $HTTP_STATUS"
+            exit 1
+          fi
+          echo "Ready check passed"
+
+      - name: Verify Deployment - Protected Route Auth Guard
+        run: |
+          PROD_URL="${{ vars.PRODUCTION_URL || 'https://therxspot.io' }}"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${PROD_URL}/admin/businesses" || echo "000")
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "SECURITY FAILURE: Admin route accessible without auth in production"
+            exit 1
+          fi
+          echo "Auth guard check passed (status: $HTTP_STATUS)"
+
       - name: Create GitHub Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
-          release_name: Release v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
           body: |
             Production deployment of TheRxSpot Marketplace
             - Commit: ${{ github.sha }}

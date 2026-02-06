@@ -9,7 +9,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import CountrySelect from "../country-select"
 import LanguageSelect from "../language-select"
 import { HttpTypes } from "@medusajs/types"
-import { Locale } from "@lib/data/locales"
+import type { Locale } from "@lib/data/locales"
 
 const SideMenuItems = {
   Home: "/",
