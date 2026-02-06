@@ -14,6 +14,9 @@ $fallbackBackendPort = 9001
 $backendPort = $preferredBackendPort
 $adminUiPort = 5173
 $runtimeConfigPath = Join-Path $repoRoot "launcher_assets\runtime-config.js"
+$requestedMode = (if ($env:THERXSPOT_BACKEND_MODE) { $env:THERXSPOT_BACKEND_MODE } else { "start" }).ToLowerInvariant()
+$backendMode = if ($requestedMode -in @("dev", "start")) { $requestedMode } else { "start" }
+$backendNpmScript = if ($backendMode -eq "dev") { "dev" } else { "start" }
 
 function Get-AdminPathFromConfig {
     param([string]$RepoRoot)
@@ -125,9 +128,11 @@ function Should-StopForMarketplace {
     if ($cmd.Contains($repoPath)) { return $true }
     if (
         $cmd.Contains("medusa develop") -or
+        $cmd.Contains("medusa start") -or
         $cmd.Contains("@medusajs\\cli\\cli.js develop") -or
         $cmd.Contains("@medusajs\\cli\\cli.js start --types") -or
-        $cmd.Contains("npm run dev")
+        $cmd.Contains("npm run dev") -or
+        $cmd.Contains("npm run start")
     ) {
         return $true
     }
@@ -172,6 +177,7 @@ function Get-MarketplaceDevProcesses {
         # in their commandline (for example: "cmd /c medusa develop").
         if (
             $cmd.Contains("medusa develop") -or
+            $cmd.Contains("medusa start") -or
             $cmd.Contains("@medusajs\\cli\\cli.js develop") -or
             $cmd.Contains("@medusajs\\cli\\cli.js start --types")
         ) {
@@ -179,7 +185,7 @@ function Get-MarketplaceDevProcesses {
         }
 
         # Keep npm-based cleanup scoped to this repository path.
-        if ($cmd.Contains($repoPathLower) -and $cmd.Contains("npm run dev")) {
+        if ($cmd.Contains($repoPathLower) -and ($cmd.Contains("npm run dev") -or $cmd.Contains("npm run start"))) {
             return $true
         }
 
@@ -378,6 +384,9 @@ function Open-AdminUrl {
     Start-Process $Url
 }
 
+Write-Host ("Mode: backend '" + $backendNpmScript + "' (set THERXSPOT_BACKEND_MODE=dev for hot-reload mode)") -ForegroundColor Gray
+Write-Host ""
+
 Write-Host "[1/5] Checking dependencies..." -ForegroundColor Yellow
 $pgReady = Test-Port -Port 5432
 $redisReady = Test-Port -Port 6379
@@ -515,7 +524,7 @@ $backendCommand = @"
 `$env:ADMIN_CORS='$adminCors'
 `$env:AUTH_CORS='$authCors'
 cd `"$repoRoot`"
-npm run dev
+npm run $backendNpmScript
 "@
 
 $backendProcess = Start-Process powershell -ArgumentList '-Command', $backendCommand -PassThru
