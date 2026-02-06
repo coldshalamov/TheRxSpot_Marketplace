@@ -12,14 +12,19 @@ type MyInformationProps = {
   customer: HttpTypes.StoreCustomer
 }
 
+type ProfileEmailState = {
+  success: boolean
+  error: string | null
+}
+
 const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
   const [successState, setSuccessState] = React.useState(false)
 
   // Email updates are not supported in this storefront MVP.
   const updateCustomerEmail = (
-    _currentState: Record<string, unknown>,
+    _currentState: ProfileEmailState,
     formData: FormData
-  ) => {
+  ): ProfileEmailState => {
     const customer = {
       email: formData.get("email") as string,
     }
@@ -32,8 +37,8 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
     }
   }
 
-  const [state, formAction] = useActionState(updateCustomerEmail, {
-    error: false,
+  const [state, formAction] = useActionState<ProfileEmailState, FormData>(updateCustomerEmail, {
+    error: null,
     success: false,
   })
 
@@ -52,7 +57,7 @@ const ProfileEmail: React.FC<MyInformationProps> = ({ customer }) => {
         currentInfo={`${customer.email}`}
         isSuccess={successState}
         isError={!!state.error}
-        errorMessage={state.error}
+        errorMessage={state.error ?? undefined}
         clearState={clearState}
         data-testid="account-email-editor"
       >
