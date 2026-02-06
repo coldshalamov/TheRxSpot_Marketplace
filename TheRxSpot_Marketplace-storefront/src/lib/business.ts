@@ -7,10 +7,12 @@ export interface Business {
   name: string
   slug: string
   logo_url: string | null
+  tagline?: string | null
   primary_color: string | null
   secondary_color: string | null
   custom_html_head: string | null
   custom_html_body: string | null
+  custom_tracking_script?: string | null
   domain: string | null
   is_active: boolean
   status: string
