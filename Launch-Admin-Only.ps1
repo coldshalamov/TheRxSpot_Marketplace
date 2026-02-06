@@ -11,15 +11,27 @@ Write-Host "===================================================" -ForegroundColo
 Write-Host ""
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot ".")).Path
-$preferredBackendPort = 9000
-$fallbackBackendPort = 9001
-$backendPort = $preferredBackendPort
+
+# Auto-discover available port (skips port 9000 which is reserved for Antigravity IDE)
+Write-Host "Finding available backend port..." -ForegroundColor Yellow
+$autoPort = & "$repoRoot\scripts\find-available-port.ps1" -StartPort 9001 -EndPort 9010 -ReservedPorts @('9000')
+if ($LASTEXITCODE -eq 0) {
+    $backendPort = [int]$autoPort
+    Write-Host "OK: Using auto-discovered port: $backendPort" -ForegroundColor Green
+} else {
+    Write-Host "WARN: Auto-discovery failed, using fallback port 9001" -ForegroundColor Yellow
+    $backendPort = 9001
+}
+
+$preferredBackendPort = $backendPort
+$fallbackBackendPort = $backendPort + 1
 $adminUiPort = 5173
 $runtimeConfigPath = Join-Path $repoRoot "launcher_assets\runtime-config.js"
 $requestedMode = if ($env:THERXSPOT_BACKEND_MODE) { $env:THERXSPOT_BACKEND_MODE } else { "start" }
 $requestedMode = $requestedMode.ToLowerInvariant()
 $backendMode = if ($requestedMode -in @("dev", "start")) { $requestedMode } else { "start" }
 $backendNpmScript = if ($backendMode -eq "dev") { "dev" } else { "start" }
+$noBrowser = ($env:THERXSPOT_NO_BROWSER -eq "1")
 
 function Get-AdminPathFromConfig {
     param([string]$RepoRoot)
@@ -245,6 +257,10 @@ function Release-Port-Safely {
     }
 
     foreach ($ownerPid in $listeners) {
+        if ($Port -eq 9000) {
+            Write-Host "CRITICAL: Port 9000 is reserved for User IDE. Skipping cleanup." -ForegroundColor Red
+            continue
+        }
         $procInfo = Get-ProcessInfo -ProcessId $ownerPid
         $procName = if ($procInfo -and $procInfo.Name) { $procInfo.Name } else { "PID $ownerPid" }
 
@@ -614,7 +630,7 @@ if (-not $needRebuild -and $backendPort -ne $preferredBackendPort) {
     $needRebuild = $true
 }
 
-if ($needRebuild) {
+if ($needRebuild -and $backendMode -eq "start") {
     Write-Host "Rebuilding admin panel for port $backendPort..." -ForegroundColor Yellow
     Write-Host "This ensures the white screen issue is resolved." -ForegroundColor Gray
     
@@ -703,7 +719,11 @@ Update-LauncherRuntimeConfig -RepoRoot $repoRoot -BackendPort $backendPort -Stor
 Write-Host "[5/5] Opening Admin URL..." -ForegroundColor Yellow
 $adminLoginPath = if ($adminPath -eq "/") { "/login" } else { "$adminPath/login" }
 $adminUrl = "http://localhost:$backendPort$adminLoginPath"
-Open-AdminUrl -Url $adminUrl
+if ($noBrowser) {
+    Write-Host "INFO: Browser launch skipped (THERXSPOT_NO_BROWSER=1)." -ForegroundColor Gray
+} else {
+    Open-AdminUrl -Url $adminUrl
+}
 
 Write-Host ""
 Write-Host "===================================================" -ForegroundColor Cyan

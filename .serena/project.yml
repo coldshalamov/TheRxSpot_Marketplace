@@ -37,15 +37,8 @@ ignore_all_files_in_gitignore: true
 
 # list of additional paths to ignore in all projects
 # same syntax as gitignore, so you can use * and **
-ignored_paths:
-- "**/node_modules/**"
-- "**/.next/**"
-- "**/dist/**"
-- "**/coverage/**"
-- "**/.turbo/**"
-- "**/*.har"
-- "**/.openchamber/**"
-- "**/tmp/**"
+# NOTE: All restrictions removed - agents should see everything in the repo
+ignored_paths: []
 
 # whether the project is in read-only mode
 # If set to true, all editing tools will be disabled and attempts to use them will result in an error
@@ -117,4 +110,4 @@ default_modes:
 
 # initial prompt for the project. It will always be given to the LLM upon activating the project
 # (contrary to the memories, which are loaded on demand).
-initial_prompt: "Read MEDUSA_V2_CONTEXT.md before backend changes. For admin panel regressions, read docs/ADMIN_PANEL_MISTAKE_LEDGER.md first. Never treat URL changes as success; require rendered UI, successful auth flow, no critical browser/runtime errors, and repeatability."
+initial_prompt: "Follow docs/AGENT_GROUNDING_PROTOCOL.md. Read root + nearest AGENTS.md, then medusadocs/INDEX.md and medusadocs/00_START_HERE/DECISION_TREE.md. For backend work read MEDUSA_V2_CONTEXT.md first. For admin regressions read docs/ADMIN_PANEL_MISTAKE_LEDGER.md first. Use medusadocs first and targeted llms-full.txt search only for gaps. Prefer Serena semantic tools for symbol/call-chain work. Never treat URL changes as success; require rendered UI, successful auth flow, no critical browser/runtime errors, and repeatability."

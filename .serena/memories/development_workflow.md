@@ -2,8 +2,11 @@
 
 ## 1. Pre-Flight
 - Read root `AGENTS.md` first, then nearest scoped instructions (`src/AGENTS.md`, `TheRxSpot_Marketplace-storefront/AGENTS.md`, `docs/AGENTS.md`).
+- Read `docs/AGENT_GROUNDING_PROTOCOL.md`.
+- Route through `medusadocs/INDEX.md` and `medusadocs/00_START_HERE/DECISION_TREE.md` for task-specific docs.
 - For backend tasks, read `MEDUSA_V2_CONTEXT.md` before editing.
 - For admin render/login issues, read `docs/ADMIN_PANEL_MISTAKE_LEDGER.md` before proposing fixes.
+- Escalate to targeted `llms-full.txt` search only when curated docs are missing required detail.
 
 ## 2. Local Startup Order
 - Start infrastructure first: `Start-Dependencies.ps1` or `Start-Dependencies.bat`.
@@ -34,3 +37,4 @@
 - Keep diagnostics and generated artifacts outside watched source folders.
 - Keep changes small, scoped, and reversible.
 - Do not claim success based on URL changes alone.
+- Use Serena symbol-aware tools for high-risk semantic analysis, and use `rg` for literal/path lookup.

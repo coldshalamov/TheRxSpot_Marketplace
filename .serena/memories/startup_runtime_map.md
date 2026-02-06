@@ -8,9 +8,9 @@
    - full stack: `Launch-Marketplace.ps1`
 
 ## Typical Ports
-- Backend: `9000` (fallback `9001`).
+- Backend: `9001` (fallback `9002`).
 - Storefront: `8000` (fallback `8001`).
-- Serena local MCP bridge: usually `8000`/custom for MCPO sessions.
+- **CRITICAL: Port 9000 is reserved for User IDE. NEVER use or kill processes on this port.**
 
 ## Path and URL Truth Sources
 - `medusa-config.ts`:

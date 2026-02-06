@@ -102,7 +102,7 @@ npm install
 cp .env.template .env
 npm run build
 npm run dev
-# Backend runs on http://localhost:9000
+# Backend runs on http://localhost:9001
 ```
 
 ### Storefront Setup

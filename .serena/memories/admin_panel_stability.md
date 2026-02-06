@@ -26,3 +26,4 @@ Never claim an admin fix is done unless all are true in one run:
 - Treat `medusa-config.ts` (`admin.path`) as source of truth.
 - Do not hardcode admin URL paths in tooling if config already owns them.
 - Keep artifact/log outputs outside watched source directories.
+- **CRITICAL: Port 9000 is reserved for the USER's IDE. NEVER kill processes on port 9000 or attempt to use it.**

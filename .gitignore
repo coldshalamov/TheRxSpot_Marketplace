@@ -8,6 +8,9 @@ public/admin
 /tmp
 /.claude
 /node_modules
+/.quarantine
+/.tmp-*
+/TheRxSpot_Marketplace-storefront/tmp
 yarn-error.log
 
 .idea

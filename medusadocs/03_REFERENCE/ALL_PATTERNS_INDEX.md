@@ -3,6 +3,7 @@
 > **Quick Search Reference**: A-Z index of every pattern across Medusa V2 documentation.
 > **Version**: Medusa V2.13.1
 > **Scope**: Multi-tenant marketplace backend
+> **Note**: Legacy `trimmed_part*.md` links were replaced with `LEGACY_SOURCE_MAP.md` to keep this index navigable.
 
 ---
 
@@ -11,90 +12,90 @@
 | Pattern | Category | Where Used | Link |
 |---------|----------|------------|------|
 | `acquireLockStep` | Workflow | Race condition prevention | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
-| `actor_type` | Auth | Request context | [trimmed_part7.md](../trimmed_part7.md) |
+| `actor_type` | Auth | Request context | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
 | `addToCartWorkflow` | Core Workflow | Cart operations | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
-| `additionalDataValidator` | API | Core route extension | [trimmed_part1.md](../trimmed_part1.md) |
-| `array()` | Data Model | Array property | [trimmed_part1.md](../trimmed_part1.md) |
-| `authenticate()` | Middleware | Route protection | [trimmed_part1.md](../trimmed_part1.md) |
-| `AUTHENTICATE = false` | API | Opt-out auth | [trimmed_part1.md](../trimmed_part1.md) |
-| `authMethodsPerActor` | Config | Provider restriction | [trimmed_part4.md](../trimmed_part4.md) |
-| `belongsTo()` | Data Model | Relationship | [trimmed_part1.md](../trimmed_part1.md) |
-| `bigNumber()` | Data Model | Price property | [trimmed_part1.md](../trimmed_part1.md) |
-| `boolean()` | Data Model | Boolean property | [trimmed_part1.md](../trimmed_part1.md) |
-| `cascades()` | Data Model | Delete cascade | [trimmed_part1.md](../trimmed_part1.md) |
+| `additionalDataValidator` | API | Core route extension | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `array()` | Data Model | Array property | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `authenticate()` | Middleware | Route protection | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `AUTHENTICATE = false` | API | Opt-out auth | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `authMethodsPerActor` | Config | Provider restriction | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `belongsTo()` | Data Model | Relationship | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `bigNumber()` | Data Model | Price property | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `boolean()` | Data Model | Boolean property | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `cascades()` | Data Model | Delete cascade | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
 | `cancelOrderWorkflow` | Core Workflow | Order management | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
 | `completeCartWorkflow` | Core Workflow | Checkout | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
-| `ContainerRegistrationKeys` | Container | DI resolution | [trimmed_part1.md](../trimmed_part1.md) |
+| `ContainerRegistrationKeys` | Container | DI resolution | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
 | `createCartWorkflow` | Core Workflow | Cart creation | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
 | `createCustomerWorkflow` | Core Workflow | Customer mgmt | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
 | `createOrderWorkflow` | Core Workflow | Order creation | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
 | `createProductsWorkflow` | Core Workflow | Product mgmt | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
-| `createRemoteLinkStep` | Workflow | Module linking | [trimmed_part3.md](../trimmed_part3.md) |
-| `createStep` | Workflow | Step definition | [trimmed_part1.md](../trimmed_part1.md) |
-| `createWorkflow` | Workflow | Workflow definition | [trimmed_part1.md](../trimmed_part1.md) |
-| `dateTime()` | Data Model | Timestamp | [trimmed_part1.md](../trimmed_part1.md) |
-| `db:generate` | CLI | Migration | [trimmed_part1.md](../trimmed_part1.md) |
-| `db:migrate` | CLI | Migration | [trimmed_part1.md](../trimmed_part1.md) |
-| `db:sync-links` | CLI | Link sync | [trimmed_part1.md](../trimmed_part1.md) |
-| `default()` | Data Model | Default value | [trimmed_part1.md](../trimmed_part1.md) |
-| `defineLink` | Module | Cross-module link | [trimmed_part1.md](../trimmed_part1.md) |
-| `defineMiddlewares` | API | Middleware config | [trimmed_part1.md](../trimmed_part1.md) |
-| `defineRouteConfig` | Admin | UI route | [trimmed_part1.md](../trimmed_part1.md) |
-| `defineWidgetConfig` | Admin | Widget | [trimmed_part1.md](../trimmed_part1.md) |
-| `deleteCascade` | Link | Cascade delete | [trimmed_part5.md](../trimmed_part5.md) |
+| `createRemoteLinkStep` | Workflow | Module linking | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `createStep` | Workflow | Step definition | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `createWorkflow` | Workflow | Workflow definition | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `dateTime()` | Data Model | Timestamp | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `db:generate` | CLI | Migration | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `db:migrate` | CLI | Migration | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `db:sync-links` | CLI | Link sync | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `default()` | Data Model | Default value | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `defineLink` | Module | Cross-module link | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `defineMiddlewares` | API | Middleware config | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `defineRouteConfig` | Admin | UI route | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `defineWidgetConfig` | Admin | Widget | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `deleteCascade` | Link | Cascade delete | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
 | `deleteLineItemsWorkflow` | Core Workflow | Cart operations | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
-| `dismissRemoteLinkStep` | Workflow | Remove links | [trimmed_part3.md](../trimmed_part3.md) |
-| `emitEventStep` | Workflow | Event emission | [trimmed_part1.md](../trimmed_part1.md) |
-| `enum()` | Data Model | Enum property | [trimmed_part1.md](../trimmed_part1.md) |
-| `entryPoint` | Link | Link table query | [trimmed_part2.md](../trimmed_part2.md) |
-| `errorHandler` | API | Global error handling | [trimmed_part4.md](../trimmed_part4.md) |
-| `fields` | Query | Field selection | [trimmed_part1.md](../trimmed_part1.md) |
-| `filters` | Query | Filter records | [trimmed_part2.md](../trimmed_part2.md) |
-| `float()` | Data Model | Decimal number | [trimmed_part1.md](../trimmed_part1.md) |
-| `hasMany()` | Data Model | One-to-many | [trimmed_part1.md](../trimmed_part1.md) |
-| `hasOne()` | Data Model | One-to-one | [trimmed_part4.md](../trimmed_part4.md) |
-| `hooks.productsCreated` | Workflow | Workflow hooks | [trimmed_part1.md](../trimmed_part1.md) |
-| `id()` | Data Model | ID property | [trimmed_part1.md](../trimmed_part1.md) |
-| `index()` | Data Model | DB index | [trimmed_part1.md](../trimmed_part1.md) |
-| `indexes()` | Data Model | Composite index | [trimmed_part4.md](../trimmed_part4.md) |
-| `isList` | Link | Many relation | [trimmed_part1.md](../trimmed_part1.md) |
-| `json()` | Data Model | JSON property | [trimmed_part1.md](../trimmed_part1.md) |
-| `link.create()` | Link | Create link | [trimmed_part1.md](../trimmed_part1.md) |
-| `link.dismiss()` | Link | Remove link | [trimmed_part1.md](../trimmed_part1.md) |
-| `loader` | Module | Module loader | [trimmed_part1.md](../trimmed_part1.md) |
-| `manyToMany()` | Data Model | Many-to-many | [trimmed_part1.md](../trimmed_part1.md) |
-| `matcher` | Middleware | Route pattern | [trimmed_part1.md](../trimmed_part1.md) |
-| `MedusaError` | Error | Error handling | [trimmed_part6.md](../trimmed_part6.md) |
-| `MedusaService` | Service | CRUD generation | [trimmed_part1.md](../trimmed_part1.md) |
-| `Module` | Module | Module definition | [trimmed_part1.md](../trimmed_part1.md) |
-| `nullable()` | Data Model | Allow null | [trimmed_part1.md](../trimmed_part1.md) |
-| `number()` | Data Model | Integer | [trimmed_part1.md](../trimmed_part1.md) |
-| `pagination` | Query | Skip/take | [trimmed_part2.md](../trimmed_part2.md) |
-| `primaryKey()` | Data Model | PK constraint | [trimmed_part1.md](../trimmed_part1.md) |
-| `query.graph()` | Query | Data retrieval | [trimmed_part1.md](../trimmed_part1.md) |
-| `query.index()` | Query | Cross-module filter | [trimmed_part5.md](../trimmed_part5.md) |
-| `QueryContext` | Query | Context passing | [trimmed_part2.md](../trimmed_part2.md) |
-| `readOnly` | Link | Virtual relation | [trimmed_part2.md](../trimmed_part2.md) |
+| `dismissRemoteLinkStep` | Workflow | Remove links | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `emitEventStep` | Workflow | Event emission | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `enum()` | Data Model | Enum property | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `entryPoint` | Link | Link table query | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `errorHandler` | API | Global error handling | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `fields` | Query | Field selection | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `filters` | Query | Filter records | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `float()` | Data Model | Decimal number | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `hasMany()` | Data Model | One-to-many | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `hasOne()` | Data Model | One-to-one | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `hooks.productsCreated` | Workflow | Workflow hooks | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `id()` | Data Model | ID property | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `index()` | Data Model | DB index | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `indexes()` | Data Model | Composite index | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `isList` | Link | Many relation | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `json()` | Data Model | JSON property | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `link.create()` | Link | Create link | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `link.dismiss()` | Link | Remove link | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `loader` | Module | Module loader | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `manyToMany()` | Data Model | Many-to-many | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `matcher` | Middleware | Route pattern | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `MedusaError` | Error | Error handling | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `MedusaService` | Service | CRUD generation | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `Module` | Module | Module definition | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `nullable()` | Data Model | Allow null | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `number()` | Data Model | Integer | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `pagination` | Query | Skip/take | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `primaryKey()` | Data Model | PK constraint | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `query.graph()` | Query | Data retrieval | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `query.index()` | Query | Cross-module filter | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `QueryContext` | Query | Context passing | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `readOnly` | Link | Virtual relation | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
 | `releaseLockStep` | Workflow | Release lock | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
-| `removeRemoteLinkStep` | Workflow | Remove links | [trimmed_part3.md](../trimmed_part3.md) |
-| `runAsStep` | Workflow | Nested workflow | [trimmed_part4.md](../trimmed_part4.md) |
-| `schedule` | Job | Cron expression | [trimmed_part1.md](../trimmed_part1.md) |
-| `searchable()` | Data Model | Full-text search | [trimmed_part1.md](../trimmed_part1.md) |
-| `sendNotificationsStep` | Workflow | Notifications | [trimmed_part6.md](../trimmed_part6.md) |
-| `StepResponse` | Workflow | Step output | [trimmed_part1.md](../trimmed_part1.md) |
-| `text()` | Data Model | String property | [trimmed_part1.md](../trimmed_part1.md) |
-| `transform` | Workflow | Variable manipulation | [trimmed_part1.md](../trimmed_part1.md) |
-| `unique()` | Data Model | Unique constraint | [trimmed_part1.md](../trimmed_part1.md) |
+| `removeRemoteLinkStep` | Workflow | Remove links | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `runAsStep` | Workflow | Nested workflow | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `schedule` | Job | Cron expression | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `searchable()` | Data Model | Full-text search | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `sendNotificationsStep` | Workflow | Notifications | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `StepResponse` | Workflow | Step output | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `text()` | Data Model | String property | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `transform` | Workflow | Variable manipulation | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `unique()` | Data Model | Unique constraint | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
 | `updateOrderWorkflow` | Core Workflow | Order update | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
 | `updateProductsWorkflow` | Core Workflow | Product update | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
 | `uploadFilesWorkflow` | Core Workflow | File upload | [CORE_WORKFLOWS.md](./CORE_WORKFLOWS.md) |
-| `useQueryGraphStep` | Workflow | Query step | [trimmed_part1.md](../trimmed_part1.md) |
-| `useRemoteQueryStep` | Workflow | Remote query | [trimmed_part3.md](../trimmed_part3.md) |
-| `validateAndTransformBody` | Middleware | Body validation | [trimmed_part1.md](../trimmed_part1.md) |
-| `validateAndTransformQuery` | Middleware | Query validation | [trimmed_part1.md](../trimmed_part1.md) |
-| `when` | Workflow | Conditional execution | [trimmed_part1.md](../trimmed_part1.md) |
-| `withDeleted` | Query | Include deleted | [trimmed_part2.md](../trimmed_part2.md) |
-| `WorkflowResponse` | Workflow | Workflow output | [trimmed_part1.md](../trimmed_part1.md) |
+| `useQueryGraphStep` | Workflow | Query step | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `useRemoteQueryStep` | Workflow | Remote query | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `validateAndTransformBody` | Middleware | Body validation | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `validateAndTransformQuery` | Middleware | Query validation | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `when` | Workflow | Conditional execution | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `withDeleted` | Query | Include deleted | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
+| `WorkflowResponse` | Workflow | Workflow output | [LEGACY_SOURCE_MAP.md](./LEGACY_SOURCE_MAP.md) |
 
 ---
 
@@ -332,3 +333,4 @@ import { defineWidgetConfig } from "@medusajs/admin-sdk"
 import { useQueryGraphStep } from "@medusajs/medusa/core-flows"
 import { createProductsWorkflow } from "@medusajs/medusa/core-flows"
 ```
+

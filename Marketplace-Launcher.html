@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,7 +35,7 @@
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            background-image: 
+            background-image:
                 radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 40%),
                 radial-gradient(circle at 80% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
         }
@@ -192,9 +193,43 @@
             animation: pulse 2s infinite;
         }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
 
         footer {
             text-align: center;
@@ -215,9 +250,10 @@
         }
     </style>
 </head>
+
 <body>
     <img src="launcher_assets/hero.png" class="hero-image" alt="Background">
-    
+
     <div class="container">
         <div class="content-card">
             <header>
@@ -229,25 +265,38 @@
             <div class="grid">
                 <a id="storefront-launch-btn" href="http://localhost:8000" target="_blank" class="launch-btn">
                     <div class="icon">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                        </svg>
                     </div>
                     <span id="storefront-port-label" class="port">:8000</span>
                     <h3>Storefront <span class="badge">Next.js</span></h3>
                     <p>The patient/provider facing shop interface with premium aesthetics.</p>
                 </a>
 
-                <a id="admin-launch-btn" href="http://localhost:9000/app/login" target="_blank" class="launch-btn">
+                <a id="admin-launch-btn" href="http://localhost:9001/app/login" target="_blank" class="launch-btn">
                     <div class="icon">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
+                            </path>
+                        </svg>
                     </div>
-                    <span id="admin-port-label" class="port">:9000</span>
+                    <span id="admin-port-label" class="port">:9001</span>
                     <h3>Admin Panel <span class="badge">Medusa</span></h3>
                     <p>Manage products, orders, and fulfillment logistics.</p>
                 </a>
 
                 <a href="https://docs.medusajs.com/v2" target="_blank" class="launch-btn">
                     <div class="icon">
-                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5s3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                            </path>
+                        </svg>
                     </div>
                     <h3>Developer Docs</h3>
                     <p>Access Medusa V2 technical documentation and API references.</p>
@@ -264,7 +313,7 @@
                 </div>
             </div>
         </div>
-        
+
         <footer>
             DESIGNED BY ANTIGRAVITY &bull; ADVANCED AGENTIC CODING
         </footer>
@@ -298,7 +347,7 @@
 
             const backendPort = normalizePort(
                 params.get("backendPort") ?? runtimeConfig.backendPort,
-                9000
+                9001
             );
             const storefrontPort = normalizePort(
                 params.get("storefrontPort") ?? runtimeConfig.storefrontPort,
@@ -341,4 +390,5 @@
         });
     </script>
 </body>
+
 </html>

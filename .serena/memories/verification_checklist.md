@@ -22,3 +22,4 @@ Use this as a minimum evidence gate before claiming fixes.
 ## Evidence Discipline
 - Do not treat URL change as success evidence.
 - Summarize concrete checks performed when reporting completion.
+- If a new failure mode is found, record it in `docs/ADMIN_PANEL_MISTAKE_LEDGER.md` and update relevant AGENTS/memory guidance.

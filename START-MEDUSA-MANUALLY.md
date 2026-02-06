@@ -23,7 +23,7 @@ npm run dev
 
 **Wait for this message:**
 ```
-Server is ready on: http://localhost:9000
+Server is ready on: http://localhost:9001
 ```
 
 This usually takes 15-30 seconds.
@@ -43,9 +43,9 @@ npm run dev
 
 Once both services show "ready":
 
-- **Admin Panel**: http://localhost:9000/app
+- **Admin Panel**: http://localhost:9001/app
 - **Storefront**: http://localhost:8000
-- **Backend API**: http://localhost:9000
+- **Backend API**: http://localhost:9001
 
 ## Troubleshooting
 
@@ -72,8 +72,8 @@ Once both services show "ready":
 
 **Port already in use**: Another process is using the port. Find and kill it:
 ```powershell
-# Find process on port 9000
-netstat -ano | findstr :9000
+# Find process on port 9001 (DO NOT KILL PORT 9000 - IT IS THE IDE)
+netstat -ano | findstr :9001
 
 # Kill it (replace PID with actual process ID)
 taskkill /PID <PID> /F
@@ -83,7 +83,7 @@ taskkill /PID <PID> /F
 
 ## First Time Login
 
-When you access http://localhost:9000/app for the first time:
+When you access http://localhost:9001/app for the first time:
 
 1. You'll see a login/setup screen
 2. Follow the onboarding wizard

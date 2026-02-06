@@ -1,2 +1,64 @@
 {
+    "runConfigurations.configurations": [
+        {
+            "id": "config-1770408442774-tyzi9l8ut",
+            "name": "Backend Dev (Port 9001)",
+            "command": "npm",
+            "args": "run dev",
+            "env": {},
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "id": "config-1770408477396-i5jjfdigv",
+            "name": "Run Integration Tests",
+            "command": "npm",
+            "args": "run test:integration:http",
+            "env": {},
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "id": "config-1770408505024-5ifn331kr",
+            "name": "Smoke Test (Verify System)",
+            "command": "npm",
+            "args": "run diagnose:smoke",
+            "env": {},
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "id": "config-1770408558041-4rqlk7k25",
+            "name": "TypeScript Type Check",
+            "command": "npm",
+            "args": "run typecheck",
+            "env": {},
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "id": "config-1770408598286-ix88vzmuk",
+            "name": "Build Admin Bundle",
+            "command": "npm",
+            "args": "run build",
+            "env": {},
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "id": "config-1770408640992-ufqkd1ccl",
+            "name": "Storefront Dev (Port 8000)",
+            "command": "Command: npm",
+            "args": "run dev",
+            "env": {
+                "NEXT_PUBLIC_MEDUSA_BACKEND_URL": "http://localhost:9001"
+            },
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "id": "config-1770418547097-9p10dq9xx",
+            "name": "Admin (Reliable Launcher)",
+            "command": "pwsh",
+            "args": "-NoProfile -ExecutionPolicy Bypass -File .\\Launch-Admin-Only.ps1",
+            "env": {
+                "THERXSPOT_BACKEND_MODE": "start"
+            },
+            "cwd": "${workspaceFolder}"
+        }
+    ]
 }

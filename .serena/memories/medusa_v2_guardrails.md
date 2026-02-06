@@ -1,6 +1,7 @@
 # Medusa v2 Guardrails (Critical)
 
 Source of truth: `MEDUSA_V2_CONTEXT.md`
+Companion guidance: `docs/AGENT_GROUNDING_PROTOCOL.md` and `medusadocs/`
 
 ## Mandatory Patterns
 - Use `src/modules` + `src/workflows` for business logic.
@@ -15,6 +16,7 @@ Source of truth: `MEDUSA_V2_CONTEXT.md`
 ## Stability Dependencies
 - Redis is required for Medusa v2 event bus startup.
 - If server hangs, check Redis/container state first.
+- **CRITICAL: Port 9000 is reserved for the USER's IDE. Avoid port 9000 for all service bindings.**
 - Verify `DATABASE_URL` + migrations when startup or data behavior is suspicious.
 
 ## Backend Edit Checklist
@@ -22,3 +24,4 @@ Source of truth: `MEDUSA_V2_CONTEXT.md`
 2. Keep module boundaries clean.
 3. Add/adjust workflow if write logic crosses domain boundaries.
 4. Run lint/typecheck/tests relevant to changed behavior.
+5. If docs are insufficient, run targeted `llms-full.txt` queries before introducing unfamiliar patterns.

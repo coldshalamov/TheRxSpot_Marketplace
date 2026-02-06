@@ -63,7 +63,7 @@ export function validateEnv(env: NodeJS.ProcessEnv = process.env): AppEnvConfig 
   const adminCors = requireString(env, "ADMIN_CORS")
   const authCors = requireString(env, "AUTH_CORS")
 
-  const backendUrl = optionalString(env, "MEDUSA_BACKEND_URL") || "http://localhost:9000"
+  const backendUrl = optionalString(env, "MEDUSA_BACKEND_URL") || "http://localhost:9001"
 
   const encryption =
     phiEncryptionEnabled || nodeEnv === "production"

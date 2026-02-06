@@ -793,4 +793,12 @@ shipped → delivered
 
 ---
 
+## Developer Operations
+
+- **Medusa Backend Port**: Defaulting to **:9001** to avoid conflict with local IDE services on :9000.
+- **Storefront Port**: Defaulting to **:8000**.
+- **IDE Reserved Port**: Port 9000 is reserved for User IDE. DO NOT USE OR KILL.
+
+---
+
 See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for development roadmap.

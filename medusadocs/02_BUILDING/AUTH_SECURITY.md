@@ -685,6 +685,6 @@ const downloads = await complianceService.listAuditLogs({
 
 - [Medusa V2 Auth Documentation](https://docs.medusajs.com/resources/commerce-modules/auth)
 - [HIPAA Security Rule](https://www.hhs.gov/hipaa/for-professionals/security/index.html)
-- [Encryption Utility](../src/utils/encryption.ts)
-- [Audit Logging Middleware](../src/api/middlewares/audit-logging.ts)
-- [Tenant Isolation](../src/api/middlewares/tenant-isolation.ts)
+- [Encryption Utility](../../src/utils/encryption.ts)
+- [Audit Logging Middleware](../../src/api/middlewares/audit-logging.ts)
+- [Tenant Isolation](../../src/api/middlewares/tenant-isolation.ts)

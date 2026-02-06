@@ -24,6 +24,7 @@ for local full-stack workflows.
 
 ## High-Signal Files
 - `AGENTS.md`: root operating instructions and module map.
+- `docs/AGENT_GROUNDING_PROTOCOL.md`: mandatory grounding sequence and escalation policy.
 - `MEDUSA_V2_CONTEXT.md`: mandatory Medusa v2 rules (do not use v1 patterns).
 - `medusa-config.ts`: module registration + `admin.path` (currently `/app`).
 - `docs/ADMIN_PANEL_MISTAKE_LEDGER.md`: admin stability evidence standard.

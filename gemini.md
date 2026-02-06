@@ -41,6 +41,7 @@
 - Keep changes scoped and reversible.
 - Prefer module-local commands from the relevant nested `AGENTS.md`.
 - Do not read the entire `docs/` tree unless the task needs it.
+- **CRITICAL: Port 9000 is reserved for the USER's IDE. NEVER kill processes on port 9000 and DO NOT attempt to use port 9000 for Medusa or any other services.**
 
 ## Links to Nested Instructions
 - `src/AGENTS.md`

@@ -1,5 +1,7 @@
 # Troubleshooting Playbook
 
+Before deep debugging, route through `medusadocs/00_START_HERE/DECISION_TREE.md` and `medusadocs/03_REFERENCE/TROUBLESHOOTING.md`.
+
 ## Backend Hangs on Startup
 - Check Redis availability first (Medusa v2 event bus dependency).
 - Confirm `DATABASE_URL` connectivity and migration state.

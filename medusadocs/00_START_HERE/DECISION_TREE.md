@@ -35,7 +35,7 @@
 
 **Also check:**
 - Look at existing similar models in `src/modules/*/models/`
-- See CODEBASE_SUMMARY.md section on your target module
+- See [../01_CONTEXT/YOUR_CODEBASE.md](../01_CONTEXT/YOUR_CODEBASE.md) section on your target module
 
 ### B. "A new business process/automation" (e.g., when X happens, do Y)
 → Read [../02_BUILDING/WORKFLOWS.md](../02_BUILDING/WORKFLOWS.md)
@@ -168,3 +168,4 @@ The most common path for adding a feature:
 ---
 
 **Still not sure?** Read [QUICKSTART.md](./QUICKSTART.md) for the 5 most common copy-paste patterns.
+
