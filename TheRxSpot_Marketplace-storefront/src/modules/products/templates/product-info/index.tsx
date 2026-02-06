@@ -8,7 +8,11 @@ type ProductInfoProps = {
 
 const ProductInfo = ({ product }: ProductInfoProps) => {
   const requiresConsult = product.metadata?.requires_consult === true
-  const consultFee = product.metadata?.consult_fee
+  const consultFeeRaw = product.metadata?.consult_fee
+  const consultFee =
+    typeof consultFeeRaw === "number" || typeof consultFeeRaw === "string"
+      ? Number(consultFeeRaw)
+      : null
 
   return (
     <div id="product-info">
@@ -34,9 +38,9 @@ const ProductInfo = ({ product }: ProductInfoProps) => {
               <Badge size="small" color="orange">
                 Consultation Required
               </Badge>
-              {consultFee && (
+              {consultFee !== null && Number.isFinite(consultFee) && (
                 <Text className="text-small text-ui-fg-muted">
-                  Consultation Fee: ${Number(consultFee) / 100}
+                  Consultation Fee: ${consultFee / 100}
                 </Text>
               )}
             </div>
