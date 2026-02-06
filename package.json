@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "postinstall": "node ./scripts/ensure-date-fns-locale.mjs",
-    "build": "medusa build",
+    "build": "node ./scripts/build/run-medusa-build.mjs",
     "db:clean-migrate": "node ./scripts/db/clean-migrate.mjs",
     "seed": "medusa exec ./src/scripts/seed.ts",
     "seed:therxspot": "medusa exec ./src/scripts/seed-the-rx-spot.ts",
