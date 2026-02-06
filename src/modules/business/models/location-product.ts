@@ -7,6 +7,10 @@ export const LocationProduct = model.define("location_product", {
   category_id: model.text().nullable(),
   is_active: model.boolean().default(true),
   custom_price: model.number().nullable(),
+  display_title: model.text().nullable(),
+  display_description: model.text().nullable(),
+  display_image_url: model.text().nullable(),
+  details_blocks: model.json().nullable(),
   rank: model.number().default(0),
 })
   .indexes([

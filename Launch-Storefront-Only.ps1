@@ -92,14 +92,23 @@ function Resolve-BackendUrl {
         try {
             $response = Invoke-WebRequest -Uri "http://localhost:$port/health" -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop
             if ($response.StatusCode -eq 200) {
-                return "http://localhost:$port"
+                $json = $null
+                try {
+                    $json = $response.Content | ConvertFrom-Json -ErrorAction Stop
+                } catch {
+                    continue
+                }
+
+                if ($json -and $json.status -eq "healthy") {
+                    return "http://localhost:$port"
+                }
             }
         } catch {
             # Keep trying next candidate
         }
     }
 
-    return "http://localhost:9000"
+    return $null
 }
 
 function Resolve-StorefrontPublishableKey {
@@ -144,6 +153,13 @@ if ($port8000InUse) {
 
 Write-Host "[2/3] Starting storefront on :$storefrontPort..." -ForegroundColor Yellow
 $backendUrl = Resolve-BackendUrl
+if (-not $backendUrl) {
+    Write-Host "ERROR: No healthy Medusa backend found on ports 9000 or 9001." -ForegroundColor Red
+    Write-Host "Start backend first with .\\Launch-Admin-Only.bat or .\\Launch-Marketplace.bat" -ForegroundColor Yellow
+    pause
+    exit 1
+}
+
 Write-Host "Using backend URL: $backendUrl" -ForegroundColor Gray
 $storefrontPublishableKey = Resolve-StorefrontPublishableKey
 if (-not $storefrontPublishableKey) {

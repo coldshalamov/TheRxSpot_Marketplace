@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { BUSINESS_MODULE } from "../../../../../modules/business"
+import { DEFAULT_TEMPLATE_ID, isAllowedTemplateId } from "../../../../../modules/business/constants/template-ids"
 
 /**
  * GET /admin/businesses/:id/theme
@@ -38,6 +39,15 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
 
   const { publish, ...templateData } = body
 
+  if (
+    templateData.template_id !== undefined &&
+    !isAllowedTemplateId(templateData.template_id)
+  ) {
+    return res.status(400).json({
+      message: "Invalid template_id. Expected one of the approved RxSpot templates.",
+    })
+  }
+
   // Get current latest version to increment
   const latest = await businessService.getLatestTemplateDraft(id)
   const nextVersion = latest ? (latest.version || 0) + 1 : 1
@@ -54,7 +64,7 @@ export const PUT = async (req: MedusaRequest, res: MedusaResponse) => {
   // Create new version
   const template = await businessService.createTemplateConfigs({
     business_id: id,
-    template_id: templateData.template_id || latest?.template_id || "default",
+    template_id: templateData.template_id || latest?.template_id || DEFAULT_TEMPLATE_ID,
     version: nextVersion,
     is_published: false,
     sections: templateData.sections || latest?.sections || [],

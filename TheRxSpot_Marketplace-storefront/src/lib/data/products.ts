@@ -6,6 +6,19 @@ import { HttpTypes } from "@medusajs/types"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { getRegion, retrieveRegion } from "./regions"
+import { cookies } from "next/headers"
+import { getTenantConfigFromCookie } from "@lib/tenant"
+
+async function getTenantHeaders(): Promise<Record<string, string>> {
+  const cookieStore = await cookies()
+  const tenantCookie = cookieStore.get("_tenant_config")?.value
+  const tenant = getTenantConfigFromCookie(tenantCookie)
+
+  const headers: Record<string, string> = {}
+  if (tenant?.business?.slug) headers["x-business-slug"] = tenant.business.slug
+  if (tenant?.publishable_api_key) headers["x-publishable-api-key"] = tenant.publishable_api_key
+  return headers
+}
 
 export const listProducts = async ({
   pageParam = 1,
@@ -47,6 +60,7 @@ export const listProducts = async ({
 
   const headers = {
     ...(await getAuthHeaders()),
+    ...(await getTenantHeaders()),
   }
 
   const next = {

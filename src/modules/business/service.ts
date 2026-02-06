@@ -12,6 +12,7 @@ import { OutboxEvent } from "./models/outbox-event"
 import { TemplateConfig } from "./models/template-config"
 import { Coupon } from "./models/coupon"
 import { decryptFields, encryptFields } from "../../utils/encryption"
+import { DEFAULT_TEMPLATE_ID } from "./constants/template-ids"
 
 class BusinessModuleService extends MedusaService({
   Business,
@@ -337,6 +338,36 @@ class BusinessModuleService extends MedusaService({
     }
   }
 
+  async getCatalogLocation(businessId: string, locationId?: string) {
+    if (locationId) {
+      const location = await this.retrieveLocation(locationId)
+      if (!location || location.business_id !== businessId) {
+        throw new Error("Location not found for business")
+      }
+      return location
+    }
+
+    const locations = await this.listLocations(
+      { business_id: businessId, is_active: true },
+      { order: { name: "ASC" }, take: 1 }
+    )
+
+    return locations[0] ?? null
+  }
+
+  async listCatalogProductsByBusiness(businessId: string, locationId?: string) {
+    const location = await this.getCatalogLocation(businessId, locationId)
+    if (!location) return { location: null, locationProducts: [] as any[] }
+
+    const locationProducts = await this.listLocationProducts({ location_id: location.id })
+    locationProducts.sort((a: any, b: any) => (a.rank ?? 0) - (b.rank ?? 0))
+
+    return {
+      location,
+      locationProducts,
+    }
+  }
+
   // =========================
   // Template Config methods
   // =========================
@@ -363,7 +394,7 @@ class BusinessModuleService extends MedusaService({
 
     return await this.createTemplateConfigs({
       business_id: businessId,
-      template_id: "default",
+      template_id: DEFAULT_TEMPLATE_ID,
       version: 1,
       is_published: true,
       published_at: new Date(),

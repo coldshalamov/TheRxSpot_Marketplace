@@ -40,6 +40,7 @@ Storefront only:
 ```
 
 `Launch-Admin-Only` pre-warms admin assets and opens admin in a clean Edge InPrivate window with extensions disabled (if Edge is available), which avoids many "blank spinner forever" browser-profile issues.
+Storefront launchers now auto-provision a valid publishable key for the current Medusa backend session.
 
 ### 3. Use Command Center links
 The launcher tiles show the active ports (for example `:9001` if `:9000` is already used).
@@ -76,6 +77,15 @@ Try:
 1. Run `.\Launch-Admin-Only.bat` and use the opened InPrivate admin window.
 2. If needed, manually open `http://localhost:9001/app` (or printed backend port).
 3. Keep the backend terminal visible and ensure no restart loop appears while loading.
+
+### Storefront says "A valid publishable key is required"
+Likely causes:
+1. Storefront is pointing at the wrong backend port.
+2. Placeholder key (`pk_test`) is being used instead of a real Medusa publishable key.
+
+Current launcher behavior:
+1. `Launch-Marketplace` and `Launch-Storefront-Only` create/link a real publishable key automatically.
+2. Storefront is started with runtime env vars for backend URL and publishable key, so `.env.local` does not need manual edits for local port changes.
 
 ### Dependencies are missing
 - PostgreSQL not running: start it, then rerun `Start-Dependencies.bat`.

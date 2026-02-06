@@ -39,6 +39,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
           version: template.version,
           sections: template.sections,
           global_styles: template.global_styles,
+          metadata: template.metadata,
         }
       : null,
     catalog_config: full.catalog_config,

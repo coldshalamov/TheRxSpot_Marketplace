@@ -3,7 +3,7 @@ import { BUSINESS_MODULE } from "../../../modules/business"
 
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
-  const business = (req as any).business
+  const business = (req as any).context?.business
 
   const filters: Record<string, any> = { is_active: true }
 

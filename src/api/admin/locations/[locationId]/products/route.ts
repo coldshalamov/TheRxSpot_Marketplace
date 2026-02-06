@@ -1,6 +1,7 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { BUSINESS_MODULE } from "../../../../../modules/business"
 import { Modules } from "@medusajs/framework/utils"
+import { sanitizeDetailsBlocks } from "../../../../../modules/business/utils/details-blocks"
 
 // GET /admin/locations/:locationId/products - List products assigned to location
 export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
@@ -51,11 +52,26 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
 export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
   const businessModuleService = req.scope.resolve(BUSINESS_MODULE)
   const { locationId } = req.params
-  const { product_id, product_ids, category_id, custom_price } = req.body as {
+  const {
+    product_id,
+    product_ids,
+    category_id,
+    custom_price,
+    is_active,
+    display_title,
+    display_description,
+    display_image_url,
+    details_blocks,
+  } = req.body as {
     product_id?: string
     product_ids?: string[]
     category_id?: string
     custom_price?: number
+    is_active?: boolean
+    display_title?: string | null
+    display_description?: string | null
+    display_image_url?: string | null
+    details_blocks?: unknown
   }
 
   const idsToAssign = product_ids ?? (product_id ? [product_id] : [])
@@ -79,9 +95,16 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
       // Update existing
       const updated = await businessModuleService.updateLocationProducts({
         id: existingProduct[0].id,
-        is_active: true,
+        is_active: is_active !== undefined ? !!is_active : true,
         category_id: category_id ?? existingProduct[0].category_id,
         custom_price: custom_price ?? existingProduct[0].custom_price,
+        display_title: display_title ?? existingProduct[0].display_title ?? null,
+        display_description: display_description ?? existingProduct[0].display_description ?? null,
+        display_image_url: display_image_url ?? existingProduct[0].display_image_url ?? null,
+        details_blocks:
+          details_blocks !== undefined
+            ? sanitizeDetailsBlocks(details_blocks)
+            : existingProduct[0].details_blocks ?? [],
       })
       created.push(updated)
     } else {
@@ -91,7 +114,11 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse) => {
         product_id: productId,
         category_id: category_id ?? null,
         custom_price: custom_price ?? null,
-        is_active: true,
+        is_active: is_active !== undefined ? !!is_active : true,
+        display_title: display_title ?? null,
+        display_description: display_description ?? null,
+        display_image_url: display_image_url ?? null,
+        details_blocks: details_blocks !== undefined ? sanitizeDetailsBlocks(details_blocks) : [],
         rank: nextRank++,
       })
       created.push(locationProduct)
