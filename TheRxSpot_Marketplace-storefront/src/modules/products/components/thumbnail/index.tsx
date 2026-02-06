@@ -21,7 +21,7 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
   className,
   "data-testid": dataTestid,
 }) => {
-  const initialImage = thumbnail || images?.[0]?.url
+  const initialImage = thumbnail ?? images?.[0]?.url ?? undefined
 
   return (
     <Container
