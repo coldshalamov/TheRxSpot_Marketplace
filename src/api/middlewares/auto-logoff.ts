@@ -52,6 +52,21 @@ const LAST_ACTIVITY_KEY = "lastActivity"
 function isAuthenticatedRoute(req: MedusaRequest): boolean {
   const path = req.path || req.originalUrl || ""
   const method = req.method || "GET"
+
+  // Admin bootstrap endpoints are polled during dashboard init and can run before
+  // full auth context/session state is stabilized. Skipping timeout checks here
+  // prevents dashboard shell deadlocks while preserving timeout enforcement on
+  // operational/admin data routes.
+  const normalizedPath = path.toLowerCase()
+
+  if (
+    normalizedPath.startsWith("/admin/feature-flags") ||
+    normalizedPath.startsWith("/feature-flags") ||
+    normalizedPath.startsWith("/admin/users/me") ||
+    normalizedPath.startsWith("/users/me")
+  ) {
+    return false
+  }
   
   // Public endpoints that don't require session validation
   const publicEndpoints = [
@@ -184,11 +199,14 @@ export function createAutoLogoffMiddleware(timeoutMinutes: number = DEFAULT_TIME
           logger.error({ error: logError }, "auto-logoff: failed to log session timeout")
         }
         
-        // Clear the session to force re-authentication
+        // Clear the session to force re-authentication.
+        // Do not mutate session internals directly; express-session expects
+        // internal metadata (e.g. cookie/originalMaxAge) to remain intact.
         if (req.session) {
-          // Destroy session data
-          Object.keys(req.session).forEach(key => {
-            delete (req.session as any)[key]
+          req.session.destroy((destroyError) => {
+            if (destroyError) {
+              logger.error({ error: destroyError }, "auto-logoff: failed to destroy expired session")
+            }
           })
         }
         

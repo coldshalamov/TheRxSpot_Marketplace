@@ -71,6 +71,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\serena-gpt-bridge\Initialize-
 Useful flags:
 - `-Port 8011` (or another free local port)
 - `-SkipMemorySync` (onboarding only)
+- `-UseMcpWriteMemory` (force sync via `write_memory` API calls instead of local memory discovery)
 - `-ForceOnboarding`
 - `-KeepServerRunning` (leave local MCP running after initialization)
 

@@ -654,12 +654,15 @@ const EarningsPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <div className="text-xs font-medium mb-2">Type</div>
-                  <Select value={type} onValueChange={(v) => setType(v as any)}>
+                  <Select
+                    value={type || "__all__"}
+                    onValueChange={(v) => setType((v === "__all__" ? "" : v) as any)}
+                  >
                     <Select.Trigger>
                       <Select.Value placeholder="All" />
                     </Select.Trigger>
                     <Select.Content>
-                      <Select.Item value="">All</Select.Item>
+                      <Select.Item value="__all__">All</Select.Item>
                       <Select.Item value="commission">Commission</Select.Item>
                       <Select.Item value="consult_fee">Consult Fee</Select.Item>
                       <Select.Item value="service_fee">Service Fee</Select.Item>
@@ -668,7 +671,10 @@ const EarningsPage = () => {
                 </div>
                 <div>
                   <div className="text-xs font-medium mb-2">Date range</div>
-                  <Select value={datePreset} onValueChange={(v) => setDatePreset(v as any)}>
+                  <Select
+                    value={datePreset || "__all__"}
+                    onValueChange={(v) => setDatePreset((v === "__all__" ? "" : v) as any)}
+                  >
                     <Select.Trigger>
                       <Select.Value placeholder="Last 30 days" />
                     </Select.Trigger>
@@ -677,7 +683,7 @@ const EarningsPage = () => {
                       <Select.Item value="30">Last 30 days</Select.Item>
                       <Select.Item value="90">Last 90 days</Select.Item>
                       <Select.Item value="custom">Custom (set below)</Select.Item>
-                      <Select.Item value="">All time</Select.Item>
+                      <Select.Item value="__all__">All time</Select.Item>
                     </Select.Content>
                   </Select>
                   {datePreset === "custom" ? (

@@ -1,6 +1,8 @@
 #!/usr/bin/env pwsh
 # TheRxSpot Marketplace - Admin Only Launcher
 $ErrorActionPreference = "Stop"
+# Suppress Invoke-WebRequest progress rendering, which can look like a hang.
+$ProgressPreference = "SilentlyContinue"
 
 Write-Host ""
 Write-Host "===================================================" -ForegroundColor Cyan
@@ -14,7 +16,8 @@ $fallbackBackendPort = 9001
 $backendPort = $preferredBackendPort
 $adminUiPort = 5173
 $runtimeConfigPath = Join-Path $repoRoot "launcher_assets\runtime-config.js"
-$requestedMode = (if ($env:THERXSPOT_BACKEND_MODE) { $env:THERXSPOT_BACKEND_MODE } else { "start" }).ToLowerInvariant()
+$requestedMode = if ($env:THERXSPOT_BACKEND_MODE) { $env:THERXSPOT_BACKEND_MODE } else { "start" }
+$requestedMode = $requestedMode.ToLowerInvariant()
 $backendMode = if ($requestedMode -in @("dev", "start")) { $requestedMode } else { "start" }
 $backendNpmScript = if ($backendMode -eq "dev") { "dev" } else { "start" }
 
@@ -59,6 +62,79 @@ function Try-GetRuntimePort {
     return $null
 }
 
+function Get-EnvValueFromDotEnv {
+    param(
+        [string]$EnvPath,
+        [string]$Key
+    )
+
+    if (-not (Test-Path $EnvPath)) {
+        return $null
+    }
+
+    $pattern = "^\s*" + [regex]::Escape($Key) + "\s*=\s*(.*)$"
+    foreach ($line in Get-Content $EnvPath) {
+        if ($line -match $pattern) {
+            $value = $matches[1].Trim()
+            if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
+                $value = $value.Substring(1, $value.Length - 2)
+            }
+            return $value
+        }
+    }
+
+    return $null
+}
+
+function Convert-ToSha256Hex {
+    param([string]$Value)
+
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Value)
+        $hash = $sha.ComputeHash($bytes)
+        return ($hash | ForEach-Object { $_.ToString("x2") }) -join ""
+    } finally {
+        $sha.Dispose()
+    }
+}
+
+function Resolve-EncryptionKeyForLauncher {
+    param([string]$RepoRoot)
+
+    $candidate = if ($env:ENCRYPTION_KEY_CURRENT) { $env:ENCRYPTION_KEY_CURRENT } else { $env:DATABASE_ENCRYPTION_KEY }
+    if (-not [string]::IsNullOrWhiteSpace($candidate)) {
+        return $candidate.Trim()
+    }
+
+    $envPath = Join-Path $RepoRoot ".env"
+
+    $fromFile = Get-EnvValueFromDotEnv -EnvPath $envPath -Key "ENCRYPTION_KEY_CURRENT"
+    if (-not [string]::IsNullOrWhiteSpace($fromFile)) {
+        return $fromFile.Trim()
+    }
+
+    $legacyFromFile = Get-EnvValueFromDotEnv -EnvPath $envPath -Key "DATABASE_ENCRYPTION_KEY"
+    if (-not [string]::IsNullOrWhiteSpace($legacyFromFile)) {
+        return $legacyFromFile.Trim()
+    }
+
+    $seed = Get-EnvValueFromDotEnv -EnvPath $envPath -Key "JWT_SECRET"
+    if ([string]::IsNullOrWhiteSpace($seed)) {
+        $seed = Get-EnvValueFromDotEnv -EnvPath $envPath -Key "COOKIE_SECRET"
+    }
+    if ([string]::IsNullOrWhiteSpace($seed)) {
+        return $null
+    }
+
+    $seed = $seed.Trim()
+    if ($seed -match "^[0-9a-fA-F]{64,}$") {
+        return $seed.Substring(0, 64).ToLowerInvariant()
+    }
+
+    return (Convert-ToSha256Hex -Value $seed)
+}
+
 function Update-LauncherRuntimeConfig {
     param(
         [string]$RepoRoot,
@@ -86,6 +162,21 @@ window.__THERXSPOT_LAUNCHER_PORTS = {
 "@
 
     Set-Content -Path (Join-Path $RepoRoot "launcher_assets\runtime-config.js") -Value $runtimeConfigContent -Encoding utf8
+}
+
+function Sync-AdminBuildForStartMode {
+    param([string]$RepoRoot)
+
+    $sourceDir = Join-Path $RepoRoot ".medusa\server\public\admin"
+    $sourceIndex = Join-Path $sourceDir "index.html"
+    if (-not (Test-Path $sourceIndex)) {
+        return $false
+    }
+
+    $targetDir = Join-Path $RepoRoot "public\admin"
+    New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
+    Copy-Item -Path (Join-Path $sourceDir "*") -Destination $targetDir -Recurse -Force
+    return $true
 }
 
 function Test-Port {
@@ -130,6 +221,8 @@ function Should-StopForMarketplace {
         $cmd.Contains("medusa develop") -or
         $cmd.Contains("medusa start") -or
         $cmd.Contains("@medusajs\\cli\\cli.js develop") -or
+        $cmd.Contains("@medusajs\\cli\\cli.js") -or
+        $cmd.Contains("@medusajs\\cli\\cli.js start") -or
         $cmd.Contains("@medusajs\\cli\\cli.js start --types") -or
         $cmd.Contains("npm run dev") -or
         $cmd.Contains("npm run start")
@@ -157,10 +250,30 @@ function Release-Port-Safely {
 
         if (Should-StopForMarketplace -ProcessInfo $procInfo) {
             Write-Host "WARN: Port $Port is used by marketplace process $procName. Stopping it..." -ForegroundColor Yellow
-            Stop-Process -Id $ownerPid -Force -ErrorAction SilentlyContinue
+            Stop-MarketplaceProcessTree -ProcessId $ownerPid | Out-Null
             Start-Sleep -Milliseconds 800
         } else {
             Write-Host "INFO: Port $Port is used by external process $procName. Leaving it untouched." -ForegroundColor Cyan
+        }
+    }
+}
+
+function Stop-MarketplaceProcessTree {
+    param([int]$ProcessId)
+
+    if ($ProcessId -le 0) {
+        return $false
+    }
+
+    try {
+        $null = & taskkill /PID $ProcessId /T /F 2>$null
+        return $true
+    } catch {
+        try {
+            Stop-Process -Id $ProcessId -Force -ErrorAction Stop
+            return $true
+        } catch {
+            return $false
         }
     }
 }
@@ -179,6 +292,8 @@ function Get-MarketplaceDevProcesses {
             $cmd.Contains("medusa develop") -or
             $cmd.Contains("medusa start") -or
             $cmd.Contains("@medusajs\\cli\\cli.js develop") -or
+            $cmd.Contains("@medusajs\\cli\\cli.js") -or
+            $cmd.Contains("@medusajs\\cli\\cli.js start") -or
             $cmd.Contains("@medusajs\\cli\\cli.js start --types")
         ) {
             return $true
@@ -237,8 +352,11 @@ function Stop-StaleMarketplaceDevProcesses {
 
     foreach ($candidate in $candidates) {
         try {
-            Stop-Process -Id $candidate.ProcessId -Force -ErrorAction Stop
-            Write-Host "INFO: Stopped stale marketplace process PID $($candidate.ProcessId)." -ForegroundColor Gray
+            if (Stop-MarketplaceProcessTree -ProcessId $candidate.ProcessId) {
+                Write-Host "INFO: Stopped stale marketplace process PID $($candidate.ProcessId)." -ForegroundColor Gray
+            } else {
+                Write-Host "WARN: Failed to stop stale process PID $($candidate.ProcessId)." -ForegroundColor Yellow
+            }
         } catch {
             Write-Host "WARN: Failed to stop stale process PID $($candidate.ProcessId): $($_.Exception.Message)" -ForegroundColor Yellow
         }
@@ -489,9 +607,12 @@ if (-not $needRebuild) {
     }
 }
 
-# Do not force rebuilds solely because the backend is on fallback port (e.g., 9001).
-# Medusa admin builds are not reliably keyed by localhost port string in built assets.
-# Source freshness + admin path checks above are the safe rebuild triggers.
+# When backend falls back to a non-default port (e.g., 9001), force a rebuild so
+# the admin bundle points at the active backend URL and doesn't call stale :9000.
+if (-not $needRebuild -and $backendPort -ne $preferredBackendPort) {
+    Write-Host "WARN: Backend is on fallback port $backendPort. Forcing admin rebuild for backend URL sync." -ForegroundColor Yellow
+    $needRebuild = $true
+}
 
 if ($needRebuild) {
     Write-Host "Rebuilding admin panel for port $backendPort..." -ForegroundColor Yellow
@@ -499,7 +620,21 @@ if ($needRebuild) {
     
     Set-Location $repoRoot
     $env:MEDUSA_BACKEND_URL = "http://localhost:$backendPort"
-    npm run build
+
+    # Isolate TEMP/TMP for build to avoid intermittent esbuild temp-file locks on Windows.
+    $buildTempDir = Join-Path $repoRoot ".tmp\launcher-build-temp"
+    New-Item -ItemType Directory -Path $buildTempDir -Force | Out-Null
+    $previousTemp = $env:TEMP
+    $previousTmp = $env:TMP
+    $env:TEMP = $buildTempDir
+    $env:TMP = $buildTempDir
+
+    try {
+        npm run build
+    } finally {
+        $env:TEMP = $previousTemp
+        $env:TMP = $previousTmp
+    }
     
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: Build failed." -ForegroundColor Red
@@ -511,11 +646,30 @@ if ($needRebuild) {
     Write-Host "OK: Admin build is available and valid" -ForegroundColor Green
 }
 
+if ($backendMode -eq "start") {
+    Write-Host "Syncing admin static assets for production start mode..." -ForegroundColor Gray
+    if (-not (Sync-AdminBuildForStartMode -RepoRoot $repoRoot)) {
+        Write-Host "ERROR: Admin build artifacts are missing. Run npm run build and retry." -ForegroundColor Red
+        pause
+        exit 1
+    }
+}
+
 Write-Host "[4/5] Starting Medusa backend on :$backendPort..." -ForegroundColor Yellow
 $backendUrl = "http://localhost:$backendPort"
 $storeCors = "http://localhost:8000,http://localhost:8001,https://docs.medusajs.com"
 $adminCors = "http://localhost:5173,http://localhost:9000,http://localhost:$backendPort,http://localhost:8000,http://localhost:8001,https://docs.medusajs.com"
 $authCors = "http://localhost:5173,http://localhost:9000,http://localhost:$backendPort,http://localhost:8000,http://localhost:8001,https://docs.medusajs.com"
+$resolvedEncryptionKey = Resolve-EncryptionKeyForLauncher -RepoRoot $repoRoot
+
+if ([string]::IsNullOrWhiteSpace($resolvedEncryptionKey) -and $backendMode -eq "start") {
+    Write-Host "ERROR: Missing encryption key for production start mode." -ForegroundColor Red
+    Write-Host "Set ENCRYPTION_KEY_CURRENT (or DATABASE_ENCRYPTION_KEY) in .env to a 32-byte key." -ForegroundColor Yellow
+    pause
+    exit 1
+}
+
+$escapedEncryptionKey = if ([string]::IsNullOrWhiteSpace($resolvedEncryptionKey)) { "" } else { $resolvedEncryptionKey.Replace("'", "''") }
 
 $backendCommand = @"
 `$env:PORT='$backendPort'
@@ -523,6 +677,7 @@ $backendCommand = @"
 `$env:STORE_CORS='$storeCors'
 `$env:ADMIN_CORS='$adminCors'
 `$env:AUTH_CORS='$authCors'
+`$env:ENCRYPTION_KEY_CURRENT='$escapedEncryptionKey'
 cd `"$repoRoot`"
 npm run $backendNpmScript
 "@

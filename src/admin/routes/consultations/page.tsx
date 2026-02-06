@@ -418,12 +418,15 @@ const ConsultationsPage = () => {
         </div>
         <div className="w-[240px]">
           <div className="text-xs font-medium mb-1">Business</div>
-          <Select value={businessId} onValueChange={setBusinessId}>
+          <Select
+            value={businessId || "__all__"}
+            onValueChange={(v) => setBusinessId(v === "__all__" ? "" : v)}
+          >
             <Select.Trigger>
               <Select.Value placeholder="All businesses" />
             </Select.Trigger>
             <Select.Content>
-              <Select.Item value="">All businesses</Select.Item>
+              <Select.Item value="__all__">All businesses</Select.Item>
               {businesses.map((b: any) => (
                 <Select.Item key={b.id} value={b.id}>
                   {b.name}
@@ -693,12 +696,15 @@ const ConsultationsPage = () => {
 
               <div>
                 <div className="text-xs font-medium mb-2">Type</div>
-                <Select value={type} onValueChange={(v) => setType(v as any)}>
+                <Select
+                  value={type || "__all__"}
+                  onValueChange={(v) => setType((v === "__all__" ? "" : v) as any)}
+                >
                   <Select.Trigger>
                     <Select.Value placeholder="All" />
                   </Select.Trigger>
                   <Select.Content>
-                    <Select.Item value="">All</Select.Item>
+                    <Select.Item value="__all__">All</Select.Item>
                     <Select.Item value="initial">Initial</Select.Item>
                     <Select.Item value="follow-up">Follow-up</Select.Item>
                   </Select.Content>

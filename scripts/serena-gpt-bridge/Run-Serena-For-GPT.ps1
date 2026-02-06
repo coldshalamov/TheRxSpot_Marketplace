@@ -25,17 +25,31 @@ function Wait-HttpOk {
 }
 
 function Wait-TunnelUrlFromLog {
-    param([string]$LogPath, [int]$TimeoutSeconds = 90)
+    param(
+        [string]$StdOutLogPath,
+        [string]$StdErrLogPath,
+        [int]$TimeoutSeconds = 90
+    )
     $pattern = 'https://[a-zA-Z0-9-]+\.trycloudflare\.com'
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     while ((Get-Date) -lt $deadline) {
-        if (Test-Path $LogPath) {
-            $text = Get-Content -Raw -Path $LogPath -ErrorAction SilentlyContinue
-            if ($text) {
-                $m = [regex]::Match($text, $pattern)
-                if ($m.Success) { return $m.Value }
-            }
+        $text = ""
+
+        if (Test-Path $StdOutLogPath) {
+            $outText = Get-Content -Raw -Path $StdOutLogPath -ErrorAction SilentlyContinue
+            if ($outText) { $text += $outText }
         }
+
+        if (Test-Path $StdErrLogPath) {
+            $errText = Get-Content -Raw -Path $StdErrLogPath -ErrorAction SilentlyContinue
+            if ($errText) { $text += "`n$errText" }
+        }
+
+        if ($text) {
+            $m = [regex]::Match($text, $pattern)
+            if ($m.Success) { return $m.Value }
+        }
+
         Start-Sleep -Milliseconds 700
     }
     return $null
@@ -94,7 +108,7 @@ Write-Host "[3/5] Starting tunnel..." -ForegroundColor Gray
 $tunArgs = @("tunnel", "--url", "http://localhost:$port", "--no-autoupdate", "--loglevel", "info")
 $tunProc = Start-Process -FilePath $cloudflaredPath -ArgumentList $tunArgs -PassThru -WindowStyle Hidden -RedirectStandardOutput $tunOut -RedirectStandardError $tunErr
 
-$tunnelUrl = Wait-TunnelUrlFromLog -LogPath $tunOut -TimeoutSeconds 90
+$tunnelUrl = Wait-TunnelUrlFromLog -StdOutLogPath $tunOut -StdErrLogPath $tunErr -TimeoutSeconds 90
 if (-not $tunnelUrl) { throw "Tunnel URL not found in $tunOut" }
 
 Write-Host "[4/5] Updating Worker target..." -ForegroundColor Gray

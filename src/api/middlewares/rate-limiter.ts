@@ -137,6 +137,26 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
     res: MedusaResponse,
     next: MedusaNextFunction
   ) => {
+    const requestPath = (
+      (req.originalUrl as string) ||
+      (req as any).url ||
+      (req.path as string) ||
+      ""
+    ).toLowerCase()
+
+    // The admin dashboard calls /auth/session repeatedly during bootstrap and
+    // route transitions. Throttling this endpoint causes self-lockout loops
+    // in local operational environments.
+    if (
+      keyPrefix === "auth" &&
+      (
+        requestPath.includes("/auth/session") ||
+        requestPath.includes("/session")
+      )
+    ) {
+      return next()
+    }
+
     // Integration tests run against ephemeral databases but the Redis limiter
     // uses a shared keyspace by IP/window. Disable in `test` to keep runs
     // deterministic and isolated.
@@ -146,7 +166,6 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
 
     // In local development, avoid lockouts from repeated auth attempts
     // while debugging admin flows.
-    const env = (process.env.NODE_ENV || "").toLowerCase()
     const forwardedFor = ((req.headers["x-forwarded-for"] as string) || "").split(",")[0].trim()
     const realIp = ((req.headers["x-real-ip"] as string) || "").trim()
     const remoteIp = (req.socket?.remoteAddress || "").trim()
@@ -157,7 +176,9 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
       ip === "::ffff:127.0.0.1" ||
       ip === "localhost"
 
-    if (env === "development" && isLocalIp) {
+    // Local loopback traffic should never lock out operators during
+    // launcher-driven development/start flows.
+    if (isLocalIp) {
       return next()
     }
 

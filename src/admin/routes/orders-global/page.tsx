@@ -467,12 +467,18 @@ const OrdersGlobalPage = () => {
             placeholder="Search order ID, product name, client, business…"
             className="w-full md:w-[420px]"
           />
-          <Select value={businessId} onValueChange={(v) => { setBusinessId(v); setPage(0) }}>
+          <Select
+            value={businessId || "__all__"}
+            onValueChange={(v) => {
+              setBusinessId(v === "__all__" ? "" : v)
+              setPage(0)
+            }}
+          >
             <Select.Trigger className="w-full md:w-[260px]">
               <Select.Value placeholder="All businesses" />
             </Select.Trigger>
             <Select.Content>
-              <Select.Item value="">All businesses</Select.Item>
+              <Select.Item value="__all__">All businesses</Select.Item>
               {(businesses || []).map((b: any) => (
                 <Select.Item key={b.id} value={b.id}>
                   {b.name}
@@ -480,12 +486,18 @@ const OrdersGlobalPage = () => {
               ))}
             </Select.Content>
           </Select>
-          <Select value={productId} onValueChange={(v) => { setProductId(v); setPage(0) }}>
+          <Select
+            value={productId || "__all__"}
+            onValueChange={(v) => {
+              setProductId(v === "__all__" ? "" : v)
+              setPage(0)
+            }}
+          >
             <Select.Trigger className="w-full md:w-[260px]">
               <Select.Value placeholder="All products" />
             </Select.Trigger>
             <Select.Content>
-              <Select.Item value="">All products</Select.Item>
+              <Select.Item value="__all__">All products</Select.Item>
               {(products || []).map((p: any) => (
                 <Select.Item key={p.id} value={p.id}>
                   {p.title}

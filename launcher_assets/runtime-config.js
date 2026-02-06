@@ -3,5 +3,5 @@ window.__THERXSPOT_LAUNCHER_PORTS = {
   backendPort: 9001,
   storefrontPort: 8000,
   adminPath: "/app",
-  generatedAt: "2026-02-06T02:33:09"
+  generatedAt: "2026-02-06T09:06:02"
 };

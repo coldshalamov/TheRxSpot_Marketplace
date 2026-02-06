@@ -82,14 +82,14 @@ const BusinessesPage = () => {
         <Heading level="h1">Businesses</Heading>
         <div className="flex gap-2 items-center">
           <Select
-            value={statusFilter}
-            onValueChange={(val) => setStatusFilter(val)}
+            value={statusFilter || "__all__"}
+            onValueChange={(val) => setStatusFilter(val === "__all__" ? "" : val)}
           >
             <Select.Trigger>
               <Select.Value placeholder="All Statuses" />
             </Select.Trigger>
             <Select.Content>
-              <Select.Item value="">All</Select.Item>
+              <Select.Item value="__all__">All</Select.Item>
               <Select.Item value="pending">Pending</Select.Item>
               <Select.Item value="approved">Approved</Select.Item>
               <Select.Item value="active">Active</Select.Item>

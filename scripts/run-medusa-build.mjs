@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, rmSync } from "node:fs"
 import { spawn } from "node:child_process"
 import path from "node:path"
 
@@ -25,6 +25,23 @@ const child =
       })
 
 child.on("exit", (code) => {
+  if (code === 0) {
+    try {
+      const builtAdminDir = path.join(process.cwd(), ".medusa", "server", "public", "admin")
+      const runtimeAdminDir = path.join(process.cwd(), "public", "admin")
+
+      if (existsSync(builtAdminDir)) {
+        rmSync(runtimeAdminDir, { recursive: true, force: true })
+        mkdirSync(path.dirname(runtimeAdminDir), { recursive: true })
+        cpSync(builtAdminDir, runtimeAdminDir, { recursive: true })
+        console.log(`info:    Synced admin build to ${runtimeAdminDir}`)
+      }
+    } catch (err) {
+      console.error("error:   Failed to sync admin build into public/admin", err)
+      process.exit(1)
+    }
+  }
+
   process.exit(code ?? 1)
 })
 

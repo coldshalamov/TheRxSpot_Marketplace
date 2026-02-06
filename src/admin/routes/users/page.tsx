@@ -395,12 +395,15 @@ const UsersPage = () => {
           </div>
           <div>
             <div className="text-xs font-medium mb-1">Status</div>
-            <Select value={status} onValueChange={(v) => setStatus(v as any)}>
+            <Select
+              value={status || "__all__"}
+              onValueChange={(v) => setStatus((v === "__all__" ? "" : v) as any)}
+            >
               <Select.Trigger>
                 <Select.Value placeholder="All" />
               </Select.Trigger>
               <Select.Content>
-                <Select.Item value="">All</Select.Item>
+                <Select.Item value="__all__">All</Select.Item>
                 <Select.Item value="active">Active</Select.Item>
                 <Select.Item value="inactive">Inactive</Select.Item>
               </Select.Content>
@@ -408,12 +411,15 @@ const UsersPage = () => {
           </div>
           <div>
             <div className="text-xs font-medium mb-1">Role</div>
-            <Select value={role} onValueChange={(v) => setRole(v as any)}>
+            <Select
+              value={role || "__all__"}
+              onValueChange={(v) => setRole((v === "__all__" ? "" : v) as any)}
+            >
               <Select.Trigger>
                 <Select.Value placeholder="All" />
               </Select.Trigger>
               <Select.Content>
-                <Select.Item value="">All</Select.Item>
+                <Select.Item value="__all__">All</Select.Item>
                 <Select.Item value="customer">Customer</Select.Item>
                 <Select.Item value="admin">Admin</Select.Item>
                 <Select.Item value="clinician">Clinician</Select.Item>

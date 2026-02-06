@@ -20,7 +20,9 @@ module.exports = defineConfig({
     },
     cookieOptions: {
       sameSite: "strict",
-      secure: env.nodeEnv === "production",
+      // In local "start" mode we still run plain HTTP; forcing secure cookies
+      // prevents session issuance and breaks admin login bootstrap.
+      secure: env.nodeEnv === "production" && env.backendUrl.startsWith("https://"),
       httpOnly: true,
     },
   },
